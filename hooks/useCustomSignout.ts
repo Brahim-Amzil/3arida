@@ -1,22 +1,14 @@
 import { useRouter } from 'next/router';
+import { useAuth } from '@/lib/firebase/AuthContext';
 
 export function useCustomSignOut() {
   const router = useRouter();
+  const { signOut: firebaseSignOut } = useAuth();
 
   const signOut = async () => {
     try {
-      const response = await fetch('/api/auth/custom-signout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Signout failed');
-      }
-
-      router.push('/auth/login');
+      await firebaseSignOut();
+      router.push('/auth/firebase-login');
     } catch (error) {
       console.error('Error during sign out:', error);
     }

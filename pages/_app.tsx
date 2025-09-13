@@ -1,5 +1,5 @@
 import app from '@/lib/app';
-import { SessionProvider } from 'next-auth/react';
+import { AuthProvider } from '@/lib/firebase/AuthContext';
 import { appWithTranslation } from 'next-i18next';
 import Head from 'next/head';
 import { Toaster } from 'react-hot-toast';
@@ -16,7 +16,7 @@ import { Themer } from '@boxyhq/react-ui/shared';
 import { AccountLayout } from '@/components/layouts';
 
 function MyApp({ Component, pageProps }: AppPropsWithLayout) {
-  const { session, ...props } = pageProps;
+  const { ...props } = pageProps;
 
   // Add mixpanel
   useEffect(() => {
@@ -42,7 +42,7 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
         <title>{app.name}</title>
         <link rel="icon" href="https://boxyhq.com/img/favicon.ico" />
       </Head>
-      <SessionProvider session={session}>
+      <AuthProvider>
         <Toaster toastOptions={{ duration: 4000 }} />
         <Themer
           overrideTheme={{
@@ -62,7 +62,7 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
         >
           {getLayout(<Component {...props} />)}
         </Themer>
-      </SessionProvider>
+      </AuthProvider>
     </>
   );
 }

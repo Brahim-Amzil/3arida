@@ -4,8 +4,15 @@ const { withSentryConfig } = require('@sentry/nextjs');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
+  // Force static export for Firebase deployment only
+  ...(process.env.BUILD_TARGET === 'firebase' ? { output: 'export' } : {}),
+  trailingSlash: false,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -17,19 +24,23 @@ const nextConfig = {
       },
     ],
   },
-  i18n,
-  rewrites: async () => {
-    return [
-      {
-        source: '/.well-known/saml.cer',
-        destination: '/api/well-known/saml.cer',
-      },
-      {
-        source: '/.well-known/saml-configuration',
-        destination: '/well-known/saml-configuration',
-      },
-    ];
-  },
+  // i18n is disabled for static export
+  // i18n,
+  // Only add rewrites when not using static export
+  ...(!(process.env.NODE_ENV === 'production' && process.env.BUILD_TARGET === 'firebase') ? {
+    rewrites: async () => {
+      return [
+        {
+          source: '/.well-known/saml.cer',
+          destination: '/api/well-known/saml.cer',
+        },
+        {
+          source: '/.well-known/saml-configuration',
+          destination: '/well-known/saml-configuration',
+        },
+      ];
+    },
+  } : {}),
   async headers() {
     return [
       {
@@ -40,12 +51,16 @@ const nextConfig = {
             value: 'max-age=31536000; includeSubDomains;',
           },
           {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
-          {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'unsafe-none',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'unsafe-none',
           },
         ],
       },

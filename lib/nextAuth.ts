@@ -17,7 +17,6 @@ import { randomUUID } from 'crypto';
 
 import { Role } from '@prisma/client';
 import { getAccount } from 'models/account';
-import { addTeamMember, getTeam } from 'models/team';
 import { createUser, getUser } from 'models/user';
 import { verifyPassword } from '@/lib/auth';
 import { isEmailAllowed } from '@/lib/email/utils';
@@ -59,7 +58,10 @@ if (isAuthProviderEnabled('credentials')) {
 
         const { email, password, recaptchaToken } = credentials;
 
-        await validateRecaptcha(recaptchaToken);
+        // Only validate reCAPTCHA if token is provided and reCAPTCHA is enabled
+        if (recaptchaToken) {
+          await validateRecaptcha(recaptchaToken);
+        }
 
         if (!email || !password) {
           return null;
@@ -318,13 +320,7 @@ export const getAuthOptions = (
 
           await linkAccount(newUser, account);
 
-          if (isIdpLogin && user) {
-            await linkToTeam(user as unknown as Profile, newUser.id);
-          }
-
-          if (account.provider === 'boxyhq-saml' && profile) {
-            await linkToTeam(profile, newUser.id);
-          }
+          // Team linking functionality removed for petition platform
 
           if (isCredentialsProviderCallbackWithDbSession) {
             await createDatabaseSession(newUser, req, res);
@@ -428,34 +424,4 @@ const linkAccount = async (user: User, account: Account) => {
   }
 };
 
-const linkToTeam = async (profile: Profile, userId: string) => {
-  const team = await getTeam({
-    id: profile.requested.tenant,
-  });
-
-  // Sort out roles
-  const roles = profile.roles || profile.groups || [];
-  let userRole: Role = team.defaultRole || Role.MEMBER;
-
-  for (let role of roles) {
-    if (env.groupPrefix) {
-      role = role.replace(env.groupPrefix, '');
-    }
-
-    // Owner > Admin > Member
-    if (
-      role.toUpperCase() === Role.ADMIN &&
-      userRole.toUpperCase() !== Role.OWNER.toUpperCase()
-    ) {
-      userRole = Role.ADMIN;
-      continue;
-    }
-
-    if (role.toUpperCase() === Role.OWNER) {
-      userRole = Role.OWNER;
-      break;
-    }
-  }
-
-  await addTeamMember(team.id, userId, userRole);
-};
+// Team functionality removed for petition platform

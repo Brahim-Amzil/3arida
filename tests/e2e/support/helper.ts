@@ -17,8 +17,6 @@ export const secondTeam = {
 } as const;
 
 export async function cleanup() {
-  await prisma.teamMember.deleteMany();
-  await prisma.team.deleteMany();
   await prisma.user.deleteMany();
   await prisma.session.deleteMany();
   await prisma.$disconnect();

@@ -10,7 +10,23 @@ import { ThemesProps, applyTheme } from '@/lib/theme';
 
 const useTheme = () => {
   const [theme, setTheme] = useState<string | null>(null);
-  const { t } = useTranslation('common');
+  
+  // Safe translation hook usage with fallback
+  let t: (key: string) => string;
+  try {
+    const translation = useTranslation('common');
+    t = translation.t;
+  } catch (error) {
+    // Fallback function if i18next is not initialized
+    t = (key: string) => {
+      const fallbacks: Record<string, string> = {
+        'system': 'System',
+        'dark': 'Dark',
+        'light': 'Light'
+      };
+      return fallbacks[key] || key;
+    };
+  }
 
   useEffect(() => {
     setTheme(localStorage.getItem('theme'));

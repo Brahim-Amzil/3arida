@@ -2,8 +2,7 @@ import { InputWithLabel, Loading } from '@/components/shared';
 import { maxLengthPolicies } from '@/lib/common';
 import env from '@/lib/env';
 import { useFormik } from 'formik';
-import useInvitation from 'hooks/useInvitation';
-import { signIn, useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/firebase/AuthContext';
 import { useTranslation } from 'next-i18next';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -18,15 +17,12 @@ interface MagicLinkProps {
 
 const MagicLink = ({ csrfToken }: MagicLinkProps) => {
   const router = useRouter();
-  const { status } = useSession();
+  const { user, loading } = useAuth();
   const { t } = useTranslation('common');
-  const { invitation } = useInvitation();
 
-  const params = invitation ? `?token=${invitation.token}` : '';
+  const params = '';
 
-  const callbackUrl = invitation
-    ? `/invitations/${invitation.token}`
-    : env.redirectIfAuthenticated;
+  const callbackUrl = env.redirectIfAuthenticated;
 
   const formik = useFormik({
     initialValues: {
@@ -36,32 +32,23 @@ const MagicLink = ({ csrfToken }: MagicLinkProps) => {
       email: Yup.string().required().email().max(maxLengthPolicies.email),
     }),
     onSubmit: async (values) => {
-      const response = await signIn('email', {
-        email: values.email,
-        csrfToken,
-        redirect: false,
-        callbackUrl,
-      });
-
-      formik.resetForm();
-
-      if (response?.error) {
+      try {
+        // Firebase doesn't have magic links in the same way as NextAuth
+        // This would need to be implemented with Firebase's email link authentication
+        // For now, redirect to regular login
+        toast.success('Please use the regular login form');
+        router.push('/auth/login');
+      } catch (error) {
         toast.error(t('email-login-error'));
-        return;
-      }
-
-      if (response?.status === 200 && response?.ok) {
-        toast.success(t('email-login-success'));
-        return;
       }
     },
   });
 
-  if (status === 'loading') {
+  if (loading) {
     return <Loading />;
   }
 
-  if (status === 'authenticated') {
+  if (user) {
     router.push(env.redirectIfAuthenticated);
   }
 

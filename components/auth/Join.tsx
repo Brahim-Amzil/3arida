@@ -50,13 +50,19 @@ const Join = ({ recaptchaSiteKey }: JoinProps) => {
     validateOnChange: false,
     validateOnBlur: false,
     onSubmit: async (values) => {
+      const requestData: any = {
+        ...values,
+      };
+      
+      // Only include recaptchaToken if reCAPTCHA is enabled
+      if (recaptchaSiteKey && recaptchaToken) {
+        requestData.recaptchaToken = recaptchaToken;
+      }
+      
       const response = await fetch('/api/auth/join', {
         method: 'POST',
         headers: defaultHeaders,
-        body: JSON.stringify({
-          ...values,
-          recaptchaToken,
-        }),
+        body: JSON.stringify(requestData),
       });
 
       const json = (await response.json()) as ApiResponse<{

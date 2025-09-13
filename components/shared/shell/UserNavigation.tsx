@@ -1,5 +1,7 @@
 import {
-  RectangleStackIcon,
+  DocumentTextIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
   ShieldCheckIcon,
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -12,10 +14,22 @@ const UserNavigation = ({ activePathname }: NavigationProps) => {
 
   const menus: MenuItem[] = [
     {
-      name: t('all-teams'),
-      href: '/teams',
-      icon: RectangleStackIcon,
-      active: activePathname === '/teams',
+      name: t('my-petitions'),
+      href: '/petitions/my-petitions',
+      icon: DocumentTextIcon,
+      active: activePathname === '/petitions/my-petitions',
+    },
+    {
+      name: t('discover-petitions'),
+      href: '/petitions/discover',
+      icon: MagnifyingGlassIcon,
+      active: activePathname === '/petitions/discover',
+    },
+    {
+      name: t('create-petition'),
+      href: '/petitions/create',
+      icon: PlusIcon,
+      active: activePathname === '/petitions/create',
     },
     {
       name: t('account'),

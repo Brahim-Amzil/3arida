@@ -1,31 +1,29 @@
-import type {
-  GetServerSidePropsContext,
-  InferGetServerSidePropsType,
-} from 'next';
+;
+import type { ReactElement } from 'react';
+import type { NextPageWithLayout } from 'types';
+import type { ComponentStatus } from 'react-daisyui/dist/types';
 
 import * as Yup from 'yup';
 import Link from 'next/link';
+import Head from 'next/head';
 import { useFormik } from 'formik';
 import { Button } from 'react-daisyui';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
-import React, { type ReactElement, useEffect, useState, useRef } from 'react';
-import type { ComponentStatus } from 'react-daisyui/dist/types';
-import { getCsrfToken, signIn, useSession } from 'next-auth/react';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useEffect, useState, useRef } from 'react';
+import toast from 'react-hot-toast';
+import ReCAPTCHA from 'react-google-recaptcha';
 
-import env from '@/lib/env';
-import type { NextPageWithLayout } from 'types';
 import { AuthLayout } from '@/components/layouts';
+import { authProviderEnabled } from '@/lib/auth';
+import { getCsrfToken, signIn, useSession } from '@/lib/firebase/useFirebaseAuth';
 import GithubButton from '@/components/auth/GithubButton';
 import GoogleButton from '@/components/auth/GoogleButton';
 import { Alert, InputWithLabel, Loading } from '@/components/shared';
-import { authProviderEnabled } from '@/lib/auth';
-import Head from 'next/head';
+import env from '@/lib/env';
 import TogglePasswordVisibility from '@/components/shared/TogglePasswordVisibility';
 import AgreeMessage from '@/components/auth/AgreeMessage';
 import GoogleReCAPTCHA from '@/components/shared/GoogleReCAPTCHA';
-import ReCAPTCHA from 'react-google-recaptcha';
 import { maxLengthPolicies } from '@/lib/common';
 
 interface Message {
@@ -33,16 +31,24 @@ interface Message {
   status: ComponentStatus | null;
 }
 
-const Login: NextPageWithLayout<
-  InferGetServerSidePropsType<typeof getServerSideProps>
-> = ({ csrfToken, authProviders, recaptchaSiteKey }) => {
+const LoginPage: NextPageWithLayout = () => {
   const router = useRouter();
-  const { status } = useSession();
+  const session = useSession();
+  const status = session?.status || 'loading';
   const { t } = useTranslation('common');
   const [recaptchaToken, setRecaptchaToken] = useState<string>('');
   const [message, setMessage] = useState<Message>({ text: null, status: null });
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
+  const [csrfToken, setCsrfToken] = useState<string>('');
   const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const authProviders = authProviderEnabled();
+  const recaptchaSiteKey = env.recaptcha.siteKey;
+
+  useEffect(() => {
+    getCsrfToken().then(token => {
+      if (token) setCsrfToken(token);
+    });
+  }, []);
 
   const { error, success, token } = router.query as {
     error: string;
@@ -82,21 +88,33 @@ const Login: NextPageWithLayout<
 
       setMessage({ text: null, status: null });
 
-      const response = await signIn('credentials', {
-        email,
-        password,
-        csrfToken,
-        redirect: false,
-        callbackUrl: redirectUrl,
-        recaptchaToken,
-      });
+      try {
+        const signInData: any = {
+          email,
+          password,
+          csrfToken,
+          redirect: false,
+          callbackUrl: redirectUrl,
+        };
+        
+        // Only include recaptchaToken if reCAPTCHA is enabled
+        if (recaptchaSiteKey && recaptchaToken) {
+          signInData.recaptchaToken = recaptchaToken;
+        }
+        
+        const response = await signIn('credentials', signInData);
 
-      formik.resetForm();
-      recaptchaRef.current?.reset();
+        formik.resetForm();
+        recaptchaRef.current?.reset();
 
-      if (response && !response.ok) {
-        setMessage({ text: response.error, status: 'error' });
-        return;
+        if (response && typeof response === 'object' && 'ok' in response && !response.ok) {
+          setMessage({ text: response.error || 'Login failed', status: 'error' });
+          return;
+        }
+
+        // If successful, redirect will be handled by useSession hook
+      } catch (error: any) {
+        setMessage({ text: error.message || 'Login failed', status: 'error' });
       }
     },
   });
@@ -107,6 +125,7 @@ const Login: NextPageWithLayout<
 
   if (status === 'authenticated') {
     router.push(redirectUrl);
+    return <Loading />;
   }
 
   const params = token ? `?token=${token}` : '';
@@ -227,7 +246,7 @@ const Login: NextPageWithLayout<
   );
 };
 
-Login.getLayout = function getLayout(page: ReactElement) {
+LoginPage.getLayout = function getLayout(page: ReactElement) {
   return (
     <AuthLayout heading="welcome-back" description="log-in-to-account">
       {page}
@@ -235,19 +254,6 @@ Login.getLayout = function getLayout(page: ReactElement) {
   );
 };
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  const { locale } = context;
 
-  return {
-    props: {
-      ...(locale ? await serverSideTranslations(locale, ['common']) : {}),
-      csrfToken: await getCsrfToken(context),
-      authProviders: authProviderEnabled(),
-      recaptchaSiteKey: env.recaptcha.siteKey,
-    },
-  };
-};
 
-export default Login;
+export default LoginPage;

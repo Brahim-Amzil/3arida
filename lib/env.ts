@@ -1,3 +1,4 @@
+// Firebase replaces NextAuth - no session strategy needed
 import type { SessionStrategy } from 'next-auth';
 
 const env = {
@@ -5,6 +6,24 @@ const env = {
   appUrl: `${process.env.APP_URL}`,
   redirectIfAuthenticated: '/dashboard',
   securityHeadersEnabled: process.env.SECURITY_HEADERS_ENABLED ?? false,
+
+  // Firebase configuration
+  firebase: {
+    // Client-side config
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+
+    // Server-side admin config
+    admin: {
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY,
+    },
+  },
 
   // SMTP configuration for NextAuth
   smtp: {
@@ -82,7 +101,7 @@ const env = {
   disableNonBusinessEmailSignup:
     process.env.DISABLE_NON_BUSINESS_EMAIL_SIGNUP === 'true',
 
-  authProviders: process.env.AUTH_PROVIDERS || 'github,credentials',
+  authProviders: process.env.AUTH_PROVIDERS || 'github,credentials,google',
 
   otel: {
     prefix: process.env.OTEL_PREFIX || 'boxyhq.saas',
@@ -118,7 +137,9 @@ const env = {
 
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY,
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    currency: process.env.STRIPE_CURRENCY || 'mad',
   },
 };
 

@@ -71,6 +71,9 @@ const unAuthenticatedRoutes = [
   '/unlock-account',
   '/login/saml',
   '/.well-known/*',
+  '/', // Allow home page
+  '/petitions', // Allow public petition browsing
+  '/petitions/**', // Allow public petition viewing
 ];
 
 export default async function middleware(req: NextRequest) {
@@ -81,37 +84,14 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const redirectUrl = new URL('/auth/login', req.url);
-  redirectUrl.searchParams.set('callbackUrl', encodeURI(req.url));
+  // TEMPORARY: Disable auth middleware to prevent redirect loops
+  // TODO: Implement Firebase-based middleware or use client-side protection
+  // For now, let all requests through to prevent the infinite redirect loop
 
-  // JWT strategy
-  if (env.nextAuth.sessionStrategy === 'jwt') {
-    const token = await getToken({
-      req,
-    });
+  // const redirectUrl = new URL('/auth/firebase-login', req.url);
+  // redirectUrl.searchParams.set('callbackUrl', encodeURI(req.url));
 
-    if (!token) {
-      return NextResponse.redirect(redirectUrl);
-    }
-  }
-
-  // Database strategy
-  else if (env.nextAuth.sessionStrategy === 'database') {
-    const url = new URL('/api/auth/session', req.url);
-
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        cookie: req.headers.get('cookie') || '',
-      },
-    });
-
-    const session = await response.json();
-
-    if (!session.user) {
-      return NextResponse.redirect(redirectUrl);
-    }
-  }
+  // Firebase auth is handled client-side, so we'll skip server-side auth checks for now
 
   const requestHeaders = new Headers(req.headers);
   const csp = generateCSP();

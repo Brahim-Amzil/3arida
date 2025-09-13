@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions for role checking
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+    
+    function isModerator() {
+      return isAuthenticated() && getUserRole() in ['admin', 'moderator'];
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isEmailVerified() {
+      return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+    
+    function isPhoneVerified() {
+      return isAuthenticated() && request.auth.token.phone_number != null;
+    }
+    
+    function isActiveUser() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      allow read: if isModerator();
+      allow update: if isAdmin() && 
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'isActive', 'updatedAt']));
+      // Allow email and phone verification updates
+      allow update: if isOwner(userId) && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['verifiedEmail', 'verifiedPhone', 'verifiedAt', 'updatedAt']);
+      allow create: if isOwner(userId) && 
+        request.resource.data.role == 'user' &&
+        request.resource.data.isActive == true;
+    }
+    
+    // Email verification tokens collection
+    match /emailVerificationTokens/{tokenId} {
+      // Allow reading tokens for email verification process
+      allow read: if isAuthenticated();
+      // Allow creating tokens during registration/verification process
+      allow create: if isAuthenticated();
+      // Allow updating tokens to mark as used during verification
+      allow update: if isAuthenticated() && 
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isUsed']);
+      // Allow deletion after verification
+      allow delete: if isAuthenticated();
+    }
+    
+    // Petitions collection
+    match /petitions/{petitionId} {
+      allow read: if resource.data.status == 'approved' && resource.data.isPublic == true;
+      allow read: if isAuthenticated() && resource.data.creatorId == request.auth.uid;
+      allow read: if isModerator();
+      allow create: if isEmailVerified() && isActiveUser() &&
+        request.resource.data.creatorId == request.auth.uid &&
+        request.resource.data.status == 'draft' &&
+        request.resource.data.currentSignatures == 0;
+      allow update: if isAuthenticated() && 
+        resource.data.creatorId == request.auth.uid &&
+        resource.data.status in ['draft', 'pending'] &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['title', 'description', 'category', 'subcategory', 'mediaUrls', 'tags', 'location', 'updatedAt']);
+      allow update: if isModerator() &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'approvedAt', 'approvedBy', 'pausedAt', 'pausedBy', 'pauseReason', 'deletedAt', 'deletedBy', 'deleteReason', 'updatedAt']);
+      allow delete: if isAdmin();
+    }
+    
+    // Signatures collection
+    match /signatures/{signatureId} {
+      allow read: if true;
+      allow create: if isPhoneVerified() && isActiveUser() &&
+        request.resource.data.verificationMethod == 'phone_otp' &&
+        request.resource.data.signerPhone == request.auth.token.phone_number;
+      allow update, delete: if false;
+    }
+    
+    // Creator pages collection
+    match /creatorPages/{pageId} {
+      allow read: if resource.data.isActive == true;
+      allow read: if isModerator();
+      allow create, update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        isActiveUser();
+      allow delete: if isAdmin();
+    }
+    
+    // Test collection (for debugging)
+    match /test/{testId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

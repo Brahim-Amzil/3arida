@@ -63,62 +63,49 @@ model User {
   invalid_login_attempts Int       @default(0)
   lockedAt               DateTime?
 
-  teamMembers TeamMember[]
   accounts    Account[]
   sessions    Session[]
-  invitations Invitation[]
+  petitions   Petition[]
+  signatures  Signature[]
+  apiKeys     ApiKey[]
 }
 
-model Team {
-  id              String       @id @default(uuid())
-  name            String
-  slug            String       @unique
-  domain          String?      @unique
-  defaultRole     Role         @default(MEMBER)
-  billingId       String?
-  billingProvider String?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @default(now())
-  members         TeamMember[]
-  invitations     Invitation[]
-  apiKeys         ApiKey[]
-
-  @@index([billingId])
+model Petition {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  goal        Int
+  creatorId   String
+  status      String   @default("active") // active, closed, successful
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  signatures  Int      @default(0)
+  category    String?
+  image       String?
+  
+  creator     User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  
+  @@index([creatorId])
+  @@index([category])
+  @@index([status])
 }
 
-model TeamMember {
-  id        String   @id @default(uuid())
-  teamId    String
-  userId    String
-  role      Role     @default(MEMBER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([teamId, userId])
+model Signature {
+  id         String   @id @default(uuid())
+  petitionId String
+  userId     String?
+  name       String
+  email      String
+  verified   Boolean  @default(false)
+  comment    String?
+  createdAt  DateTime @default(now())
+  ipAddress  String?
+  
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@unique([petitionId, email])
+  @@index([petitionId])
   @@index([userId])
-}
-
-model Invitation {
-  id             String   @id @default(uuid())
-  teamId         String
-  email          String?
-  role           Role     @default(MEMBER)
-  token          String   @unique
-  expires        DateTime
-  invitedBy      String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now())
-  sentViaEmail   Boolean  @default(true)
-  allowedDomains String[] @default([])
-
-  user User @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  @@unique([teamId, email])
-  @@index([email])
 }
 
 model PasswordReset {
@@ -133,16 +120,16 @@ model PasswordReset {
 model ApiKey {
   id         String    @id @default(uuid())
   name       String
-  teamId     String
+  userId     String
   hashedKey  String    @unique
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now())
   expiresAt  DateTime?
   lastUsedAt DateTime?
 
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([teamId])
+  @@index([userId])
 }
 
 model Subscription {

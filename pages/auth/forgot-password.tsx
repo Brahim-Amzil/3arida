@@ -2,12 +2,7 @@ import { AuthLayout } from '@/components/layouts';
 import { InputWithLabel } from '@/components/shared';
 import { defaultHeaders, maxLengthPolicies } from '@/lib/common';
 import { useFormik } from 'formik';
-import type {
-  GetServerSidePropsContext,
-  InferGetServerSidePropsType,
-} from 'next';
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRef, type ReactElement, useState } from 'react';
@@ -19,9 +14,7 @@ import GoogleReCAPTCHA from '@/components/shared/GoogleReCAPTCHA';
 import ReCAPTCHA from 'react-google-recaptcha';
 import env from '@/lib/env';
 
-const ForgotPassword: NextPageWithLayout<
-  InferGetServerSidePropsType<typeof getServerSideProps>
-> = ({ recaptchaSiteKey }) => {
+const ForgotPassword: NextPageWithLayout = () => {
   const { t } = useTranslation('common');
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [recaptchaToken, setRecaptchaToken] = useState<string>('');
@@ -39,7 +32,7 @@ const ForgotPassword: NextPageWithLayout<
         headers: defaultHeaders,
         body: JSON.stringify({
           ...values,
-          recaptchaToken,
+          ...(env.recaptcha.siteKey && recaptchaToken ? { recaptchaToken } : {}),
         }),
       });
 
@@ -77,7 +70,7 @@ const ForgotPassword: NextPageWithLayout<
             <GoogleReCAPTCHA
               recaptchaRef={recaptchaRef}
               onChange={setRecaptchaToken}
-              siteKey={recaptchaSiteKey}
+              siteKey={env.recaptcha.siteKey}
             />
           </div>
           <div className="mt-4">
@@ -111,17 +104,6 @@ ForgotPassword.getLayout = function getLayout(page: ReactElement) {
   return <AuthLayout heading="reset-password">{page}</AuthLayout>;
 };
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  const { locale }: GetServerSidePropsContext = context;
 
-  return {
-    props: {
-      ...(locale ? await serverSideTranslations(locale, ['common']) : {}),
-      recaptchaSiteKey: env.recaptcha.siteKey,
-    },
-  };
-};
 
 export default ForgotPassword;

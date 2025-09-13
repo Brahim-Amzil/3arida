@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { team, user } from '../support/helper';
+import { team, user } from './helper';
 import { JoinPage, LoginPage } from './fixtures';
 
 type LoginFixture = {

@@ -3,8 +3,8 @@ import env from './env';
 
 const app = {
   version: packageInfo.version,
-  name: 'BoxyHQ',
-  logoUrl: 'https://boxyhq.com/img/logo.png',
+  name: '3arida - Petition Platform',
+  logoUrl: '/logo.png', // We'll need to add this
   url: env.appUrl,
 };
 

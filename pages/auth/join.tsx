@@ -3,26 +3,23 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from 'next-i18next';
-import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next';
 import { type ReactElement, useEffect } from 'react';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
 import type { NextPageWithLayout } from 'types';
 import { authProviderEnabled } from '@/lib/auth';
 import { AuthLayout } from '@/components/layouts';
 import GithubButton from '@/components/auth/GithubButton';
 import GoogleButton from '@/components/auth/GoogleButton';
-import { JoinWithInvitation, Join } from '@/components/auth';
+import { Join } from '@/components/auth';
 import Head from 'next/head';
 import { Loading } from '@/components/shared';
 import env from '@/lib/env';
 
-const Signup: NextPageWithLayout<
-  InferGetServerSidePropsType<typeof getServerSideProps>
-> = ({ authProviders, recaptchaSiteKey }) => {
+const Signup: NextPageWithLayout = () => {
   const router = useRouter();
-  const { status } = useSession();
+  const session = useSession();
+  const status = session?.status || 'loading';
   const { t } = useTranslation('common');
+  const authProviders = authProviderEnabled();
 
   const { error, token } = router.query as {
     error: string;
@@ -60,16 +57,7 @@ const Signup: NextPageWithLayout<
           authProviders.credentials && <div className="divider">{t('or')}</div>}
 
         {authProviders.credentials && (
-          <>
-            {token ? (
-              <JoinWithInvitation
-                inviteToken={token}
-                recaptchaSiteKey={recaptchaSiteKey}
-              />
-            ) : (
-              <Join recaptchaSiteKey={recaptchaSiteKey} />
-            )}
-          </>
+          <Join recaptchaSiteKey={env.recaptcha.siteKey} />
         )}
       </div>
       <p className="text-center text-sm text-gray-600 mt-3">
@@ -93,18 +81,6 @@ Signup.getLayout = function getLayout(page: ReactElement) {
   );
 };
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  const { locale } = context;
 
-  return {
-    props: {
-      ...(locale ? await serverSideTranslations(locale, ['common']) : {}),
-      authProviders: authProviderEnabled(),
-      recaptchaSiteKey: env.recaptcha.siteKey,
-    },
-  };
-};
 
 export default Signup;

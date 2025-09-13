@@ -1,25 +1,34 @@
-import { signIn } from 'next-auth/react';
+import { signIn } from '@/lib/firebase/useFirebaseAuth';
 import { Button } from 'react-daisyui';
 import { useTranslation } from 'next-i18next';
-import useInvitation from 'hooks/useInvitation';
+import { useRouter } from 'next/router';
 import env from '@/lib/env';
+import { useState } from 'react';
 
 const GoogleButton = () => {
   const { t } = useTranslation('common');
-  const { invitation } = useInvitation();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const callbackUrl = invitation
-    ? `/invitations/${invitation.token}`
-    : env.redirectIfAuthenticated;
+  const callbackUrl = env.redirectIfAuthenticated;
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsLoading(true);
+      await signIn('google');
+      router.push(callbackUrl);
+    } catch (error) {
+      console.error('Google sign-in failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Button
       className="btn btn-outline w-full"
-      onClick={() => {
-        signIn('google', {
-          callbackUrl,
-        });
-      }}
+      onClick={handleGoogleSignIn}
+      loading={isLoading}
       size="md"
     >
       <svg

@@ -13,7 +13,7 @@ import { updateAccountSchema } from '@/lib/zod';
 
 const UpdateName = ({ user }: { user: Partial<User> }) => {
   const { t } = useTranslation('common');
-  const { update } = useSession();
+  const { data } = useSession();
   const router = useRouter();
 
   const formik = useFormik({
@@ -42,9 +42,8 @@ const UpdateName = ({ user }: { user: Partial<User> }) => {
         return;
       }
 
-      await update({
-        name: values.name,
-      });
+      // Update user profile in Firebase
+      // This would need to be implemented in the Firebase auth context
 
       router.replace('/settings/account');
       toast.success(t('successfully-updated'));

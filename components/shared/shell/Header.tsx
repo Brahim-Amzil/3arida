@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import React from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/firebase/AuthContext';
 import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
@@ -19,15 +19,13 @@ interface HeaderProps {
 
 const Header = ({ setSidebarOpen }: HeaderProps) => {
   const { toggleTheme } = useTheme();
-  const { status, data } = useSession();
+  const { user, userDocument, loading } = useAuth();
   const { t } = useTranslation('common');
   const signOut = useCustomSignOut();
 
-  if (status === 'loading' || !data) {
+  if (loading || !user) {
     return null;
   }
-
-  const { user } = data;
 
   return (
     <div className="sticky top-0 z-40 flex h-14 shrink-0 items-center border-b px-4 sm:gap-x-6 sm:px-6 lg:px-8 bg-white dark:bg-black dark:text-white">
@@ -49,7 +47,7 @@ const Header = ({ setSidebarOpen }: HeaderProps) => {
                   className="ml-4 text-sm font-semibold leading-6 text-gray-900 dark:text-gray-50"
                   aria-hidden="true"
                 >
-                  {user.name}
+                  {userDocument?.name || user.displayName || 'User'}
                 </button>
                 <ChevronDownIcon
                   className="ml-2 h-5 w-5 text-gray-400"

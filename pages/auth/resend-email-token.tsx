@@ -2,8 +2,6 @@ import { AuthLayout } from '@/components/layouts';
 import { Alert, InputWithLabel } from '@/components/shared';
 import { defaultHeaders } from '@/lib/common';
 import { useFormik } from 'formik';
-import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, type ReactElement, useEffect } from 'react';
@@ -14,9 +12,7 @@ import { useTranslation } from 'next-i18next';
 import { ApiResponse, NextPageWithLayout } from 'types';
 import * as Yup from 'yup';
 
-const VerifyAccount: NextPageWithLayout<
-  InferGetServerSidePropsType<typeof getServerSideProps>
-> = () => {
+const VerifyAccount: NextPageWithLayout = () => {
   const router = useRouter();
   const { t } = useTranslation('common');
   const [message, setMessage] = useState<{
@@ -105,16 +101,6 @@ VerifyAccount.getLayout = function getLayout(page: ReactElement) {
   return <AuthLayout heading="verify-your-account">{page}</AuthLayout>;
 };
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  const { locale }: GetServerSidePropsContext = context;
 
-  return {
-    props: {
-      ...(locale ? await serverSideTranslations(locale, ['common']) : {}),
-    },
-  };
-};
 
 export default VerifyAccount;

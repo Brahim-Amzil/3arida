@@ -1,5 +1,4 @@
 import React from 'react';
-import TeamDropdown from '../TeamDropdown';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import Brand from './Brand';
 import Navigation from './Navigation';
@@ -15,6 +14,7 @@ const Drawer = ({ sidebarOpen, setSidebarOpen }: DrawerProps) => {
 
   return (
     <>
+      {/* Mobile sidebar */}
       {sidebarOpen && (
         <div className="relative z-50 lg:hidden">
           <div className="fixed inset-0 bg-gray-600/80" />
@@ -35,7 +35,6 @@ const Drawer = ({ sidebarOpen, setSidebarOpen }: DrawerProps) => {
               </div>
               <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-black px-6 pb-4">
                 <Brand />
-                <TeamDropdown />
                 <Navigation />
               </div>
             </div>
@@ -43,10 +42,10 @@ const Drawer = ({ sidebarOpen, setSidebarOpen }: DrawerProps) => {
         </div>
       )}
 
+      {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 px-6">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white dark:bg-black px-6 pb-4">
           <Brand />
-          <TeamDropdown />
           <Navigation />
         </div>
       </div>
