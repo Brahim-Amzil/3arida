@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+// Prisma import removed as it was unused
 
 type ApiError = {
   code: number;
