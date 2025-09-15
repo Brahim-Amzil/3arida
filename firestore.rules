@@ -1,0 +1,295 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Helper function to check if user is moderator
+    function isModerator() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['moderator', 'admin'];
+    }
+    
+    // Helper function to check moderator permissions
+    function hasModeratorPermission(permission) {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/moderators/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/moderators/$(request.auth.uid)).data.permissions[permission] == true;
+    }
+
+    // Enhanced validation functions
+    function isValidEmail(email) {
+      return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidMoroccanPhone(phone) {
+      return phone.matches('^(\\+212|0)[5-7][0-9]{8}$');
+    }
+
+    function containsSpam(text) {
+      return text.matches('.*https?://.*') || // Contains URLs
+             text.matches('.*\\b\\d{10,}\\b.*') || // Contains long numbers
+             text.matches('.*(.)\\1{10,}.*'); // Contains repeated characters
+    }
+
+    function isValidPetitionTitle(title) {
+      return title is string && 
+             title.size() >= 10 && 
+             title.size() <= 200 && 
+             !containsSpam(title);
+    }
+
+    function isValidPetitionDescription(description) {
+      return description is string && 
+             description.size() >= 50 && 
+             description.size() <= 5000 && 
+             !containsSpam(description);
+    }
+
+    function isValidTargetSignatures(target) {
+      return target is number && 
+             target >= 10 && 
+             target <= 10000000 && 
+             target % 1 == 0; // Must be integer
+    }
+
+    function isValidUserName(name) {
+      return name is string && 
+             name.size() >= 2 && 
+             name.size() <= 100 && 
+             name.matches('^[a-zA-ZÀ-ÿ\\u0600-\\u06FF\\s\'-]+$');
+    }
+
+    function isValidComment(content) {
+      return content is string && 
+             content.size() >= 1 && 
+             content.size() <= 1000 && 
+             !containsSpam(content);
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Users can read/write their own data
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Admins and moderators can read all user data
+      allow read: if isModerator();
+      // Only admins can update user roles
+      allow update: if isAdmin() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'isActive', 'updatedAt']);
+    }
+    
+    // Petitions collection
+    match /petitions/{petitionId} {
+      // Public read for approved petitions
+      allow read: if resource.data.status == 'approved' && resource.data.isPublic == true;
+      // Creators can read their own petitions regardless of status
+      allow read: if request.auth != null && resource.data.creatorId == request.auth.uid;
+      // Moderators can read all petitions
+      allow read: if isModerator();
+      
+      // Authenticated users with verified email can create petitions
+      allow create: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.verifiedEmail == true &&
+        validatePetitionCreation(request.resource.data);
+
+      function validatePetitionCreation(data) {
+        return data.keys().hasAll(['title', 'description', 'category', 'targetSignatures', 'creatorId', 'status']) &&
+               data.creatorId == request.auth.uid &&
+               isValidPetitionTitle(data.title) &&
+               isValidPetitionDescription(data.description) &&
+               data.category is string && data.category.size() > 0 && data.category.size() <= 50 &&
+               isValidTargetSignatures(data.targetSignatures) &&
+               data.status == 'pending' &&
+               data.currentSignatures == 0 &&
+               data.isPublic == true &&
+               data.isActive == true;
+      }
+      
+      // Creators can update their own petitions (limited fields and status)
+      allow update: if request.auth != null && 
+        resource.data.creatorId == request.auth.uid &&
+        resource.data.status in ['draft', 'pending'] &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'title', 'description', 'category', 'subcategory', 'targetSignatures', 
+          'mediaUrls', 'location', 'updatedAt'
+        ]);
+      
+      // Moderators can update petition status and moderation fields
+      allow update: if isModerator() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'moderatedBy', 'moderationNotes', 'approvedAt', 'pausedAt', 
+          'deletedAt', 'isActive', 'updatedAt'
+        ]);
+      
+      // Creators can delete their own draft/pending petitions
+      allow delete: if request.auth != null && 
+        resource.data.creatorId == request.auth.uid &&
+        resource.data.status in ['draft', 'pending'];
+      
+      // Admins can delete any petition
+      allow delete: if isAdmin();
+    }
+    
+    // Signatures collection
+    match /signatures/{signatureId} {
+      // Anyone can read signatures (for public petition pages)
+      allow read: if true;
+      
+      // Authenticated users with verified phone can create signatures
+      allow create: if request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.verifiedPhone == true;
+      
+      // Signatures are immutable once created
+      allow update, delete: if false;
+    }
+    
+    // Creator pages collection
+    match /creatorPages/{pageId} {
+      // Public read for active creator pages
+      allow read: if resource.data.isActive == true;
+      
+      // Users can create and update their own creator pages
+      allow create, update: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Users can delete their own creator pages
+      allow delete: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+      
+      // Admins can manage all creator pages
+      allow read, write: if isAdmin();
+    }
+    
+    // Moderators collection
+    match /moderators/{moderatorId} {
+      // Moderators can read their own data
+      allow read: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+      
+      // Admins can manage all moderators
+      allow read, write: if isAdmin();
+    }
+    
+    // Categories collection
+    match /categories/{categoryId} {
+      // Public read for active categories
+      allow read: if resource.data.isActive == true;
+      
+      // Only admins can manage categories
+      allow write: if isAdmin();
+    }
+    
+    // Payments collection
+    match /payments/{paymentId} {
+      // Users can read their own payments
+      allow read: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+      
+      // System can create payments (via Cloud Functions)
+      allow create: if request.auth != null;
+      
+      // Only system can update payment status
+      allow update: if false; // Handled by Cloud Functions
+      
+      // Admins can read all payments
+      allow read: if isAdmin();
+    }
+    
+    // QR codes collection
+    match /qrCodes/{qrCodeId} {
+      // Public read for QR codes
+      allow read: if true;
+      
+      // System can create QR codes
+      allow create: if request.auth != null;
+      
+      // System can update download counts
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['downloadCount']);
+      
+      // Petition creators can delete their QR codes
+      allow delete: if request.auth != null;
+    }
+    
+    // Comments collection
+    match /comments/{commentId} {
+      // Public read for comments
+      allow read: if true;
+      
+      // Authenticated users can create comments
+      allow create: if request.auth != null &&
+        validateCommentCreation(request.resource.data);
+      
+      // Users can update their own comments (within 5 minutes)
+      allow update: if request.auth != null &&
+        resource.data.authorId == request.auth.uid &&
+        request.time < resource.data.createdAt + duration.value(5, 'm') &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'updatedAt']);
+      
+      // Users can delete their own comments, moderators can delete any
+      allow delete: if request.auth != null &&
+        (resource.data.authorId == request.auth.uid || isModerator());
+
+      function validateCommentCreation(data) {
+        return data.keys().hasAll(['petitionId', 'authorId', 'authorName', 'content']) &&
+               data.authorId == request.auth.uid &&
+               isValidComment(data.content) &&
+               isValidUserName(data.authorName) &&
+               data.petitionId is string &&
+               data.likes == 0;
+      }
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+      
+      // System can create notifications
+      allow create: if request.auth != null &&
+        validateNotificationCreation(request.resource.data);
+      
+      // Users can update read status only
+      allow update: if request.auth != null &&
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) &&
+        request.resource.data.read == true;
+      
+      // Users can delete their own notifications
+      allow delete: if request.auth != null &&
+        resource.data.userId == request.auth.uid;
+
+      function validateNotificationCreation(data) {
+        return data.keys().hasAll(['userId', 'type', 'title', 'message']) &&
+               data.type in ['petition_approved', 'petition_rejected', 'petition_paused', 'signature_milestone', 'petition_status_change', 'new_comment', 'petition_update'] &&
+               data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+               data.message is string && data.message.size() >= 1 && data.message.size() <= 500 &&
+               data.read == false;
+      }
+    }
+
+    // Rate limiting collection (internal use only)
+    match /rateLimits/{limitId} {
+      allow read, write: if false; // Only server-side access
+    }
+
+    // Blocked IPs collection (internal use only)
+    match /blockedIPs/{ipId} {
+      allow read, write: if false; // Only server-side access
+    }
+
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

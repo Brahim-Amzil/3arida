@@ -1,0 +1,27 @@
+{
+  "firestore": {
+    "database": "(default)",
+    "location": "europe-west1",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "hosting": {
+    "public": "out",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
