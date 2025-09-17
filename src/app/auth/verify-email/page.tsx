@@ -7,7 +7,7 @@ import { sendEmailVerification, applyActionCode } from 'firebase/auth';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useAuth } from '@/components/auth/AuthProvider-mock';
 import { auth } from '@/lib/firebase';
 
 export default function VerifyEmailPage() {

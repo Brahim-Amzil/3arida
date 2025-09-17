@@ -8,9 +8,9 @@ import QRUpgrade from '@/components/petitions/QRUpgrade';
 import QRCodeDisplay from '@/components/petitions/QRCodeDisplay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useAuth } from '@/components/auth/AuthProvider-mock';
 import { useAuthGuard } from '@/lib/auth-guards';
-import { getPetitionById } from '@/lib/petitions';
+import { getPetition } from '@/lib/petitions-mock';
 import { Petition } from '@/types/petition';
 
 export default function PetitionQRPage() {
@@ -33,7 +33,7 @@ export default function PetitionQRPage() {
         setLoading(true);
         setError('');
 
-        const petitionData = await getPetitionById(petitionId);
+        const petitionData = await getPetition(petitionId);
         if (!petitionData) {
           setError('Petition not found');
           return;

@@ -13,8 +13,8 @@ import PetitionComments from '@/components/petitions/PetitionComments';
 import { useRealtimePetition } from '@/hooks/useRealtimePetition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { getPetitionById, signPetition } from '@/lib/petitions';
+import { useAuth } from '@/components/auth/AuthProvider-mock';
+import { getPetition, signPetition } from '@/lib/petitions-mock';
 import {
   calculateProgress,
   getPetitionStatusColor,
@@ -33,19 +33,6 @@ export default function PetitionDetailPage() {
   const [showQRCode, setShowQRCode] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [signingLoading, setSigningLoading] = useState(false);
-      if (!petitionData) {
-        setError('Petition not found');
-        return;
-      }
-
-      setPetition(petitionData);
-    } catch (err: any) {
-      console.error('Error loading petition:', err);
-      setError('Failed to load petition');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSignPetition = () => {
     if (!user) {
@@ -571,16 +558,3 @@ export default function PetitionDetailPage() {
     </div>
   );
 }
-
-            {/* Comments Section */}
-            <PetitionComments petitionId={petition.id} />
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Enhanced Progress */}
-            <PetitionProgress
-              petition={petition}
-              variant="detailed"
-              showMilestones={true}
-            />

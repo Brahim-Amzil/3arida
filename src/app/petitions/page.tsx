@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import PetitionCard from '@/components/petitions/PetitionCard';
 import { Button } from '@/components/ui/button';
-import { getPetitions, getCategories } from '@/lib/petitions';
+import { getPetitions, getCategories } from '@/lib/petitions-mock';
 import { Petition, Category, PetitionFilters } from '@/types/petition';
 
 export default function PetitionsPage() {

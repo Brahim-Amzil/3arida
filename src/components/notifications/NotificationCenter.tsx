@@ -4,15 +4,51 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/components/auth/AuthProvider';
-import {
-  Notification,
-  subscribeToUserNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-  getNotificationIcon,
-  getNotificationColor,
-} from '@/lib/notifications';
+import { useAuth } from '@/components/auth/AuthProvider-mock';
+
+// Mock notification types and functions
+type NotificationType =
+  | 'petition_approved'
+  | 'petition_rejected'
+  | 'petition_paused'
+  | 'signature_milestone'
+  | 'petition_status_change'
+  | 'new_comment'
+  | 'petition_update';
+
+interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  data?: {
+    petitionId?: string;
+    petitionTitle?: string;
+    milestone?: number;
+    commentId?: string;
+    [key: string]: any;
+  };
+  read: boolean;
+  createdAt: Date;
+}
+
+const subscribeToUserNotifications = (userId: string, callback: (notifications: Notification[]) => void) => {
+  // Mock implementation - return empty notifications
+  callback([]);
+  return () => {}; // Unsubscribe function
+};
+
+const markNotificationAsRead = async (notificationId: string) => {
+  // Mock implementation
+};
+
+const markAllNotificationsAsRead = async (userId: string) => {
+  // Mock implementation
+};
+
+const getNotificationIcon = (type: NotificationType): string => '🔔';
+const getNotificationColor = (type: NotificationType): string => '#3B82F6';
 
 interface NotificationCenterProps {
   className?: string;

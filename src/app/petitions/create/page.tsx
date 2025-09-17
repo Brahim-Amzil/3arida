@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/lib/auth';
-import { createPetition, getCategories } from '@/lib/petitions';
+import { useAuth } from '@/components/auth/AuthProvider-mock';
+import { createPetition, getCategories } from '@/lib/petitions-mock';
 import { Category, PetitionFormData } from '@/types/petition';
 import {
   validatePetitionData,

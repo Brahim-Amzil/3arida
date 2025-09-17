@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { registerWithEmail, loginWithGoogle } from '@/lib/auth';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { registerWithEmail, loginWithGoogle } from '@/lib/auth-mock';
+import { useAuth } from '@/components/auth/AuthProvider-mock';
 
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, refreshAuth } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -100,6 +100,9 @@ export default function RegisterPage() {
       setError('');
 
       await loginWithGoogle();
+
+      // Refresh auth state
+      refreshAuth();
 
       // Redirect will happen automatically via useEffect
     } catch (err: any) {

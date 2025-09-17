@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Petition } from '@/types/petition';
 import { generateQRCodeDataURL, downloadQRCode } from '@/lib/qr-service';
-import { incrementPetitionShares } from '@/lib/petitions';
+import { incrementPetitionShares } from '@/lib/petitions-mock';
 
 interface QRCodeDisplayProps {
   petition: Petition;

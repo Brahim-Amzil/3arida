@@ -2,13 +2,26 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/auth/AuthProvider-mock';
+import { logout } from '@/lib/auth-mock';
 import { Button } from '@/components/ui/button';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 
 export default function Header() {
   const { user, userProfile, isAuthenticated, loading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsMobileMenuOpen(false);
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -68,6 +81,9 @@ export default function Header() {
                     {user?.email?.split('@')[0]}
                   </span>
                 </div>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Sign Out
+                </Button>
               </div>
             ) : (
               <div className="flex items-center space-x-3">
@@ -169,6 +185,14 @@ export default function Header() {
                         {user?.email?.split('@')[0]}
                       </span>
                     </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={handleLogout}
+                    >
+                      Sign Out
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-3">

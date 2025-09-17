@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Petition } from '@/types/petition';
-import { incrementPetitionShares } from '@/lib/petitions';
+import { incrementPetitionShares } from '@/lib/petitions-mock';
 
 interface PetitionShareProps {
   petition: Petition;

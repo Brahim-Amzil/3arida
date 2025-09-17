@@ -35,8 +35,8 @@ service cloud.firestore {
 
     function containsSpam(text) {
       return text.matches('.*https?://.*') || // Contains URLs
-             text.matches('.*\\b\\d{10,}\\b.*') || // Contains long numbers
-             text.matches('.*(.)\\1{10,}.*'); // Contains repeated characters
+             text.matches('.*\\\\b\\\\d{10,}\\\\b.*') || // Contains long numbers
+             text.matches('.*(.)(\\\\1){10,}.*'); // Contains repeated characters
     }
 
     function isValidPetitionTitle(title) {
@@ -64,7 +64,7 @@ service cloud.firestore {
       return name is string && 
              name.size() >= 2 && 
              name.size() <= 100 && 
-             name.matches('^[a-zA-ZÀ-ÿ\\u0600-\\u06FF\\s\'-]+$');
+             name.matches('^[a-zA-ZÀ-ÿ\\\\u0600-\\\\u06FF\\\\s\'-]+$');
     }
 
     function isValidComment(content) {

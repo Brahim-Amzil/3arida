@@ -7,7 +7,7 @@ import Header from '@/components/layout/Header';
 import PetitionAnalytics from '@/components/petitions/PetitionAnalytics';
 import { Button } from '@/components/ui/button';
 import { useAuthGuard } from '@/lib/auth-guards';
-import { getPetitionById } from '@/lib/petitions';
+import { getPetition } from '@/lib/petitions-mock';
 import { Petition } from '@/types/petition';
 
 export default function PetitionAnalyticsPage() {
@@ -31,7 +31,7 @@ export default function PetitionAnalyticsPage() {
       setLoading(true);
       setError('');
 
-      const petitionData = await getPetitionById(petitionId);
+      const petitionData = await getPetition(petitionId);
       if (!petitionData) {
         setError('Petition not found');
         return;

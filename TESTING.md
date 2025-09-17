@@ -2,6 +2,36 @@
 
 This guide covers how to test the 3arida petition platform locally and in different environments.
 
+## 🚨 Current Testing Status
+
+**Last Updated**: December 2024
+**Testing Coverage**: ~40% Complete
+
+### ⚠️ Known Issues Affecting Testing
+
+1. **Authentication Error**: Iterator interface issue with Firebase Auth (undici library conflict)
+   - Affects login/registration testing
+   - Development server shows authentication errors
+   - Workaround: Use Firebase emulators for testing
+
+2. **Missing Test Implementation**: 
+   - Unit tests not yet implemented
+   - Integration tests need setup
+   - E2E tests not configured
+
+3. **Incomplete Features**:
+   - Phone verification system not fully implemented
+   - Payment integration (Stripe) not yet added
+   - Real-time features partially implemented
+
+### 🔧 Testing Priorities
+
+1. Fix Firebase authentication issues
+2. Set up basic unit test framework
+3. Configure Firebase emulators for reliable testing
+4. Implement integration tests for core features
+5. Add E2E tests for critical user flows
+
 ## Prerequisites
 
 Before testing, make sure you have:
@@ -9,6 +39,7 @@ Before testing, make sure you have:
 1. **Node.js 18+** installed
 2. **Firebase CLI** installed (`npm install -g firebase-tools`)
 3. **Dependencies** installed (`npm install`)
+4. **Firebase Emulators** configured (recommended due to auth issues)
 
 ## Environment Setup
 
@@ -174,40 +205,47 @@ npm run type-check
 
 ### ✅ Core Features
 
-- [ ] User registration with email verification
-- [ ] User login (email/password and Google OAuth)
-- [ ] Password reset functionality
-- [ ] Phone verification for petition signing
-- [ ] Petition creation with media upload
-- [ ] Petition listing and filtering
-- [ ] Petition signing with duplicate prevention
-- [ ] QR code generation and upgrade
-- [ ] Admin dashboard and moderation
-- [ ] User role management
+- [x] User registration with email verification *(Implemented - Auth issues present)*
+- [x] User login (email/password and Google OAuth) *(Implemented - Auth issues present)*
+- [ ] Password reset functionality *(Not implemented)*
+- [ ] Phone verification for petition signing *(Partially implemented)*
+- [x] Petition creation with media upload *(Implemented)*
+- [x] Petition listing and filtering *(Implemented)*
+- [ ] Petition signing with duplicate prevention *(Partially implemented)*
+- [x] QR code generation and upgrade *(Basic implementation)*
+- [x] Admin dashboard and moderation *(Implemented)*
+- [x] User role management *(Implemented)*
 
-### ✅ Security Features
+### 🔒 Security Features
 
-- [ ] Input validation and sanitization
-- [ ] Rate limiting on sensitive operations
-- [ ] Content moderation for profanity/spam
-- [ ] CAPTCHA protection
-- [ ] IP tracking and duplicate prevention
-- [ ] Role-based access control
+- [x] Input validation and sanitization *(Basic implementation)*
+- [ ] Rate limiting on sensitive operations *(Not implemented)*
+- [ ] Content moderation for profanity/spam *(Not implemented)*
+- [ ] CAPTCHA protection *(Not implemented)*
+- [ ] IP tracking and duplicate prevention *(Not implemented)*
+- [x] Role-based access control *(Implemented)*
 
-### ✅ Real-time Features
+### ⚡ Real-time Features
 
-- [ ] Live signature count updates
-- [ ] Real-time notifications
-- [ ] Dashboard updates
-- [ ] Petition status changes
+- [ ] Live signature count updates *(Not implemented)*
+- [ ] Real-time notifications *(Not implemented)*
+- [ ] Dashboard updates *(Not implemented)*
+- [ ] Petition status changes *(Partially implemented)*
 
-### ✅ UI/UX
+### 🎨 UI/UX
 
-- [ ] Responsive design on mobile/tablet/desktop
-- [ ] Loading states and error handling
-- [ ] Form validation feedback
-- [ ] Accessibility compliance
-- [ ] Morocco-specific localization
+- [x] Responsive design on mobile/tablet/desktop *(Implemented)*
+- [x] Loading states and error handling *(Basic implementation)*
+- [x] Form validation feedback *(Implemented)*
+- [ ] Accessibility compliance *(Not tested)*
+- [ ] Morocco-specific localization *(Not implemented)*
+
+### 💳 Payment Features *(Not Implemented)*
+
+- [ ] Stripe integration for tiered pricing
+- [ ] QR code upgrade payments (10 MAD)
+- [ ] Subscription management
+- [ ] Payment webhooks and verification
 
 ## Common Issues and Solutions
 

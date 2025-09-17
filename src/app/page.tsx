@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import PetitionCard from '@/components/petitions/PetitionCard';
 import { Button } from '@/components/ui/button';
-import { getPetitions, getCategories } from '@/lib/petitions';
+import { getPetitions, getCategories } from '@/lib/petitions-mock';
 import { Petition, Category } from '@/types/petition';
 
 export default function HomePage() {
@@ -77,7 +77,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-green-600 font-semibold px-8 py-3"
+                  className="border-green-600 text-green-600 bg-white hover:bg-green-600 hover:text-white font-semibold px-8 py-3"
                 >
                   Discover Petitions
                 </Button>
