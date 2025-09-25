@@ -1,0 +1,81 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // DEVELOPMENT RULES - More permissive for testing
+    // TODO: Replace with production rules before deployment
+    
+    // Users collection - Allow authenticated users to read/write
+    match /users/{userId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Petitions collection - Allow public read and authenticated write
+    match /petitions/{petitionId} {
+      // Public read for all petitions
+      allow read: if true;
+      
+      // Authenticated users can create petitions
+      allow create: if request.auth != null;
+      
+      // Creators and authenticated users can update
+      allow update: if request.auth != null;
+      
+      // Creators and authenticated users can delete
+      allow delete: if request.auth != null;
+    }
+    
+    // Signatures collection - Allow public access for development
+    match /signatures/{signatureId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null;
+    }
+    
+    // Creator pages collection - Allow public read and authenticated write
+    match /creatorPages/{pageId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null;
+    }
+    
+    // Categories collection - Allow public read and authenticated write
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Comments collection - Allow public read and authenticated write
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null;
+    }
+    
+    // Notifications collection - Allow authenticated access
+    match /notifications/{notificationId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Moderators collection - Allow authenticated access
+    match /moderators/{moderatorId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Payments collection - Allow authenticated access
+    match /payments/{paymentId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // QR codes collection - Allow public read and authenticated write
+    match /qrCodes/{qrCodeId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Allow all other collections for development
+    match /{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
