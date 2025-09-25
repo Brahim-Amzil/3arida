@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/auth/AuthProvider-mock';
-import { logout } from '@/lib/auth-mock';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { logout } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 
@@ -70,6 +70,17 @@ export default function Header() {
                     Dashboard
                   </Button>
                 </Link>
+                {userProfile?.role === 'admin' && (
+                  <Link href="/admin">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-purple-600 hover:text-purple-700"
+                    >
+                      👑 Admin
+                    </Button>
+                  </Link>
+                )}
                 <NotificationCenter />
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -175,6 +186,20 @@ export default function Header() {
                         Dashboard
                       </Button>
                     </Link>
+                    {userProfile?.role === 'admin' && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-purple-600 hover:text-purple-700"
+                        >
+                          👑 Admin
+                        </Button>
+                      </Link>
+                    )}
                     <div className="flex items-center space-x-2 px-3 py-2">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                         <span className="text-green-600 font-medium text-sm">
@@ -185,9 +210,9 @@ export default function Header() {
                         {user?.email?.split('@')[0]}
                       </span>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="w-full justify-start"
                       onClick={handleLogout}
                     >

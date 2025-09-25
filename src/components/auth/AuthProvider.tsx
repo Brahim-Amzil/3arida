@@ -39,11 +39,17 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        setUser(firebaseUser);
+      console.log(
+        '🔐 Auth state changed:',
+        firebaseUser ? 'User logged in' : 'User logged out'
+      );
 
-        if (firebaseUser) {
-          // Fetch user profile from Firestore
+      setUser(firebaseUser);
+      setLoading(false); // Set loading to false immediately
+
+      if (firebaseUser) {
+        // Try to fetch user profile, but don't block the UI
+        try {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data();
@@ -56,23 +62,40 @@ export default function AuthProvider({ children }: AuthProviderProps) {
               verifiedPhone: userData.verifiedPhone || false,
               role: userData.role || 'user',
               creatorPageId: userData.creatorPageId,
-              createdAt: userData.createdAt?.toDate() || new Date(),
-              updatedAt: userData.updatedAt?.toDate(),
-              lastLoginAt: userData.lastLoginAt?.toDate(),
+              createdAt: userData.createdAt?.toDate?.() || new Date(),
+              updatedAt: userData.updatedAt?.toDate?.(),
+              lastLoginAt: userData.lastLoginAt?.toDate?.(),
               isActive: userData.isActive !== false,
             });
           } else {
-            // User document doesn't exist, clear profile
-            setUserProfile(null);
+            // Create a basic profile from Firebase user
+            setUserProfile({
+              id: firebaseUser.uid,
+              name: firebaseUser.displayName || '',
+              email: firebaseUser.email || '',
+              verifiedEmail: firebaseUser.emailVerified,
+              verifiedPhone: false,
+              role: 'user',
+              isActive: true,
+              createdAt: new Date(),
+            });
           }
-        } else {
-          setUserProfile(null);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          // Create a basic profile even if Firestore fails
+          setUserProfile({
+            id: firebaseUser.uid,
+            name: firebaseUser.displayName || '',
+            email: firebaseUser.email || '',
+            verifiedEmail: firebaseUser.emailVerified,
+            verifiedPhone: false,
+            role: 'user',
+            isActive: true,
+            createdAt: new Date(),
+          });
         }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
+      } else {
         setUserProfile(null);
-      } finally {
-        setLoading(false);
       }
     });
 

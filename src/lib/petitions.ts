@@ -119,6 +119,24 @@ export const createPetition = async (
       id: docRef.id,
     };
 
+    console.log('✅ Petition created successfully with ID:', docRef.id);
+    console.log('📄 Created petition data:', createdPetition);
+
+    // Verify the document was actually created by trying to read it immediately
+    try {
+      const verifyDoc = await getDoc(docRef);
+      if (verifyDoc.exists()) {
+        console.log('✅ Verification: Document exists in Firestore');
+        console.log('📄 Verification data:', verifyDoc.data());
+      } else {
+        console.log(
+          '❌ Verification: Document does not exist immediately after creation'
+        );
+      }
+    } catch (verifyError) {
+      console.log('❌ Verification error:', verifyError);
+    }
+
     return createdPetition;
   } catch (error) {
     console.error('Error creating petition:', error);
@@ -129,16 +147,103 @@ export const createPetition = async (
 /**
  * Get a petition by ID
  */
+export const getPetitionById = async (id: string): Promise<Petition | null> => {
+  return getPetition(id);
+};
+
 export const getPetition = async (
-  petitionId: string
+  petitionIdOrSlug: string,
+  retryCount: number = 0
 ): Promise<Petition | null> => {
   try {
-    const docRef = doc(db, PETITIONS_COLLECTION, petitionId);
+    console.log(
+      '🔍 Getting petition with ID/Slug:',
+      petitionIdOrSlug,
+      retryCount > 0 ? `(retry ${retryCount})` : ''
+    );
+
+    // First, try direct lookup (in case it's a full document ID)
+    const docRef = doc(db, PETITIONS_COLLECTION, petitionIdOrSlug);
     const docSnap = await getDoc(docRef);
 
-    if (!docSnap.exists()) {
+    if (docSnap.exists()) {
+      console.log('✅ Petition found by direct ID lookup');
+    } else {
+      // If direct lookup fails, try to find by ID suffix (for slug-based lookups)
+      console.log('🔍 Direct lookup failed, trying to find by ID suffix...');
+
+      // Extract potential ID suffix from slug
+      const parts = petitionIdOrSlug.split('-');
+      const idSuffix = parts[parts.length - 1];
+
+      if (idSuffix && idSuffix.length >= 8) {
+        // Query all petitions and find one with matching ID suffix
+        const petitionsQuery = query(
+          collection(db, PETITIONS_COLLECTION),
+          limit(100) // Limit to avoid large queries
+        );
+
+        const querySnapshot = await getDocs(petitionsQuery);
+        let foundDoc = null;
+
+        querySnapshot.forEach((doc) => {
+          if (doc.id.endsWith(idSuffix)) {
+            foundDoc = doc;
+          }
+        });
+
+        if (foundDoc) {
+          console.log('✅ Petition found by ID suffix:', foundDoc.id);
+          const data = foundDoc.data();
+          const petition: Petition = {
+            id: foundDoc.id,
+            title: data.title,
+            description: data.description,
+            category: data.category,
+            subcategory: data.subcategory,
+            targetSignatures: data.targetSignatures,
+            currentSignatures: data.currentSignatures || 0,
+            status: data.status,
+            creatorId: data.creatorId,
+            creatorPageId: data.creatorPageId,
+            mediaUrls: data.mediaUrls || [],
+            qrCodeUrl: data.qrCodeUrl,
+            hasQrCode: data.hasQrCode || false,
+            pricingTier: data.pricingTier,
+            amountPaid: data.amountPaid || 0,
+            paymentStatus: data.paymentStatus || 'unpaid',
+            location: data.location,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            viewCount: data.viewCount || 0,
+            shareCount: data.shareCount || 0,
+            commentCount: data.commentCount || 0,
+            tags: data.tags || [],
+            featured: data.featured || false,
+            urgent: data.urgent || false,
+            verified: data.verified || false,
+          };
+          return petition;
+        }
+      }
+
+      // If not found and this is the first attempt, retry after a longer delay
+      if (retryCount === 0) {
+        console.log('❌ Petition not found, retrying in 3 seconds...');
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        return getPetition(petitionIdOrSlug, 1);
+      }
+      // If still not found, try one more time with an even longer delay
+      if (retryCount === 1) {
+        console.log('❌ Petition still not found, final retry in 5 seconds...');
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        return getPetition(petitionIdOrSlug, 2);
+      }
+      console.log('❌ Petition not found in database after all retries');
       return null;
     }
+
+    console.log('✅ Petition found, processing data...');
 
     const data = docSnap.data();
     const petition: Petition = {
@@ -163,11 +268,19 @@ export const getPetition = async (
       location: data.location,
 
       // Metadata
-      createdAt: data.createdAt.toDate(),
-      updatedAt: data.updatedAt.toDate(),
-      approvedAt: data.approvedAt?.toDate(),
-      pausedAt: data.pausedAt?.toDate(),
-      deletedAt: data.deletedAt?.toDate(),
+      createdAt: data.createdAt?.toDate
+        ? data.createdAt.toDate()
+        : data.createdAt || new Date(),
+      updatedAt: data.updatedAt?.toDate
+        ? data.updatedAt.toDate()
+        : data.updatedAt || new Date(),
+      approvedAt: data.approvedAt?.toDate
+        ? data.approvedAt.toDate()
+        : data.approvedAt,
+      pausedAt: data.pausedAt?.toDate ? data.pausedAt.toDate() : data.pausedAt,
+      deletedAt: data.deletedAt?.toDate
+        ? data.deletedAt.toDate()
+        : data.deletedAt,
 
       // Analytics
       viewCount: data.viewCount || 0,
@@ -182,10 +295,15 @@ export const getPetition = async (
       isActive: data.isActive !== false,
     };
 
+    console.log('✅ Petition processed successfully:', petition.id);
     return petition;
   } catch (error) {
-    console.error('Error getting petition:', error);
-    throw new Error('Failed to load petition. Please try again.');
+    console.error('❌ Error getting petition:', error);
+    console.error('❌ Error details:', {
+      petitionId,
+      error: error instanceof Error ? error.message : error,
+    });
+    return null; // Return null instead of throwing to avoid breaking the UI
   }
 };
 
@@ -896,15 +1014,69 @@ export const getCategories = async (): Promise<Category[]> => {
       }
     });
 
+    // If no categories found in database, return default categories
+    if (categories.length === 0) {
+      console.log('No categories found in database, using defaults');
+      return DEFAULT_CATEGORIES.map((cat, index) => ({
+        id: `default-${index}`,
+        ...cat,
+        petitionCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+    }
+
     // Sort by name
     categories.sort((a, b) => a.name.localeCompare(b.name));
 
     return categories;
   } catch (error) {
     console.error('Error getting categories:', error);
-    throw new Error('Failed to load categories. Please try again.');
+    // Return default categories as fallback
+    return DEFAULT_CATEGORIES.map((cat, index) => ({
+      id: `default-${index}`,
+      ...cat,
+      petitionCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
   }
 };
 
 // Auto-initialize categories when module loads
 initializeCategories();
+/**
+ * Get petition analytics
+ */
+export const getPetitionAnalytics = async (petitionId: string) => {
+  try {
+    // Mock implementation for now
+    // In production, this would aggregate signature data
+    return {
+      totalSignatures: 0,
+      dailySignatures: [],
+      topLocations: [],
+      signatureGrowth: 0,
+    };
+  } catch (error) {
+    console.error('Error getting petition analytics:', error);
+    throw new Error('Failed to load analytics. Please try again.');
+  }
+};
+
+/**
+ * Get related petitions by category
+ */
+export const getRelatedPetitions = async (
+  category: string,
+  excludeId?: string
+) => {
+  try {
+    // Mock implementation for now
+    // In production, this would find similar petitions
+    return [];
+  } catch (error) {
+    console.error('Error getting related petitions:', error);
+    return [];
+  }
+};

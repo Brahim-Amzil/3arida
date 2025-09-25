@@ -272,6 +272,22 @@ export const getPetitionUrl = (petition: Petition): string => {
   return `/petitions/${slug}`;
 };
 
+// Extract petition ID from slug
+export const extractPetitionIdFromSlug = (slug: string): string => {
+  if (!slug) return '';
+
+  // The slug format is: "title-words-XXXXXXXX" where XXXXXXXX is the last 8 chars of the ID
+  const parts = slug.split('-');
+  const idSuffix = parts[parts.length - 1];
+
+  // The ID suffix should be 8 characters long
+  if (idSuffix && idSuffix.length >= 8) {
+    return idSuffix;
+  }
+
+  return '';
+};
+
 // Validate Moroccan phone number
 export const validateMoroccanPhone = (phone: string): boolean => {
   // Remove all non-digits

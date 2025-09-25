@@ -66,7 +66,7 @@ export interface PetitionFormData {
   targetSignatures: number;
   mediaUrls: string[];
   location?: {
-    country: string;
+    country?: string;
     city?: string;
     region?: string;
   };

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Petition } from '@/types/petition';
-import { incrementPetitionShares } from '@/lib/petitions-mock';
+import { incrementPetitionShares } from '@/lib/petitions';
 
 interface PetitionShareProps {
   petition: Petition;
@@ -162,7 +162,7 @@ export default function PetitionShare({
         </div>
 
         {/* Native Share (if available) */}
-        {typeof window !== 'undefined' && navigator.share && (
+        {typeof window !== 'undefined' && navigator.share !== undefined && (
           <Button
             onClick={handleNativeShare}
             className="w-full flex items-center justify-center gap-2"

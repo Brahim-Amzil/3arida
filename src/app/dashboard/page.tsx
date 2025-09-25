@@ -7,9 +7,9 @@ import Header from '@/components/layout/Header';
 import PetitionCard from '@/components/petitions/PetitionCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/components/auth/AuthProvider-mock';
-import { logout } from '@/lib/auth-mock';
-import { getUserPetitions } from '@/lib/petitions-mock';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { logout } from '@/lib/auth';
+import { getUserPetitions } from '@/lib/petitions';
 import { Petition } from '@/types/petition';
 
 export default function DashboardPage() {

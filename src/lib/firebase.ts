@@ -12,6 +12,12 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Debug: Log Firebase configuration
+console.log('🔧 Firebase Config:', {
+  projectId: firebaseConfig.projectId,
+  authDomain: firebaseConfig.authDomain,
+});
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
@@ -19,5 +25,9 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// Debug: Log database info
+console.log('🔧 Firestore app:', app.name);
+console.log('🔧 Firestore project:', app.options.projectId);
 
 export default app;

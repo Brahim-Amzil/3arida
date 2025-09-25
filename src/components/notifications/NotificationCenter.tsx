@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/components/auth/AuthProvider-mock';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 // Mock notification types and functions
 type NotificationType =
@@ -33,7 +33,10 @@ interface Notification {
   createdAt: Date;
 }
 
-const subscribeToUserNotifications = (userId: string, callback: (notifications: Notification[]) => void) => {
+const subscribeToUserNotifications = (
+  userId: string,
+  callback: (notifications: Notification[]) => void
+) => {
   // Mock implementation - return empty notifications
   callback([]);
   return () => {}; // Unsubscribe function

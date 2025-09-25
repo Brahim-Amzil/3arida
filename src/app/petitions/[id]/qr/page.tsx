@@ -8,9 +8,9 @@ import QRUpgrade from '@/components/petitions/QRUpgrade';
 import QRCodeDisplay from '@/components/petitions/QRCodeDisplay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/components/auth/AuthProvider-mock';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { useAuthGuard } from '@/lib/auth-guards';
-import { getPetition } from '@/lib/petitions-mock';
+import { getPetition } from '@/lib/petitions';
 import { Petition } from '@/types/petition';
 
 export default function PetitionQRPage() {
@@ -40,7 +40,7 @@ export default function PetitionQRPage() {
         }
 
         // Check if user owns this petition
-        if (petitionData.createdBy !== user?.uid) {
+        if (petitionData.creatorId !== user?.uid) {
           setError('You can only manage QR codes for your own petitions');
           return;
         }

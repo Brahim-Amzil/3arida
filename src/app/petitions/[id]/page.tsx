@@ -13,8 +13,8 @@ import PetitionComments from '@/components/petitions/PetitionComments';
 import { useRealtimePetition } from '@/hooks/useRealtimePetition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/components/auth/AuthProvider-mock';
-import { getPetition, signPetition } from '@/lib/petitions-mock';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { getPetitionById, signPetition } from '@/lib/petitions';
 import {
   calculateProgress,
   getPetitionStatusColor,
@@ -25,7 +25,7 @@ import { Petition } from '@/types/petition';
 export default function PetitionDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const petitionId = params?.id as string;
+  const petitionId = params?.id as string; // This can be either a full ID or a slug
   const { user, userProfile } = useAuth();
 
   const { petition, loading, error } = useRealtimePetition(petitionId);
@@ -53,23 +53,16 @@ export default function PetitionDetailPage() {
       setSigningLoading(true);
 
       await signPetition(petition.id, {
-        signerName: userProfile?.name || user.displayName || 'Anonymous',
-        signerPhone: phoneNumber,
-        signerLocation: {
+        name: userProfile?.name || user.displayName || 'Anonymous',
+        phone: phoneNumber,
+        location: {
           country: 'Morocco',
         },
         comment: '',
       });
 
-      // Update local petition state
-      setPetition((prev) =>
-        prev
-          ? {
-              ...prev,
-              currentSignatures: prev.currentSignatures + 1,
-            }
-          : null
-      );
+      // The petition will be updated via real-time listener
+      // No need to manually update state
 
       setShowSigningFlow(false);
 
@@ -172,9 +165,8 @@ export default function PetitionDetailPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full">
             <PhoneVerification
-              onVerificationComplete={handlePhoneVerified}
+              onVerified={handlePhoneVerified}
               onCancel={() => setShowSigningFlow(false)}
-              petitionTitle={petition.title}
             />
           </div>
         </div>

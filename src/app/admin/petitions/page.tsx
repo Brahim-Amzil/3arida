@@ -299,9 +299,11 @@ export default function AdminPetitionsPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {petition.title}
-                        </h3>
+                        <Link href={`/admin/petitions/${petition.id}`}>
+                          <h3 className="text-lg font-semibold text-gray-900 hover:text-green-600 cursor-pointer">
+                            {petition.title}
+                          </h3>
+                        </Link>
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             petition.status === 'pending'
@@ -359,11 +361,8 @@ export default function AdminPetitionsPage() {
 
                     <div className="ml-6 flex flex-col gap-2">
                       <Button size="sm" variant="outline" asChild>
-                        <Link
-                          href={`/petitions/${petition.id}`}
-                          target="_blank"
-                        >
-                          View
+                        <Link href={`/admin/petitions/${petition.id}`}>
+                          Review
                         </Link>
                       </Button>
 

@@ -7,7 +7,7 @@ import Header from '@/components/layout/Header';
 import PetitionAnalytics from '@/components/petitions/PetitionAnalytics';
 import { Button } from '@/components/ui/button';
 import { useAuthGuard } from '@/lib/auth-guards';
-import { getPetition } from '@/lib/petitions-mock';
+import { getPetition } from '@/lib/petitions';
 import { Petition } from '@/types/petition';
 
 export default function PetitionAnalyticsPage() {
@@ -38,7 +38,7 @@ export default function PetitionAnalyticsPage() {
       }
 
       // Check if user owns this petition
-      if (petitionData.createdBy !== user?.uid) {
+      if (petitionData.creatorId !== user?.uid) {
         setError('You can only view analytics for your own petitions');
         return;
       }

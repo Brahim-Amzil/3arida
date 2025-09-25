@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/auth/AuthProvider-mock';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { User } from '@/types/petition';
 
 // Types for role checking

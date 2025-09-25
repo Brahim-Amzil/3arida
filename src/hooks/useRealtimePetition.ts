@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPetition } from '@/lib/petitions-mock';
+import { getPetition } from '@/lib/petitions';
 import { Petition } from '@/types/petition';
 
 export const useRealtimePetition = (petitionId: string) => {
@@ -19,7 +19,7 @@ export const useRealtimePetition = (petitionId: string) => {
       try {
         setLoading(true);
         const petitionData = await getPetition(petitionId);
-        
+
         if (petitionData) {
           setPetition(petitionData);
           setError('');

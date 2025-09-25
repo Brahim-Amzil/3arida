@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import PetitionCard from '@/components/petitions/PetitionCard';
 import { Button } from '@/components/ui/button';
-import { getPetitions, getCategories } from '@/lib/petitions-mock';
+import { getPetitions, getCategories } from '@/lib/petitions';
 import { Petition, Category } from '@/types/petition';
 
 export default function HomePage() {
@@ -19,24 +19,40 @@ export default function HomePage() {
     const loadData = async () => {
       try {
         setLoading(true);
+        setError('');
 
-        // Load featured petitions (most signed)
-        const featuredResult = await getPetitions(
-          { sortBy: 'signatures', sortOrder: 'desc' },
-          { page: 1, limit: 3, total: 0, hasMore: false }
-        );
-        setFeaturedPetitions(featuredResult.petitions);
+        // Load featured petitions (most signed) - with error handling
+        try {
+          const featuredResult = await getPetitions(
+            { sortBy: 'signatures', sortOrder: 'desc' },
+            { page: 1, limit: 3, total: 0, hasMore: false }
+          );
+          setFeaturedPetitions(featuredResult.petitions || []);
+        } catch (err) {
+          console.error('Error loading featured petitions:', err);
+          setFeaturedPetitions([]);
+        }
 
-        // Load recent petitions
-        const recentResult = await getPetitions(
-          { sortBy: 'recent', sortOrder: 'desc' },
-          { page: 1, limit: 6, total: 0, hasMore: false }
-        );
-        setRecentPetitions(recentResult.petitions);
+        // Load recent petitions - with error handling
+        try {
+          const recentResult = await getPetitions(
+            { sortBy: 'recent', sortOrder: 'desc' },
+            { page: 1, limit: 6, total: 0, hasMore: false }
+          );
+          setRecentPetitions(recentResult.petitions || []);
+        } catch (err) {
+          console.error('Error loading recent petitions:', err);
+          setRecentPetitions([]);
+        }
 
-        // Load categories
-        const categoriesData = await getCategories();
-        setCategories(categoriesData.slice(0, 8)); // Show first 8 categories
+        // Load categories - with error handling
+        try {
+          const categoriesData = await getCategories();
+          setCategories(categoriesData.slice(0, 8)); // Show first 8 categories
+        } catch (err) {
+          console.error('Error loading categories:', err);
+          setCategories([]); // Continue without categories
+        }
       } catch (err) {
         console.error('Error loading home page data:', err);
         setError('Failed to load petitions. Please try again.');
@@ -57,7 +73,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Make Change Happen in Morocco
+              ######### ##### #######
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-green-100 max-w-3xl mx-auto">
               Join thousands of citizens creating petitions and making their

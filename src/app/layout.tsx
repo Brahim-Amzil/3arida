@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import AuthProvider from '@/components/auth/AuthProvider-mock';
+import AuthProvider from '@/components/auth/AuthProvider';
+import { ProductionMonitoringProvider } from '@/components/monitoring/ProductionMonitoringProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -67,9 +68,11 @@ export default function RootLayout({
         <meta name="theme-color" content="#22c55e" />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <div className="min-h-screen bg-gray-50">{children}</div>
-        </AuthProvider>
+        <ProductionMonitoringProvider>
+          <AuthProvider>
+            <div className="min-h-screen bg-gray-50">{children}</div>
+          </AuthProvider>
+        </ProductionMonitoringProvider>
       </body>
     </html>
   );
