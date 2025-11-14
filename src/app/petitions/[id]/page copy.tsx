@@ -1,0 +1,1233 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+import PhoneVerification from '@/components/auth/PhoneVerification';
+import QRCodeDisplay from '@/components/petitions/QRCodeDisplay';
+import PetitionProgress from '@/components/petitions/PetitionProgress';
+import PetitionShare from '@/components/petitions/PetitionShare';
+import PetitionComments from '@/components/petitions/PetitionComments';
+import PetitionManagement from '@/components/petitions/PetitionManagement';
+import { useRealtimePetition } from '@/hooks/useRealtimePetition';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/components/auth/AuthProvider';
+import {
+  getPetitionById,
+  signPetition,
+  updatePetitionStatus,
+  getUserById,
+  deletePetitionByCreator,
+  archivePetition,
+  requestPetitionDeletion,
+} from '@/lib/petitions';
+import {
+  calculateProgress,
+  getPetitionStatusColor,
+  getPetitionStatusLabel,
+} from '@/lib/petition-utils';
+import PetitionAdminActions from '@/components/admin/PetitionAdminActions';
+import { Petition, User } from '@/types/petition';
+import { notifyPetitionStatusChange } from '@/lib/notifications';
+import { Check, X, Pause, Play, Archive, Trash2 } from 'lucide-react';
+import { isAdmin, isModerator, isModeratorOrAdmin } from '@/lib/auth-guards';
+import NotificationAlert, {
+  NotificationAlertData,
+} from '@/components/notifications/NotificationAlert';
+import { useSearchParams } from 'next/navigation';
+
+export default function PetitionDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const petitionId = params?.id as string; // This can be either a full ID or a slug
+  const { user, userProfile } = useAuth();
+
+  const { petition, loading, error } = useRealtimePetition(petitionId);
+  const [showSigningFlow, setShowSigningFlow] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [signingLoading, setSigningLoading] = useState(false);
+  const [adminActionLoading, setAdminActionLoading] = useState(false);
+  const [notificationAlert, setNotificationAlert] =
+    useState<NotificationAlertData | null>(null);
+  const [creator, setCreator] = useState<User | null>(null);
+  const [creatorLoading, setCreatorLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    'petition' | 'publisher' | 'comments' | 'signees'
+  >('petition');
+  const [commentsCount, setCommentsCount] = useState(0);
+
+  // Check if current user is admin/moderator
+  const isAdmin =
+    userProfile &&
+    (userProfile.role === 'admin' || userProfile.role === 'moderator');
+
+  // Fetch creator information when petition is loaded
+  useEffect(() => {
+    const fetchCreator = async () => {
+      if (petition?.creatorId && !creator && !creatorLoading) {
+        setCreatorLoading(true);
+        try {
+          const creatorData = await getUserById(petition.creatorId);
+          setCreator(creatorData);
+        } catch (error) {
+          console.error('Error fetching creator:', error);
+        } finally {
+          setCreatorLoading(false);
+        }
+      }
+    };
+
+    fetchCreator();
+  }, [petition?.creatorId, creator, creatorLoading]);
+
+  // Fetch comments count when petition is loaded
+  useEffect(() => {
+    const fetchCommentsCount = async () => {
+      if (!petition?.id) return;
+
+      try {
+        const { collection, query, where, getCountFromServer } = await import(
+          'firebase/firestore'
+        );
+        const { db } = await import('@/lib/firebase');
+
+        const commentsRef = collection(db, 'comments');
+        const commentsQuery = query(
+          commentsRef,
+          where('petitionId', '==', petition.id)
+        );
+
+        const snapshot = await getCountFromServer(commentsQuery);
+        setCommentsCount(snapshot.data().count);
+      } catch (error) {
+        console.error('Error fetching comments count:', error);
+      }
+    };
+
+    fetchCommentsCount();
+  }, [petition?.id]);
+
+  // Check for notification parameters in URL and show alert
+  useEffect(() => {
+    if (!petition) return;
+
+    const notifType = searchParams.get('notif');
+    const notifReason = searchParams.get('reason');
+
+    console.log('🔍 Checking for notification parameters:', {
+      notifType,
+      notifReason,
+      hasSearchParams: !!searchParams,
+      allParams: Object.fromEntries(searchParams.entries()),
+    });
+
+    if (notifType) {
+      console.log('✅ Found notification type:', notifType);
+      let alertData: NotificationAlertData | null = null;
+
+      switch (notifType) {
+        case 'approved':
+          alertData = {
+            type: 'approved',
+            title: 'Petition Approved!',
+            message:
+              'Your petition has been approved by our moderation team and is now live on the platform.',
+            reason: notifReason || undefined,
+            timestamp: new Date(),
+          };
+          break;
+
+        case 'rejected':
+          alertData = {
+            type: 'rejected',
+            title: 'Petition Rejected',
+            message: 'Your petition has been rejected by our moderation team.',
+            reason: notifReason || undefined,
+            timestamp: new Date(),
+          };
+          break;
+
+        case 'paused':
+          alertData = {
+            type: 'paused',
+            title: 'Petition Paused',
+            message:
+              'Your petition has been temporarily paused by our moderation team.',
+            reason: notifReason || undefined,
+            timestamp: new Date(),
+          };
+          break;
+
+        case 'deleted':
+          alertData = {
+            type: 'deleted',
+            title: 'Petition Deleted',
+            message: 'Your petition has been removed from the platform.',
+            reason: notifReason || undefined,
+            timestamp: new Date(),
+          };
+          break;
+
+        case 'archived':
+          alertData = {
+            type: 'archived',
+            title: 'Petition Archived',
+            message: 'Your petition has been archived.',
+            reason: notifReason || undefined,
+            timestamp: new Date(),
+          };
+          break;
+
+        case 'deletion_approved':
+          alertData = {
+            type: 'deletion_approved',
+            title: 'Deletion Request Approved',
+            message:
+              'Your deletion request has been approved. The petition has been removed.',
+            reason: notifReason || undefined,
+            timestamp: new Date(),
+          };
+          break;
+
+        case 'deletion_denied':
+          alertData = {
+            type: 'deletion_denied',
+            title: 'Deletion Request Denied',
+            message:
+              'Your deletion request has been denied by our moderation team.',
+            reason: notifReason || undefined,
+            timestamp: new Date(),
+          };
+          break;
+      }
+
+      if (alertData) {
+        console.log('✅ Setting notification alert:', alertData);
+        setNotificationAlert(alertData);
+        // Clean up URL parameters
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      } else {
+        console.log(
+          '❌ No alert data created for notification type:',
+          notifType
+        );
+      }
+    } else {
+      console.log('ℹ️ No notification type found in URL');
+    }
+  }, [petition, searchParams]);
+
+  const handleSignPetition = () => {
+    if (!user) {
+      // Redirect to login with return URL
+      router.push(
+        `/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`
+      );
+      return;
+    }
+
+    setShowSigningFlow(true);
+  };
+
+  const handlePhoneVerified = async (phoneNumber: string) => {
+    if (!petition || !user) return;
+
+    try {
+      setSigningLoading(true);
+
+      await signPetition(petition.id, {
+        name: userProfile?.name || user.displayName || 'Anonymous',
+        phone: phoneNumber,
+        location: {
+          country: 'Morocco',
+        },
+        comment: '',
+      });
+
+      // The petition will be updated via real-time listener
+      // No need to manually update state
+
+      setShowSigningFlow(false);
+
+      // Show success message
+      alert('Thank you for signing this petition!');
+    } catch (err: any) {
+      console.error('Error signing petition:', err);
+      alert(err.message || 'Failed to sign petition. Please try again.');
+    } finally {
+      setSigningLoading(false);
+    }
+  };
+
+  const handleShare = () => {
+    // Always show the comprehensive share modal
+    setShowShareModal(true);
+  };
+
+  // Admin function to update petition status
+  const handleUpdatePetitionStatus = async (
+    newStatus: 'approved' | 'rejected' | 'paused' | 'deleted' | 'archived'
+  ) => {
+    if (!isModeratorOrAdmin(userProfile) || !petition || !userProfile) return;
+
+    setAdminActionLoading(true);
+    try {
+      await updatePetitionStatus(petition.id, newStatus, userProfile.id);
+
+      // Send notification about status change (don't fail if this errors)
+      try {
+        await notifyPetitionStatusChange(
+          petition.id,
+          petition.creatorId,
+          petition.title,
+          newStatus
+        );
+      } catch (notifError) {
+        console.warn(
+          'Failed to send notification, but status updated:',
+          notifError
+        );
+      }
+
+      alert(`Petition ${newStatus} successfully!`);
+
+      // Refresh the page to show updated status
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating petition:', error);
+      alert('Error updating petition status');
+      setAdminActionLoading(false);
+    }
+  };
+
+  // Archive petition function (admin)
+  const archivePetitionAdmin = async () => {
+    if (!isModeratorOrAdmin(userProfile)) return;
+
+    if (confirm('Are you sure you want to archive this petition?')) {
+      await handleUpdatePetitionStatus('archived');
+    }
+  };
+
+  // Delete petition function
+  const deletePetition = async () => {
+    if (!isModeratorOrAdmin(userProfile)) return;
+
+    if (
+      confirm(
+        'Are you sure you want to delete this petition? This action cannot be undone.'
+      )
+    ) {
+      await handleUpdatePetitionStatus('deleted');
+    }
+  };
+
+  // Creator functions for petition management
+  const handleCreatorDelete = async () => {
+    if (!user || !petition) return;
+
+    try {
+      await deletePetitionByCreator(petition.id, user.uid);
+      alert('Petition deleted successfully');
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error('Error deleting petition:', error);
+      alert(error.message || 'Failed to delete petition');
+    }
+  };
+
+  const handleCreatorArchive = async () => {
+    if (!user || !petition) return;
+
+    try {
+      await archivePetition(petition.id, user.uid);
+      alert('Petition archived successfully');
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error('Error archiving petition:', error);
+      alert(error.message || 'Failed to archive petition');
+    }
+  };
+
+  const handleCreatorRequestDeletion = async (reason: string) => {
+    if (!user || !petition) return;
+
+    try {
+      await requestPetitionDeletion(petition.id, user.uid, reason);
+
+      // Notify admins of the deletion request
+      try {
+        const { notifyAdminsOfDeletionRequest } = await import(
+          '@/lib/notifications'
+        );
+        await notifyAdminsOfDeletionRequest(
+          petition.id,
+          petition.title,
+          user.uid,
+          reason,
+          petition.currentSignatures
+        );
+      } catch (notifError) {
+        console.error('Error sending notification to admins:', notifError);
+      }
+    } catch (error: any) {
+      console.error('Error requesting deletion:', error);
+      throw error;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !petition) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-2xl mx-auto px-4 py-12">
+          <Card>
+            <CardContent className="py-12 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Petition Not Found
+              </h2>
+              <p className="text-gray-600 mb-6">
+                {error || 'The petition you are looking for does not exist.'}
+              </p>
+              <Button asChild>
+                <Link href="/petitions">Browse Petitions</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const progress = calculateProgress(
+    petition.currentSignatures,
+    petition.targetSignatures
+  );
+  const statusColor = getPetitionStatusColor(petition.status);
+  const statusLabel = getPetitionStatusLabel(petition.status);
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header />
+
+      {/* Phone Verification Modal */}
+      {showSigningFlow && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <PhoneVerification
+              onVerified={handlePhoneVerified}
+              onCancel={() => setShowSigningFlow(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {showQRCode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Share QR Code
+              </h3>
+              <button
+                onClick={() => setShowQRCode(false)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <QRCodeDisplay
+              petition={petition}
+              size={250}
+              branded={true}
+              downloadable={true}
+              shareable={true}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <PetitionShare
+            petition={petition}
+            onClose={() => setShowShareModal(false)}
+          />
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <nav className="flex items-center space-x-2 text-sm text-gray-500">
+            <Link href="/" className="hover:text-gray-700">
+              Home
+            </Link>
+            <span>/</span>
+            <Link href="/petitions" className="hover:text-gray-700">
+              Petitions
+            </Link>
+            <span>/</span>
+            <span className="text-gray-900">{petition.title}</span>
+          </nav>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
+          {/* Main Content */}
+          <div className="w-full min-w-0 space-y-6">
+            {/* Notification Alert (if coming from notification) */}
+            {notificationAlert && (
+              <NotificationAlert
+                data={notificationAlert}
+                onClose={() => setNotificationAlert(null)}
+              />
+            )}
+
+            {/* Petition Header */}
+            <Card
+              className="w-full"
+              style={{ width: '100%', maxWidth: '100%' }}
+            >
+              <CardContent className="p-6" style={{ width: '100%' }}>
+                {/* 1. Title + Meta (Author, Date) */}
+                <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                  {petition.title}
+                </h1>
+
+                <div className="flex items-center gap-3 mb-6 w-full">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800`}
+                  >
+                    {statusLabel}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {petition.category}
+                  </span>
+                  <span className="text-sm text-gray-500">•</span>
+                  <span className="text-sm text-gray-600">
+                    By{' '}
+                    <span className="font-medium">
+                      {creatorLoading
+                        ? 'Loading...'
+                        : creator?.name || 'Unknown User'}
+                    </span>
+                  </span>
+                  <span className="text-sm text-gray-500">•</span>
+                  <span className="text-sm text-gray-500">
+                    {petition.createdAt.toLocaleDateString()}
+                  </span>
+                </div>
+
+                {/* 2. Petition Media (Images only - videos appear after description) */}
+                {petition.mediaUrls && petition.mediaUrls.length > 0 && (
+                  <div className="mb-6 space-y-4">
+                    {/* Images and Videos from mediaUrls */}
+                    {petition.mediaUrls.map((url, index) => {
+                      const isVideo =
+                        url.includes('.mp4') ||
+                        url.includes('.webm') ||
+                        url.includes('.ogg') ||
+                        url.includes('video');
+
+                      return isVideo ? (
+                        <video
+                          key={index}
+                          controls
+                          className="w-full rounded-lg"
+                        >
+                          <source src={url} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                      ) : (
+                        <div
+                          key={index}
+                          className="relative w-full h-80 bg-gray-100 rounded-lg overflow-hidden"
+                        >
+                          <Image
+                            src={url}
+                            alt={petition.title}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* 5. Signatures Progress Bar */}
+                <div className="mb-6 w-full">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-2xl font-bold text-gray-900">
+                      {petition.currentSignatures.toLocaleString()}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      {progress.toFixed(1)}% of{' '}
+                      {petition.targetSignatures.toLocaleString()} goal
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className="bg-green-600 h-3 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.min(progress, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {petition.targetSignatures - petition.currentSignatures > 0
+                      ? `${(
+                          petition.targetSignatures - petition.currentSignatures
+                        ).toLocaleString()} more signatures needed`
+                      : 'Goal reached! 🎉'}
+                  </p>
+                </div>
+
+                {/* 6. Action Buttons */}
+                <div className="flex gap-3 mb-6 w-full">
+                  <Button
+                    onClick={handleSignPetition}
+                    disabled={petition.status !== 'approved' || signingLoading}
+                    className="flex-1"
+                  >
+                    {signingLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Signing...
+                      </>
+                    ) : (
+                      'Sign This Petition'
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleShare}
+                    className="flex items-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                      />
+                    </svg>
+                    Share
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowQRCode(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                      />
+                    </svg>
+                    QR Code
+                  </Button>
+                </div>
+
+                {/* Tab Navigation */}
+                <div className="border-b border-gray-200 mb-6">
+                  <nav className="flex space-x-8">
+                    <button
+                      onClick={() => setActiveTab('petition')}
+                      className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                        activeTab === 'petition'
+                          ? 'border-green-600 text-green-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Petition
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('publisher')}
+                      className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                        activeTab === 'publisher'
+                          ? 'border-green-600 text-green-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Publisher
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('comments')}
+                      className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors relative ${
+                        activeTab === 'comments'
+                          ? 'border-green-600 text-green-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        Comments
+                        {commentsCount > 0 && (
+                          <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-red-500 rounded-full">
+                            {commentsCount > 99 ? '99+' : commentsCount}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('signees')}
+                      className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                        activeTab === 'signees'
+                          ? 'border-green-600 text-green-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Signees
+                    </button>
+                  </nav>
+                </div>
+
+                {/* Tab Content */}
+                <div className="min-h-[400px] w-full">
+                  {activeTab === 'petition' && (
+                    <div className="space-y-6 w-full">
+                      {/* Petition Description - FIRST */}
+                      <div className="w-full">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                          About this petition
+                        </h3>
+                        <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                          {petition.description}
+                        </div>
+                      </div>
+
+                      {/* Video - RIGHT AFTER description */}
+                      {petition.youtubeVideoUrl && (
+                        <div className="relative w-full pb-[56.25%] rounded-lg overflow-hidden">
+                          <iframe
+                            className="absolute top-0 left-0 w-full h-full"
+                            src={
+                              petition.youtubeVideoUrl.includes('embed')
+                                ? petition.youtubeVideoUrl
+                                : `https://www.youtube.com/embed/${
+                                    petition.youtubeVideoUrl
+                                      .split('v=')[1]
+                                      ?.split('&')[0] ||
+                                    petition.youtubeVideoUrl.split('/').pop()
+                                  }`
+                            }
+                            title="YouTube video"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      )}
+
+                      {/* Hashtags - AFTER video */}
+                      {petition.tags && petition.tags.trim() && (
+                        <div className="flex flex-wrap gap-2">
+                          {petition.tags
+                            .split(',')
+                            .map((tag: string) => tag.trim())
+                            .filter((tag: string) => tag.length > 0)
+                            .map((tag: string, index: number) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                        </div>
+                      )}
+
+                      {/* Publisher Information - AFTER description, video, and tags */}
+                      {(petition.publisherType || petition.publisherName) && (
+                        <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <h3 className="text-sm font-semibold text-blue-900 mb-3">
+                            Publisher Information
+                          </h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            {petition.publisherType && (
+                              <div>
+                                <p className="text-xs text-blue-700">Type</p>
+                                <p className="text-sm font-medium text-blue-900">
+                                  {petition.publisherType}
+                                </p>
+                              </div>
+                            )}
+                            {petition.publisherName && (
+                              <div>
+                                <p className="text-xs text-blue-700">Name</p>
+                                <p className="text-sm font-medium text-blue-900">
+                                  {petition.publisherName}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Petition Details - AFTER publisher info */}
+                      {(petition.petitionType ||
+                        petition.addressedToType ||
+                        petition.addressedToSpecific) && (
+                        <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-4">
+                          <h3 className="text-sm font-semibold text-purple-900 mb-3">
+                            Petition Details
+                          </h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            {petition.petitionType && (
+                              <div>
+                                <p className="text-xs text-purple-700">Type</p>
+                                <p className="text-sm font-medium text-purple-900">
+                                  {petition.petitionType}
+                                </p>
+                              </div>
+                            )}
+                            {petition.addressedToType && (
+                              <div>
+                                <p className="text-xs text-purple-700">
+                                  Addressed To
+                                </p>
+                                <p className="text-sm font-medium text-purple-900">
+                                  {petition.addressedToType}
+                                </p>
+                              </div>
+                            )}
+                            {petition.addressedToSpecific && (
+                              <div className="col-span-2">
+                                <p className="text-xs text-purple-700">
+                                  Specific Target
+                                </p>
+                                <p className="text-sm font-medium text-purple-900">
+                                  {petition.addressedToSpecific}
+                                </p>
+                              </div>
+                            )}
+                            {petition.referenceCode && (
+                              <div className="col-span-2">
+                                <p className="text-xs text-purple-700">
+                                  Reference Code
+                                </p>
+                                <p className="text-lg font-bold text-purple-900 font-mono tracking-wider">
+                                  {petition.referenceCode}
+                                </p>
+                                <p className="text-xs text-purple-600 mt-1">
+                                  Use this code for support inquiries
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Publisher Tab */}
+                  {activeTab === 'publisher' && (
+                    <div className="space-y-4 w-full">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-4 flex-1">
+                          {creator?.photoURL ? (
+                            <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                              <Image
+                                src={creator.photoURL}
+                                alt={creator.name || 'User'}
+                                width={64}
+                                height={64}
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-green-600 font-bold text-2xl">
+                                {creator?.name?.charAt(0).toUpperCase() || 'U'}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {creator?.name || 'Unknown User'}
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-2">
+                              {creator?.email}
+                            </p>
+                            <div className="text-sm text-gray-500">
+                              <p>
+                                Member since{' '}
+                                {creator?.createdAt
+                                  ? typeof creator.createdAt === 'string'
+                                    ? new Date(
+                                        creator.createdAt
+                                      ).toLocaleDateString()
+                                    : (creator.createdAt as any).toDate
+                                    ? (creator.createdAt as any)
+                                        .toDate()
+                                        .toLocaleDateString()
+                                    : new Date(
+                                        creator.createdAt as any
+                                      ).toLocaleDateString()
+                                  : 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Edit Button - Only show if current user is the creator */}
+                        {user && petition.creatorId === user.uid && (
+                          <Link href="/profile?tab=profile">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-2"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                />
+                              </svg>
+                              Edit Bio
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
+
+                      <div className="border-t border-gray-200 pt-4">
+                        <h4 className="font-medium text-gray-900 mb-2">
+                          About the Publisher
+                        </h4>
+                        {creator?.bio ? (
+                          <p className="text-gray-700 whitespace-pre-wrap">
+                            {creator.bio}
+                          </p>
+                        ) : (
+                          <p className="text-gray-500 italic">
+                            {user && petition.creatorId === user.uid
+                              ? 'You haven\'t added a bio yet. Click "Edit Bio" to add one.'
+                              : `${
+                                  creator?.name || 'This user'
+                                } hasn't added a bio yet.`}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Comments Tab */}
+                  {activeTab === 'comments' && (
+                    <div className="w-full">
+                      <PetitionComments
+                        petitionId={petition.id}
+                        onCommentsCountChange={(count) =>
+                          setCommentsCount(count)
+                        }
+                      />
+                    </div>
+                  )}
+
+                  {/* Signees Tab */}
+                  {activeTab === 'signees' && (
+                    <div className="space-y-4 w-full">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {petition.currentSignatures.toLocaleString()}{' '}
+                          Supporters
+                        </h3>
+                      </div>
+                      <div className="w-full text-center py-8 text-gray-500">
+                        <svg
+                          className="w-12 h-12 mx-auto mb-4 text-gray-300"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        <p className="font-medium">
+                          {petition.currentSignatures} people have signed
+                        </p>
+                        <p className="text-sm mt-1">
+                          Signature details are private for security
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Updates Section (Placeholder) */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Updates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-gray-500">
+                  <svg
+                    className="w-12 h-12 mx-auto mb-4 text-gray-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+                    />
+                  </svg>
+                  <p>No updates yet</p>
+                  <p className="text-sm">
+                    The petition creator hasn't posted any updates.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="w-full space-y-6">
+            {/* Stats */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Petition Stats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Signatures</span>
+                    <span className="font-medium">
+                      {petition.currentSignatures.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Goal</span>
+                    <span className="font-medium">
+                      {petition.targetSignatures.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Progress</span>
+                    <span className="font-medium">{progress.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Views</span>
+                    <span className="font-medium">
+                      {petition.viewCount.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Shares</span>
+                    <span className="font-medium">
+                      {petition.shareCount.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Creator Management - Show only to petition creator */}
+            {user &&
+              petition.creatorId === user.uid &&
+              petition.status !== 'deleted' && (
+                <PetitionManagement
+                  petition={petition}
+                  onDelete={handleCreatorDelete}
+                  onArchive={handleCreatorArchive}
+                  onRequestDeletion={handleCreatorRequestDeletion}
+                />
+              )}
+
+            {/* Admin Controls */}
+            {isAdmin && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Admin Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {/* Approve/Reject - Show for pending or rejected petitions */}
+                    {(petition.status === 'pending' ||
+                      petition.status === 'rejected') && (
+                      <Button
+                        onClick={() => handleUpdatePetitionStatus('approved')}
+                        disabled={adminActionLoading}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        {petition.status === 'rejected'
+                          ? 'Approve (Reverse Rejection)'
+                          : 'Approve Petition'}
+                      </Button>
+                    )}
+
+                    {(petition.status === 'pending' ||
+                      petition.status === 'approved' ||
+                      petition.status === 'paused') && (
+                      <Button
+                        onClick={() => handleUpdatePetitionStatus('rejected')}
+                        disabled={adminActionLoading}
+                        variant="destructive"
+                        className="w-full"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Reject Petition
+                      </Button>
+                    )}
+
+                    {/* Pause/Resume */}
+                    {petition.status === 'approved' && (
+                      <Button
+                        onClick={() => handleUpdatePetitionStatus('paused')}
+                        disabled={adminActionLoading}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <Pause className="w-4 h-4 mr-2" />
+                        Pause Petition
+                      </Button>
+                    )}
+
+                    {petition.status === 'paused' && (
+                      <Button
+                        onClick={() => handleUpdatePetitionStatus('approved')}
+                        disabled={adminActionLoading}
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Play className="w-4 h-4 mr-2" />
+                        Resume Petition
+                      </Button>
+                    )}
+
+                    {/* Archive */}
+                    {(petition.status === 'approved' ||
+                      petition.status === 'paused' ||
+                      petition.status === 'rejected') && (
+                      <Button
+                        onClick={archivePetitionAdmin}
+                        disabled={adminActionLoading}
+                        variant="outline"
+                        className="w-full border-blue-300 text-blue-600 hover:bg-blue-50"
+                      >
+                        <Archive className="w-4 h-4 mr-2" />
+                        Archive Petition
+                      </Button>
+                    )}
+
+                    {/* Delete - Always available to admin */}
+                    {petition.status !== 'deleted' && (
+                      <Button
+                        onClick={deletePetition}
+                        disabled={adminActionLoading}
+                        variant="destructive"
+                        className="w-full"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Petition
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Petition QR Code */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Share This Petition</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-4">
+                  <p className="text-sm text-gray-600 mb-4">
+                    Scan this QR code to share the petition
+                  </p>
+                  <div className="flex justify-center">
+                    <QRCodeDisplay
+                      petition={petition}
+                      size={200}
+                      variant="card"
+                      branded={false}
+                      downloadable={true}
+                      shareable={false}
+                      className="bg-white p-4 rounded-lg border"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+}
