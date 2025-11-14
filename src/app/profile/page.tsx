@@ -54,11 +54,36 @@ export default function ProfilePage() {
     confirmPassword: '',
   });
 
+  // Update form data when userProfile changes
+  useEffect(() => {
+    if (userProfile) {
+      console.log('🔄 Syncing form data from userProfile:', {
+        name: userProfile.name,
+        phone: userProfile.phone,
+        bio: (userProfile as any)?.bio,
+        fullProfile: userProfile,
+      });
+      setFormData({
+        name: userProfile.name || user?.displayName || '',
+        email: user?.email || '',
+        phone: userProfile.phone || '',
+        bio: (userProfile as any)?.bio || '',
+      });
+    }
+  }, [userProfile, user]);
+
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(
     (userProfile as any)?.photoURL || user?.photoURL || null
   );
+
+  // Update profile image when userProfile changes
+  useEffect(() => {
+    if (userProfile || user) {
+      setProfileImage((userProfile as any)?.photoURL || user?.photoURL || null);
+    }
+  }, [userProfile, user]);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +94,12 @@ export default function ProfilePage() {
     setSuccess(false);
 
     try {
+      console.log('📝 Updating profile with data:', {
+        name: formData.name,
+        phone: formData.phone,
+        bio: formData.bio,
+      });
+
       // Update Firebase Auth profile
       if (formData.name !== user.displayName) {
         await updateProfile(user, {
@@ -85,10 +116,11 @@ export default function ProfilePage() {
         updatedAt: new Date(),
       });
 
+      console.log('✅ Profile updated successfully');
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
-      console.error('Error updating profile:', err);
+      console.error('❌ Error updating profile:', err);
       setError(err.message || 'Failed to update profile');
     } finally {
       setLoading(false);
@@ -148,9 +180,16 @@ export default function ProfilePage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
+    const fieldName = e.target.name;
+    const fieldValue = e.target.value;
+
+    if (fieldName === 'bio') {
+      console.log('✏️ Bio field changed:', fieldValue);
+    }
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [fieldName]: fieldValue,
     });
   };
 

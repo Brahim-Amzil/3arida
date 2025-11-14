@@ -30,11 +30,13 @@ interface Comment {
 interface PetitionCommentsProps {
   petitionId: string;
   className?: string;
+  onCommentsCountChange?: (count: number) => void;
 }
 
 export default function PetitionComments({
   petitionId,
   className = '',
+  onCommentsCountChange,
 }: PetitionCommentsProps) {
   const { user, userProfile } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -51,6 +53,7 @@ export default function PetitionComments({
   const loadComments = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Loading comments for petition:', petitionId);
 
       const commentsRef = collection(db, 'comments');
       const commentsQuery = query(
@@ -61,6 +64,8 @@ export default function PetitionComments({
 
       const snapshot = await getDocs(commentsQuery);
       const commentsList: Comment[] = [];
+
+      console.log('📊 Found comments:', snapshot.size);
 
       snapshot.forEach((doc) => {
         const commentData = doc.data();
@@ -77,9 +82,12 @@ export default function PetitionComments({
         });
       });
 
+      console.log('✅ Loaded comments:', commentsList.length);
       setComments(commentsList);
+      onCommentsCountChange?.(commentsList.length);
     } catch (error) {
-      console.error('Error loading comments:', error);
+      console.error('❌ Error loading comments:', error);
+      alert('Failed to load comments. Check console for details.');
     } finally {
       setLoading(false);
     }
@@ -113,7 +121,11 @@ export default function PetitionComments({
         replies: [],
       };
 
-      setComments((prev) => [newCommentObj, ...prev]);
+      setComments((prev) => {
+        const updated = [newCommentObj, ...prev];
+        onCommentsCountChange?.(updated.length);
+        return updated;
+      });
       setNewComment('');
       setShowCommentForm(false);
     } catch (error) {

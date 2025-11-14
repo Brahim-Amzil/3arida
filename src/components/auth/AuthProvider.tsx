@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { User } from '@/types/petition';
 
@@ -38,37 +38,71 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribeProfile: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log(
         '🔐 Auth state changed:',
         firebaseUser ? 'User logged in' : 'User logged out'
       );
 
       setUser(firebaseUser);
-      setLoading(false); // Set loading to false immediately
+      setLoading(false);
+
+      // Clean up previous profile listener
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+        unsubscribeProfile = null;
+      }
 
       if (firebaseUser) {
-        // Try to fetch user profile, but don't block the UI
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setUserProfile({
-              id: firebaseUser.uid,
-              name: userData.name || firebaseUser.displayName || '',
-              email: userData.email || firebaseUser.email || '',
-              phone: userData.phone,
-              verifiedEmail: userData.verifiedEmail || false,
-              verifiedPhone: userData.verifiedPhone || false,
-              role: userData.role || 'user',
-              creatorPageId: userData.creatorPageId,
-              createdAt: userData.createdAt?.toDate?.() || new Date(),
-              updatedAt: userData.updatedAt?.toDate?.(),
-              lastLoginAt: userData.lastLoginAt?.toDate?.(),
-              isActive: userData.isActive !== false,
-            });
-          } else {
-            // Create a basic profile from Firebase user
+        // Set up realtime listener for user profile
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+
+        unsubscribeProfile = onSnapshot(
+          userDocRef,
+          (userDoc) => {
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              console.log('👤 User profile updated from Firestore', {
+                hasBio: !!userData.bio,
+                bio: userData.bio,
+              });
+              setUserProfile({
+                id: firebaseUser.uid,
+                name: userData.name || firebaseUser.displayName || '',
+                email: userData.email || firebaseUser.email || '',
+                phone: userData.phone,
+                verifiedEmail: userData.verifiedEmail || false,
+                verifiedPhone: userData.verifiedPhone || false,
+                role: userData.role || 'user',
+                creatorPageId: userData.creatorPageId,
+                createdAt: userData.createdAt?.toDate?.() || new Date(),
+                updatedAt: userData.updatedAt?.toDate?.(),
+                lastLoginAt: userData.lastLoginAt?.toDate?.(),
+                isActive: userData.isActive !== false,
+                ...((userData.bio || userData.photoURL) && {
+                  bio: userData.bio,
+                  photoURL: userData.photoURL,
+                }),
+              } as User);
+            } else {
+              // Create a basic profile from Firebase user
+              setUserProfile({
+                id: firebaseUser.uid,
+                name: firebaseUser.displayName || '',
+                email: firebaseUser.email || '',
+                verifiedEmail: firebaseUser.emailVerified,
+                verifiedPhone: false,
+                role: 'user',
+                isActive: true,
+                createdAt: new Date(),
+              });
+            }
+          },
+          (error) => {
+            console.error('Error listening to user profile:', error);
+            // Create a basic profile even if Firestore fails
             setUserProfile({
               id: firebaseUser.uid,
               name: firebaseUser.displayName || '',
@@ -80,26 +114,18 @@ export default function AuthProvider({ children }: AuthProviderProps) {
               createdAt: new Date(),
             });
           }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-          // Create a basic profile even if Firestore fails
-          setUserProfile({
-            id: firebaseUser.uid,
-            name: firebaseUser.displayName || '',
-            email: firebaseUser.email || '',
-            verifiedEmail: firebaseUser.emailVerified,
-            verifiedPhone: false,
-            role: 'user',
-            isActive: true,
-            createdAt: new Date(),
-          });
-        }
+        );
       } else {
         setUserProfile(null);
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+      }
+    };
   }, []);
 
   const value = {
