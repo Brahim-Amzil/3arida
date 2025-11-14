@@ -1080,3 +1080,128 @@ export const getRelatedPetitions = async (
     return [];
   }
 };
+
+/**
+ * Get user by ID
+ */
+export const getUserById = async (userId: string): Promise<User | null> => {
+  try {
+    const userRef = doc(db, USERS_COLLECTION, userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      return null;
+    }
+
+    const userData = userSnap.data();
+    return {
+      id: userSnap.id,
+      email: userData.email || '',
+      name: userData.name || '',
+      role: userData.role || 'user',
+      phone: userData.phone || '',
+      verifiedEmail: userData.emailVerified || false,
+      verifiedPhone: userData.phoneVerified || false,
+      createdAt: userData.createdAt?.toDate() || new Date(),
+      updatedAt: userData.updatedAt?.toDate() || new Date(),
+      isActive: userData.isActive !== false,
+      ...(userData.bio && { bio: userData.bio }),
+      ...(userData.photoURL && { photoURL: userData.photoURL }),
+    } as User;
+  } catch (error) {
+    console.error('Error getting user:', error);
+    return null;
+  }
+};
+
+/**
+ * Delete petition by creator (soft delete)
+ */
+export const deletePetitionByCreator = async (
+  petitionId: string,
+  userId: string
+): Promise<void> => {
+  try {
+    const petitionRef = doc(db, PETITIONS_COLLECTION, petitionId);
+    const petitionSnap = await getDoc(petitionRef);
+
+    if (!petitionSnap.exists()) {
+      throw new Error('Petition not found');
+    }
+
+    const petition = petitionSnap.data();
+
+    // Verify the user is the creator
+    if (petition.creatorId !== userId) {
+      throw new Error('Only the petition creator can delete this petition');
+    }
+
+    // Soft delete by marking as deleted
+    await updateDoc(petitionRef, {
+      status: 'deleted',
+      deletedAt: new Date(),
+      updatedAt: new Date(),
+    });
+  } catch (error) {
+    console.error('Error deleting petition:', error);
+    throw error;
+  }
+};
+
+/**
+ * Archive a petition
+ */
+export const archivePetition = async (
+  petitionId: string,
+  userId: string
+): Promise<void> => {
+  try {
+    const petitionRef = doc(db, PETITIONS_COLLECTION, petitionId);
+    const petitionSnap = await getDoc(petitionRef);
+
+    if (!petitionSnap.exists()) {
+      throw new Error('Petition not found');
+    }
+
+    const petition = petitionSnap.data();
+
+    // Verify the user is the creator
+    if (petition.creatorId !== userId) {
+      throw new Error('Only the petition creator can archive this petition');
+    }
+
+    await updateDoc(petitionRef, {
+      status: 'archived',
+      archivedAt: new Date(),
+      updatedAt: new Date(),
+    });
+  } catch (error) {
+    console.error('Error archiving petition:', error);
+    throw error;
+  }
+};
+
+/**
+ * Request petition deletion (for non-creators)
+ */
+export const requestPetitionDeletion = async (
+  petitionId: string,
+  userId: string,
+  reason: string
+): Promise<void> => {
+  try {
+    // In a real implementation, this would create a deletion request
+    // that admins/moderators can review
+    const requestRef = collection(db, 'deletion_requests');
+    await addDoc(requestRef, {
+      petitionId,
+      requestedBy: userId,
+      reason,
+      status: 'pending',
+      createdAt: new Date(),
+    });
+  } catch (error) {
+    console.error('Error requesting petition deletion:', error);
+    throw error;
+  }
+};
