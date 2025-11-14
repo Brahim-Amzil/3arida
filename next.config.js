@@ -1,10 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Static export configuration for Firebase Hosting
-  output: 'export',
+  // Dynamic rendering for Firebase Hosting
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
-  distDir: 'out',
   
   images: {
     domains: [
