@@ -1,9 +1,8 @@
 {
-  "/page": "app/page.js",
-  "/auth/login/page": "app/auth/login/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/admin/petitions/page": "app/admin/petitions/page.js",
-  "/petitions/page": "app/petitions/page.js",
-  "/petitions/[id]/page": "app/petitions/[id]/page.js",
-  "/admin/page": "app/admin/page.js"
+  "/api/email/welcome/route": "app/api/email/welcome/route.js",
+  "/api/email/petition-approved/route": "app/api/email/petition-approved/route.js",
+  "/api/health/route": "app/api/health/route.js",
+  "/api/email/signature-confirmation/route": "app/api/email/signature-confirmation/route.js",
+  "/api/email/petition-update/route": "app/api/email/petition-update/route.js",
+  "/api/email/milestone/route": "app/api/email/milestone/route.js"
 }
