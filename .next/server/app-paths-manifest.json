@@ -1,8 +1,4 @@
 {
-  "/api/email/welcome/route": "app/api/email/welcome/route.js",
-  "/api/email/petition-approved/route": "app/api/email/petition-approved/route.js",
-  "/api/health/route": "app/api/health/route.js",
-  "/api/email/signature-confirmation/route": "app/api/email/signature-confirmation/route.js",
-  "/api/email/petition-update/route": "app/api/email/petition-update/route.js",
-  "/api/email/milestone/route": "app/api/email/milestone/route.js"
+  "/not-found": "app/not-found.js",
+  "/page": "app/page.js"
 }

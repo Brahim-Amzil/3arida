@@ -1,6 +1,24 @@
 // Helper functions to trigger email notifications
+import { queueEmail } from './email-queue';
+import {
+  welcomeEmail,
+  petitionApprovedEmail,
+  signatureConfirmationEmail,
+  petitionUpdateEmail,
+  milestoneReachedEmail,
+} from './email-templates';
+
+// Option to use queue (recommended for production)
+const USE_QUEUE = process.env.USE_EMAIL_QUEUE === 'true';
 
 export async function sendWelcomeEmail(userName: string, userEmail: string) {
+  if (USE_QUEUE) {
+    const html = welcomeEmail(userName, userEmail);
+    await queueEmail(userEmail, 'مرحبا بك في 3arida - Welcome to 3arida', html);
+    return true;
+  }
+
+  // Direct send (original method)
   try {
     const response = await fetch('/api/email/welcome', {
       method: 'POST',
