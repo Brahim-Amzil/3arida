@@ -95,7 +95,7 @@ export default function PetitionAdminActions({
         status: updateData.status,
         updatedAt: now,
         moderatedBy: updateData.moderatedBy,
-        moderatorNotes: updateData.moderatorNotes,
+        moderationNotes: updateData.moderationNotes,
         isActive:
           updateData.isActive !== undefined
             ? updateData.isActive

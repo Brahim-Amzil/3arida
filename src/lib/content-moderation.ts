@@ -47,7 +47,7 @@ const SUSPICIOUS_PATTERNS = [
 ];
 
 // Hate speech and offensive content patterns
-const HATE_SPEECH_PATTERNS = [
+const HATE_SPEECH_PATTERNS: RegExp[] = [
   // Add patterns for hate speech detection
   // This should be comprehensive and regularly updated
 ];

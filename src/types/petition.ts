@@ -3,7 +3,9 @@ export type PetitionStatus =
   | 'draft'
   | 'pending'
   | 'approved'
+  | 'rejected'
   | 'paused'
+  | 'archived'
   | 'deleted';
 
 // Petition Pricing Tiers
@@ -30,6 +32,20 @@ export interface Petition {
   amountPaid: number;
   paymentStatus: 'unpaid' | 'paid' | 'refunded';
 
+  // Publisher information (from creation form)
+  publisherType?: string;
+  publisherName?: string;
+
+  // Petition details (from creation form)
+  petitionType?: string;
+  addressedToType?: string;
+  addressedToSpecific?: string;
+  referenceCode?: string;
+
+  // Additional content
+  youtubeVideoUrl?: string;
+  tags?: string;
+
   // Location targeting
   location?: {
     country: string;
@@ -41,6 +57,7 @@ export interface Petition {
   createdAt: Date;
   updatedAt: Date;
   approvedAt?: Date;
+  rejectedAt?: Date;
   pausedAt?: Date;
   deletedAt?: Date;
 
@@ -59,6 +76,21 @@ export interface Petition {
 
 // Petition Form Data (for creation/editing)
 export interface PetitionFormData {
+  // Publisher information
+  publisherType?: string;
+  publisherName?: string;
+  officialDocument?: File;
+
+  // Petition details
+  petitionType?: string;
+  addressedToType?: string;
+  addressedToSpecific?: string;
+
+  // Additional content
+  youtubeVideoUrl?: string;
+  tags?: string;
+
+  // Basic information
   title: string;
   description: string;
   category: string;
@@ -119,6 +151,8 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
+  photoURL?: string;
+  bio?: string;
   verifiedEmail: boolean;
   verifiedPhone: boolean;
   role: 'user' | 'moderator' | 'admin';

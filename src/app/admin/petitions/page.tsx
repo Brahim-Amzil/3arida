@@ -24,7 +24,13 @@ export default function AdminPetitionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [filter, setFilter] = useState<
-    'all' | 'pending' | 'approved' | 'paused' | 'deleted' | 'deletion-requests'
+    | 'all'
+    | 'pending'
+    | 'approved'
+    | 'paused'
+    | 'archived'
+    | 'deleted'
+    | 'deletion-requests'
   >('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchCategory, setSearchCategory] = useState<string>('all');
@@ -401,6 +407,12 @@ export default function AdminPetitionsPage() {
                     .length,
                 },
                 {
+                  key: 'archived',
+                  label: 'Archived',
+                  count: allPetitions.filter((p) => p.status === 'archived')
+                    .length,
+                },
+                {
                   key: 'deleted',
                   label: 'Deleted',
                   count: allPetitions.filter((p) => p.status === 'deleted')
@@ -682,13 +694,13 @@ export default function AdminPetitionsPage() {
                                 </div>
                               </div>
 
-                              {petition.moderatorNotes && (
+                              {petition.moderationNotes && (
                                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
                                   <p className="text-sm text-blue-800">
                                     <span className="font-medium">
                                       Moderator Notes:
                                     </span>{' '}
-                                    {petition.moderatorNotes}
+                                    {petition.moderationNotes}
                                   </p>
                                 </div>
                               )}

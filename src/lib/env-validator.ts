@@ -1,4 +1,5 @@
 // Production environment validation utilities
+import React from 'react';
 
 interface EnvValidationResult {
   isValid: boolean;

@@ -92,8 +92,21 @@ export const createPetition = async (
       amountPaid: 0,
       paymentStatus: amountRequired > 0 ? 'unpaid' : 'paid',
 
+      // Publisher information (from creation form)
+      publisherType: petitionData.publisherType,
+      publisherName: petitionData.publisherName,
+
+      // Petition details (from creation form)
+      petitionType: petitionData.petitionType,
+      addressedToType: petitionData.addressedToType,
+      addressedToSpecific: petitionData.addressedToSpecific,
+
+      // Additional content
+      youtubeVideoUrl: petitionData.youtubeVideoUrl,
+      tags: petitionData.tags,
+
       // Location targeting
-      location: petitionData.location,
+      location: petitionData.location as any,
 
       // Metadata
       createdAt: now,
@@ -184,7 +197,7 @@ export const getPetition = async (
         );
 
         const querySnapshot = await getDocs(petitionsQuery);
-        let foundDoc = null;
+        let foundDoc: any = null;
 
         querySnapshot.forEach((doc) => {
           if (doc.id.endsWith(idSuffix)) {
@@ -217,11 +230,22 @@ export const getPetition = async (
             updatedAt: data.updatedAt?.toDate() || new Date(),
             viewCount: data.viewCount || 0,
             shareCount: data.shareCount || 0,
-            commentCount: data.commentCount || 0,
-            tags: data.tags || [],
-            featured: data.featured || false,
-            urgent: data.urgent || false,
-            verified: data.verified || false,
+            isPublic: data.isPublic !== false,
+            isActive: data.isActive !== false,
+
+            // Publisher information
+            publisherType: data.publisherType,
+            publisherName: data.publisherName,
+
+            // Petition details
+            petitionType: data.petitionType,
+            addressedToType: data.addressedToType,
+            addressedToSpecific: data.addressedToSpecific,
+            referenceCode: data.referenceCode,
+
+            // Additional content
+            youtubeVideoUrl: data.youtubeVideoUrl,
+            tags: data.tags,
           };
           return petition;
         }
@@ -293,6 +317,20 @@ export const getPetition = async (
       // Public visibility
       isPublic: data.isPublic !== false,
       isActive: data.isActive !== false,
+
+      // Publisher information
+      publisherType: data.publisherType,
+      publisherName: data.publisherName,
+
+      // Petition details
+      petitionType: data.petitionType,
+      addressedToType: data.addressedToType,
+      addressedToSpecific: data.addressedToSpecific,
+      referenceCode: data.referenceCode,
+
+      // Additional content
+      youtubeVideoUrl: data.youtubeVideoUrl,
+      tags: data.tags,
     };
 
     console.log('✅ Petition processed successfully:', petition.id);
@@ -300,7 +338,7 @@ export const getPetition = async (
   } catch (error) {
     console.error('❌ Error getting petition:', error);
     console.error('❌ Error details:', {
-      petitionId,
+      petitionIdOrSlug,
       error: error instanceof Error ? error.message : error,
     });
     return null; // Return null instead of throwing to avoid breaking the UI
@@ -629,11 +667,14 @@ export const signPetition = async (
   } catch (error) {
     console.error('Error signing petition:', error);
 
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+
     // Track failed attempt if not already tracked
     if (
-      !error.message.includes('already been used') &&
-      !error.message.includes('Too many signatures') &&
-      !error.message.includes('inappropriate content')
+      !errorMessage.includes('already been used') &&
+      !errorMessage.includes('Too many signatures') &&
+      !errorMessage.includes('inappropriate content')
     ) {
       await trackSignatureAttempt({
         petitionId,
@@ -642,7 +683,7 @@ export const signPetition = async (
         phoneNumber: signerData.phone,
         userId,
         success: false,
-        reason: error.message,
+        reason: errorMessage,
       });
     }
 
@@ -723,8 +764,8 @@ export const getPetitions = async (
       filters.sortBy === 'popular'
         ? 'currentSignatures'
         : filters.sortBy === 'signatures'
-        ? 'currentSignatures'
-        : 'createdAt';
+          ? 'currentSignatures'
+          : 'createdAt';
     const sortDirection = filters.sortOrder || 'desc';
     q = query(q, orderBy(sortField, sortDirection));
 
@@ -736,7 +777,8 @@ export const getPetitions = async (
     const querySnapshot = await getDocs(q);
     const petitions: Petition[] = [];
 
-    querySnapshot.forEach((doc, index) => {
+    const docs = querySnapshot.docs;
+    docs.forEach((doc, index) => {
       // Skip the extra document used for pagination check
       if (pagination.limit && index >= pagination.limit) {
         return;

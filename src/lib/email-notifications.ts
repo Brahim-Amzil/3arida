@@ -1,0 +1,139 @@
+// Helper functions to trigger email notifications
+
+export async function sendWelcomeEmail(userName: string, userEmail: string) {
+  try {
+    const response = await fetch('/api/email/welcome', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName, userEmail }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to send welcome email:', error);
+    return false;
+  }
+}
+
+export async function sendPetitionApprovedEmail(
+  userName: string,
+  userEmail: string,
+  petitionTitle: string,
+  petitionId: string
+) {
+  try {
+    const response = await fetch('/api/email/petition-approved', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName, userEmail, petitionTitle, petitionId }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to send petition approved email:', error);
+    return false;
+  }
+}
+
+export async function sendSignatureConfirmationEmail(
+  userName: string,
+  userEmail: string,
+  petitionTitle: string,
+  petitionId: string
+) {
+  try {
+    const response = await fetch('/api/email/signature-confirmation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName, userEmail, petitionTitle, petitionId }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to send signature confirmation email:', error);
+    return false;
+  }
+}
+
+export async function sendPetitionUpdateEmail(
+  userName: string,
+  userEmail: string,
+  petitionTitle: string,
+  petitionId: string,
+  updateTitle: string,
+  updateContent: string
+) {
+  try {
+    const response = await fetch('/api/email/petition-update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userName,
+        userEmail,
+        petitionTitle,
+        petitionId,
+        updateTitle,
+        updateContent,
+      }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to send petition update email:', error);
+    return false;
+  }
+}
+
+export async function sendMilestoneEmail(
+  userName: string,
+  userEmail: string,
+  petitionTitle: string,
+  petitionId: string,
+  milestone: number,
+  currentSignatures: number,
+  targetSignatures: number
+) {
+  try {
+    const response = await fetch('/api/email/milestone', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userName,
+        userEmail,
+        petitionTitle,
+        petitionId,
+        milestone,
+        currentSignatures,
+        targetSignatures,
+      }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to send milestone email:', error);
+    return false;
+  }
+}
+
+// Batch email sending for petition updates (to all signers)
+export async function sendBatchPetitionUpdateEmails(
+  signers: Array<{ name: string; email: string }>,
+  petitionTitle: string,
+  petitionId: string,
+  updateTitle: string,
+  updateContent: string
+) {
+  const results = await Promise.allSettled(
+    signers.map((signer) =>
+      sendPetitionUpdateEmail(
+        signer.name,
+        signer.email,
+        petitionTitle,
+        petitionId,
+        updateTitle,
+        updateContent
+      )
+    )
+  );
+
+  const successful = results.filter((r) => r.status === 'fulfilled').length;
+  const failed = results.filter((r) => r.status === 'rejected').length;
+
+  console.log(`Batch email results: ${successful} sent, ${failed} failed`);
+  return { successful, failed };
+}

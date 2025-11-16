@@ -12,6 +12,11 @@ import {
   getDocs,
   addDoc,
   Timestamp,
+  doc,
+  updateDoc,
+  increment,
+  getDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -24,6 +29,7 @@ interface Comment {
   createdAt: Date;
   isAnonymous: boolean;
   likes: number;
+  likedBy?: string[]; // Array of user IDs who liked this comment
   replies: Comment[];
 }
 
@@ -45,6 +51,8 @@ export default function PetitionComments({
   const [newComment, setNewComment] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [showCommentForm, setShowCommentForm] = useState(false);
+  const [sortBy, setSortBy] = useState<'latest' | 'mostLiked'>('latest');
+  const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadComments();
@@ -69,6 +77,13 @@ export default function PetitionComments({
 
       snapshot.forEach((doc) => {
         const commentData = doc.data();
+        const likedBy = commentData.likedBy || [];
+
+        // Check if current user has liked this comment
+        if (user && likedBy.includes(user.uid)) {
+          setLikedComments((prev) => new Set(prev).add(doc.id));
+        }
+
         commentsList.push({
           id: doc.id,
           petitionId: commentData.petitionId,
@@ -78,12 +93,16 @@ export default function PetitionComments({
           createdAt: commentData.createdAt?.toDate() || new Date(),
           isAnonymous: commentData.isAnonymous || false,
           likes: commentData.likes || 0,
+          likedBy: likedBy,
           replies: [], // TODO: Implement nested replies
         });
       });
 
       console.log('✅ Loaded comments:', commentsList.length);
-      setComments(commentsList);
+
+      // Sort comments based on selected filter
+      const sortedComments = sortComments(commentsList, sortBy);
+      setComments(sortedComments);
       onCommentsCountChange?.(commentsList.length);
     } catch (error) {
       console.error('❌ Error loading comments:', error);
@@ -92,6 +111,26 @@ export default function PetitionComments({
       setLoading(false);
     }
   };
+
+  const sortComments = (
+    commentsList: Comment[],
+    sortType: 'latest' | 'mostLiked'
+  ) => {
+    if (sortType === 'mostLiked') {
+      return [...commentsList].sort((a, b) => b.likes - a.likes);
+    }
+    // Sort by latest (newest first)
+    return [...commentsList].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+  };
+
+  // Re-sort when sortBy changes
+  useEffect(() => {
+    if (comments.length > 0) {
+      setComments(sortComments(comments, sortBy));
+    }
+  }, [sortBy]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,6 +175,72 @@ export default function PetitionComments({
     }
   };
 
+  const handleLikeComment = async (commentId: string) => {
+    if (!user) {
+      alert('Please sign in to like comments');
+      return;
+    }
+
+    try {
+      const commentRef = doc(db, 'comments', commentId);
+      const isLiked = likedComments.has(commentId);
+
+      if (isLiked) {
+        // Unlike
+        await updateDoc(commentRef, {
+          likes: increment(-1),
+          likedBy:
+            comments
+              .find((c) => c.id === commentId)
+              ?.likedBy?.filter((id) => id !== user.uid) || [],
+        });
+
+        setLikedComments((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(commentId);
+          return newSet;
+        });
+
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === commentId
+              ? {
+                  ...c,
+                  likes: c.likes - 1,
+                  likedBy: c.likedBy?.filter((id) => id !== user.uid),
+                }
+              : c
+          )
+        );
+      } else {
+        // Like
+        const currentLikedBy =
+          comments.find((c) => c.id === commentId)?.likedBy || [];
+        await updateDoc(commentRef, {
+          likes: increment(1),
+          likedBy: [...currentLikedBy, user.uid],
+        });
+
+        setLikedComments((prev) => new Set(prev).add(commentId));
+
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === commentId
+              ? {
+                  ...c,
+                  likes: c.likes + 1,
+                  likedBy: [...(c.likedBy || []), user.uid],
+                }
+              : c
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error liking comment:', error);
+      alert('Failed to like comment. Please try again.');
+    }
+  };
+
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -153,7 +258,7 @@ export default function PetitionComments({
   return (
     <Card className={className}>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <CardTitle>Discussion ({comments.length})</CardTitle>
           {user && !showCommentForm && (
             <Button onClick={() => setShowCommentForm(true)} size="sm">
@@ -161,6 +266,35 @@ export default function PetitionComments({
             </Button>
           )}
         </div>
+
+        {/* Sort Filter */}
+        {comments.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Sort by:</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSortBy('latest')}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  sortBy === 'latest'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Latest
+              </button>
+              <button
+                onClick={() => setSortBy('mostLiked')}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  sortBy === 'mostLiked'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Most Liked
+              </button>
+            </div>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Comment Form */}
@@ -334,10 +468,24 @@ export default function PetitionComments({
 
                   {/* Comment Actions */}
                   <div className="flex items-center gap-4">
-                    <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+                    <button
+                      onClick={() => handleLikeComment(comment.id)}
+                      className={`flex items-center gap-1 text-sm transition-colors ${
+                        likedComments.has(comment.id)
+                          ? 'text-red-500 hover:text-red-600'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                      disabled={!user}
+                    >
                       <svg
-                        className="w-4 h-4"
-                        fill="none"
+                        className={`w-4 h-4 ${
+                          likedComments.has(comment.id) ? 'fill-current' : ''
+                        }`}
+                        fill={
+                          likedComments.has(comment.id)
+                            ? 'currentColor'
+                            : 'none'
+                        }
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
@@ -348,7 +496,9 @@ export default function PetitionComments({
                           d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                         />
                       </svg>
-                      {comment.likes > 0 && comment.likes}
+                      {comment.likes > 0 && (
+                        <span className="font-medium">{comment.likes}</span>
+                      )}
                     </button>
                     <button className="text-sm text-gray-500 hover:text-gray-700">
                       Reply
