@@ -44,7 +44,7 @@ class ProductionMonitor {
   async runHealthChecks(): Promise<SystemHealth> {
     const results: HealthCheckResult[] = [];
 
-    for (const [name, checkFn] of this.healthChecks) {
+    for (const [name, checkFn] of Array.from(this.healthChecks)) {
       try {
         const result = await Promise.race([
           checkFn(),

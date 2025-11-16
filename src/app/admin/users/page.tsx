@@ -77,10 +77,14 @@ export default function AdminUsersPage() {
       const usersList: User[] = [];
 
       snapshot.forEach((doc) => {
-        const userData = { id: doc.id, ...doc.data() } as User;
-        userData.createdAt = userData.createdAt?.toDate?.() || new Date();
-        userData.updatedAt = userData.updatedAt?.toDate?.() || new Date();
-        userData.lastLoginAt = userData.lastLoginAt?.toDate?.();
+        const data = doc.data();
+        const userData = {
+          id: doc.id,
+          ...data,
+          createdAt: (data.createdAt as any)?.toDate?.() || new Date(),
+          updatedAt: (data.updatedAt as any)?.toDate?.() || new Date(),
+          lastLoginAt: (data.lastLoginAt as any)?.toDate?.(),
+        } as User;
         usersList.push(userData);
       });
 

@@ -375,3 +375,106 @@ export const getNotificationColor = (type: NotificationType): string => {
       return 'text-gray-600';
   }
 };
+
+/**
+ * Notify admins when a creator requests petition deletion
+ */
+export const notifyAdminsOfDeletionRequest = async (
+  petitionId: string,
+  petitionTitle: string,
+  creatorId: string,
+  reason: string,
+  signatureCount: number
+): Promise<void> => {
+  try {
+    // Get all admin and moderator users
+    const usersRef = collection(db, 'users');
+    const adminsQuery = query(
+      usersRef,
+      where('role', 'in', ['admin', 'moderator'])
+    );
+    const adminsSnapshot = await getDocs(adminsQuery);
+
+    // Create notification for each admin/moderator
+    const notificationPromises = adminsSnapshot.docs.map((adminDoc) =>
+      createNotification(
+        adminDoc.id,
+        'petition_status_change',
+        'Deletion Request',
+        `${creatorId} requested deletion of "${petitionTitle}" (${signatureCount} signatures). Reason: ${reason}`,
+        {
+          petitionId,
+          petitionTitle,
+          creatorId,
+          reason,
+          signatureCount,
+          actionType: 'deletion_request',
+        }
+      )
+    );
+
+    await Promise.all(notificationPromises);
+    console.log(
+      `✅ Notified ${adminsSnapshot.size} admins of deletion request`
+    );
+  } catch (error) {
+    console.error('Error notifying admins of deletion request:', error);
+    throw error;
+  }
+};
+
+/**
+ * Notify creator when deletion request is approved
+ */
+export const notifyDeletionRequestApproved = async (
+  petitionId: string,
+  petitionTitle: string,
+  creatorId: string
+): Promise<void> => {
+  try {
+    await createNotification(
+      creatorId,
+      'petition_status_change',
+      'Deletion Request Approved',
+      `Your deletion request for "${petitionTitle}" has been approved. The petition has been removed.`,
+      {
+        petitionId,
+        petitionTitle,
+        actionType: 'deletion_approved',
+      }
+    );
+    console.log('✅ Notified creator of deletion approval');
+  } catch (error) {
+    console.error('Error notifying creator of deletion approval:', error);
+    throw error;
+  }
+};
+
+/**
+ * Notify creator when deletion request is denied
+ */
+export const notifyDeletionRequestDenied = async (
+  petitionId: string,
+  petitionTitle: string,
+  creatorId: string,
+  reason: string
+): Promise<void> => {
+  try {
+    await createNotification(
+      creatorId,
+      'petition_status_change',
+      'Deletion Request Denied',
+      `Your deletion request for "${petitionTitle}" has been denied. Reason: ${reason}`,
+      {
+        petitionId,
+        petitionTitle,
+        reason,
+        actionType: 'deletion_denied',
+      }
+    );
+    console.log('✅ Notified creator of deletion denial');
+  } catch (error) {
+    console.error('Error notifying creator of deletion denial:', error);
+    throw error;
+  }
+};

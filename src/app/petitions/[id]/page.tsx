@@ -12,6 +12,7 @@ import PetitionProgress from '@/components/petitions/PetitionProgress';
 import PetitionShare from '@/components/petitions/PetitionShare';
 import PetitionComments from '@/components/petitions/PetitionComments';
 import PetitionManagement from '@/components/petitions/PetitionManagement';
+import PetitionUpdates from '@/components/petitions/PetitionUpdates';
 import { useRealtimePetition } from '@/hooks/useRealtimePetition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -603,6 +604,27 @@ export default function PetitionDetailPage() {
                   </div>
                 )}
 
+                {/* Paused Alert */}
+                {petition.status === 'paused' && (
+                  <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <Pause className="h-5 w-5 text-orange-500" />
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-orange-800">
+                          Petition Temporarily Paused
+                        </h3>
+                        <p className="mt-1 text-sm text-orange-700">
+                          This petition is currently paused and cannot accept
+                          new signatures at this time. It may be under review or
+                          temporarily suspended by moderators.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* 5. Signatures Progress Bar */}
                 <div className="mb-6 w-full">
                   <div className="flex justify-between items-center mb-2">
@@ -701,16 +723,6 @@ export default function PetitionDetailPage() {
                       Petition
                     </button>
                     <button
-                      onClick={() => setActiveTab('publisher')}
-                      className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                        activeTab === 'publisher'
-                          ? 'border-green-600 text-green-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      Publisher
-                    </button>
-                    <button
                       onClick={() => setActiveTab('comments')}
                       className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors relative ${
                         activeTab === 'comments'
@@ -736,6 +748,16 @@ export default function PetitionDetailPage() {
                       }`}
                     >
                       Signees
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('publisher')}
+                      className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                        activeTab === 'publisher'
+                          ? 'border-green-600 text-green-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Publisher
                     </button>
                   </nav>
                 </div>
@@ -796,93 +818,13 @@ export default function PetitionDetailPage() {
                               ))}
                           </div>
                         )}
-
-                      {/* Publisher Information - AFTER description, video, and tags */}
-                      {(petition.publisherType || petition.publisherName) && (
-                        <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <h3 className="text-sm font-semibold text-blue-900 mb-3">
-                            Publisher Information
-                          </h3>
-                          <div className="grid grid-cols-2 gap-3">
-                            {petition.publisherType && (
-                              <div>
-                                <p className="text-xs text-blue-700">Type</p>
-                                <p className="text-sm font-medium text-blue-900">
-                                  {petition.publisherType}
-                                </p>
-                              </div>
-                            )}
-                            {petition.publisherName && (
-                              <div>
-                                <p className="text-xs text-blue-700">Name</p>
-                                <p className="text-sm font-medium text-blue-900">
-                                  {petition.publisherName}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Petition Details - AFTER publisher info */}
-                      {(petition.petitionType ||
-                        petition.addressedToType ||
-                        petition.addressedToSpecific) && (
-                        <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-4">
-                          <h3 className="text-sm font-semibold text-purple-900 mb-3">
-                            Petition Details
-                          </h3>
-                          <div className="grid grid-cols-2 gap-3">
-                            {petition.petitionType && (
-                              <div>
-                                <p className="text-xs text-purple-700">Type</p>
-                                <p className="text-sm font-medium text-purple-900">
-                                  {petition.petitionType}
-                                </p>
-                              </div>
-                            )}
-                            {petition.addressedToType && (
-                              <div>
-                                <p className="text-xs text-purple-700">
-                                  Addressed To
-                                </p>
-                                <p className="text-sm font-medium text-purple-900">
-                                  {petition.addressedToType}
-                                </p>
-                              </div>
-                            )}
-                            {petition.addressedToSpecific && (
-                              <div className="col-span-2">
-                                <p className="text-xs text-purple-700">
-                                  Specific Target
-                                </p>
-                                <p className="text-sm font-medium text-purple-900">
-                                  {petition.addressedToSpecific}
-                                </p>
-                              </div>
-                            )}
-                            {petition.referenceCode && (
-                              <div className="col-span-2">
-                                <p className="text-xs text-purple-700">
-                                  Reference Code
-                                </p>
-                                <p className="text-lg font-bold text-purple-900 font-mono tracking-wider">
-                                  {petition.referenceCode}
-                                </p>
-                                <p className="text-xs text-purple-600 mt-1">
-                                  Use this code for support inquiries
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
 
                   {/* Publisher Tab */}
                   {activeTab === 'publisher' && (
-                    <div className="space-y-4 w-full">
+                    <div className="space-y-6 w-full">
+                      {/* Creator Profile */}
                       <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-4 flex-1">
                           {creator?.photoURL ? (
@@ -957,6 +899,7 @@ export default function PetitionDetailPage() {
                         )}
                       </div>
 
+                      {/* About the Publisher */}
                       <div className="border-t border-gray-200 pt-4">
                         <h4 className="font-medium text-gray-900 mb-2">
                           About the Publisher
@@ -975,6 +918,88 @@ export default function PetitionDetailPage() {
                           </p>
                         )}
                       </div>
+
+                      {/* Publisher Information */}
+                      {(petition.publisherType || petition.publisherName) && (
+                        <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <h3 className="text-sm font-semibold text-blue-900 mb-3">
+                            Publisher Information
+                          </h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            {petition.publisherType && (
+                              <div>
+                                <p className="text-xs text-blue-700">Type</p>
+                                <p className="text-sm font-medium text-blue-900">
+                                  {petition.publisherType}
+                                </p>
+                              </div>
+                            )}
+                            {petition.publisherName && (
+                              <div>
+                                <p className="text-xs text-blue-700">Name</p>
+                                <p className="text-sm font-medium text-blue-900">
+                                  {petition.publisherName}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Petition Details */}
+                      {(petition.petitionType ||
+                        petition.addressedToType ||
+                        petition.addressedToSpecific ||
+                        petition.referenceCode) && (
+                        <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-4">
+                          <h3 className="text-sm font-semibold text-purple-900 mb-3">
+                            Petition Details
+                          </h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            {petition.petitionType && (
+                              <div>
+                                <p className="text-xs text-purple-700">Type</p>
+                                <p className="text-sm font-medium text-purple-900">
+                                  {petition.petitionType}
+                                </p>
+                              </div>
+                            )}
+                            {petition.addressedToType && (
+                              <div>
+                                <p className="text-xs text-purple-700">
+                                  Addressed To
+                                </p>
+                                <p className="text-sm font-medium text-purple-900">
+                                  {petition.addressedToType}
+                                </p>
+                              </div>
+                            )}
+                            {petition.addressedToSpecific && (
+                              <div className="col-span-2">
+                                <p className="text-xs text-purple-700">
+                                  Specific Target
+                                </p>
+                                <p className="text-sm font-medium text-purple-900">
+                                  {petition.addressedToSpecific}
+                                </p>
+                              </div>
+                            )}
+                            {petition.referenceCode && (
+                              <div className="col-span-2">
+                                <p className="text-xs text-purple-700">
+                                  Reference Code
+                                </p>
+                                <p className="text-lg font-bold text-purple-900 font-mono tracking-wider">
+                                  {petition.referenceCode}
+                                </p>
+                                <p className="text-xs text-purple-600 mt-1">
+                                  Use this code for support inquiries
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -1026,33 +1051,11 @@ export default function PetitionDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Updates Section (Placeholder) */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Updates</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  <svg
-                    className="w-12 h-12 mx-auto mb-4 text-gray-300"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
-                    />
-                  </svg>
-                  <p>No updates yet</p>
-                  <p className="text-sm">
-                    The petition creator hasn't posted any updates.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Updates Section */}
+            <PetitionUpdates
+              petitionId={petition.id}
+              isCreator={user?.uid === petition.creatorId}
+            />
           </div>
 
           {/* Sidebar */}
@@ -1184,6 +1187,18 @@ export default function PetitionDetailPage() {
                       </Button>
                     )}
 
+                    {/* Unarchive */}
+                    {petition.status === 'archived' && (
+                      <Button
+                        onClick={() => handleUpdatePetitionStatus('approved')}
+                        disabled={adminActionLoading}
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Play className="w-4 h-4 mr-2" />
+                        Unarchive & Approve
+                      </Button>
+                    )}
+
                     {/* Delete - Always available to admin */}
                     {petition.status !== 'deleted' && (
                       <Button
@@ -1202,29 +1217,19 @@ export default function PetitionDetailPage() {
             )}
 
             {/* Petition QR Code */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Share This Petition</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-4">
-                  <p className="text-sm text-gray-600 mb-4">
-                    Scan this QR code to share the petition
-                  </p>
-                  <div className="flex justify-center">
-                    <QRCodeDisplay
-                      petition={petition}
-                      size={200}
-                      variant="card"
-                      branded={false}
-                      downloadable={true}
-                      shareable={false}
-                      className="bg-white p-4 rounded-lg border"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div
+              onClick={() => setShowQRCode(true)}
+              className="cursor-pointer hover:opacity-90 transition-opacity"
+            >
+              <QRCodeDisplay
+                petition={petition}
+                size={200}
+                variant="card"
+                branded={false}
+                downloadable={true}
+                shareable={false}
+              />
+            </div>
           </div>
         </div>
       </div>

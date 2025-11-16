@@ -84,9 +84,13 @@ export default function AdminDashboard() {
       });
 
       recentPetitions.forEach((doc) => {
-        const petition = { id: doc.id, ...doc.data() } as Petition;
-        petition.createdAt = petition.createdAt?.toDate?.() || new Date();
-        petition.updatedAt = petition.updatedAt?.toDate?.() || new Date();
+        const data = doc.data();
+        const petition = {
+          id: doc.id,
+          ...data,
+          createdAt: (data.createdAt as any)?.toDate?.() || new Date(),
+          updatedAt: (data.updatedAt as any)?.toDate?.() || new Date(),
+        } as Petition;
         recentPetitionsList.push(petition);
       });
 
