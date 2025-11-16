@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import AuthProvider from '@/components/auth/AuthProvider';
 import { ProductionMonitoringProvider } from '@/components/monitoring/ProductionMonitoringProvider';
+import InstallPWAPrompt from '@/components/pwa/InstallPWAPrompt';
+import PushNotificationPrompt from '@/components/pwa/PushNotificationPrompt';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -28,6 +30,12 @@ export const metadata: Metadata = {
     telephone: false,
   },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://3arida.ma'),
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: '3arida',
+  },
   openGraph: {
     title: '3arida - Petition Platform for Morocco',
     description: 'Create and sign petitions to make change happen in Morocco',
@@ -71,6 +79,9 @@ export default function RootLayout({
         <ProductionMonitoringProvider>
           <AuthProvider>
             <div className="min-h-screen bg-gray-50">{children}</div>
+            {/* PWA Components */}
+            <InstallPWAPrompt />
+            <PushNotificationPrompt />
           </AuthProvider>
         </ProductionMonitoringProvider>
       </body>

@@ -157,6 +157,8 @@ export interface User {
   verifiedPhone: boolean;
   role: 'user' | 'moderator' | 'admin';
   creatorPageId?: string;
+  fcmToken?: string; // Firebase Cloud Messaging token for push notifications
+  fcmTokenUpdatedAt?: Date;
   createdAt: Date;
   updatedAt?: Date;
   lastLoginAt?: Date;

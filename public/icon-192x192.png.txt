@@ -1,0 +1,3 @@
+# Placeholder for 192x192 icon
+# Generate actual icon at: https://realfavicongenerator.net/
+# Or use: https://www.pwabuilder.com/imageGenerator
