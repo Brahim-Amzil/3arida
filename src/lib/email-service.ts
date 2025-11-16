@@ -11,7 +11,7 @@ export interface EmailOptions {
 export async function sendEmail({ to, subject, html }: EmailOptions) {
   try {
     const data = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'noreply@3arida.ma',
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
       to,
       subject,
       html,
