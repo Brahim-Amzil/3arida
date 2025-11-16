@@ -1,0 +1,61 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[27],{27:function(e,t,i){let a,n,r,s;i.d(t,{getAnalytics:function(){return C},logEvent:function(){return L}});var o=i(206),l=i(6914),c=i(8745),d=i(5538);i(2334);/**
+ * @license
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */let u="analytics",h="https://www.googletagmanager.com/gtag/js",f=new l.Yd("@firebase/analytics"),p=new c.LL("analytics","Analytics",{"already-exists":"A Firebase Analytics instance with the appId {$id}  already exists. Only one Firebase Analytics instance can be created for each appId.","already-initialized":"initializeAnalytics() cannot be called again with different options than those it was initially called with. It can be called again with the same options to return the existing instance, or getAnalytics() can be used to get a reference to the already-initialized instance.","already-initialized-settings":"Firebase Analytics has already been initialized.settings() must be called before initializing any Analytics instanceor it will have no effect.","interop-component-reg-failed":"Firebase Analytics Interop Component failed to instantiate: {$reason}","invalid-analytics-context":"Firebase Analytics is not supported in this environment. Wrap initialization of analytics in analytics.isSupported() to prevent initialization in unsupported environments. Details: {$errorInfo}","indexeddb-unavailable":"IndexedDB unavailable or restricted in this environment. Wrap initialization of analytics in analytics.isSupported() to prevent initialization in unsupported environments. Details: {$errorInfo}","fetch-throttle":"The config fetch request timed out while in an exponential backoff state. Unix timestamp in milliseconds when fetch request throttling ends: {$throttleEndTimeMillis}.","config-fetch-failed":"Dynamic config fetch failed: [{$httpStatus}] {$responseMessage}","no-api-key":'The "apiKey" field is empty in the local Firebase config. Firebase Analytics requires this field tocontain a valid API key.',"no-app-id":'The "appId" field is empty in the local Firebase config. Firebase Analytics requires this field tocontain a valid app ID.',"no-client-id":'The "client_id" field is empty.',"invalid-gtag-resource":"Trusted Types detected an invalid gtag resource: {$gtagURL}."});/**
+ * @license
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */function m(e){if(!e.startsWith(h)){let t=p.create("invalid-gtag-resource",{gtagURL:e});return f.warn(t.message),""}return e}function g(e){return Promise.all(e.map(e=>e.catch(e=>e)))}async function w(e,t,i,a,n,r){let s=a[n];try{if(s)await t[s];else{let e=(await g(i)).find(e=>e.measurementId===n);e&&await t[e.appId]}}catch(e){f.error(e)}e("config",n,r)}async function y(e,t,i,a,n){try{let r=[];if(n&&n.send_to){let e=n.send_to;Array.isArray(e)||(e=[e]);let a=await g(i);for(let i of e){let e=a.find(e=>e.measurementId===i),n=e&&t[e.appId];if(n)r.push(n);else{r=[];break}}}0===r.length&&(r=Object.values(t)),await Promise.all(r),e("event",a,n||{})}catch(e){f.error(e)}}class v{constructor(e={},t=1e3){this.throttleMetadata=e,this.intervalMillis=t}getThrottleMetadata(e){return this.throttleMetadata[e]}setThrottleMetadata(e,t){this.throttleMetadata[e]=t}deleteThrottleMetadata(e){delete this.throttleMetadata[e]}}let b=new v;async function I(e){var t;let{appId:i,apiKey:a}=e,n={method:"GET",headers:new Headers({Accept:"application/json","x-goog-api-key":a})},r="https://firebase.googleapis.com/v1alpha/projects/-/apps/{app-id}/webConfig".replace("{app-id}",i),s=await fetch(r,n);if(200!==s.status&&304!==s.status){let e="";try{let i=await s.json();(null===(t=i.error)||void 0===t?void 0:t.message)&&(e=i.error.message)}catch(e){}throw p.create("config-fetch-failed",{httpStatus:s.status,responseMessage:e})}return s.json()}async function T(e,t=b,i){let{appId:a,apiKey:n,measurementId:r}=e.options;if(!a)throw p.create("no-app-id");if(!n){if(r)return{measurementId:r,appId:a};throw p.create("no-api-key")}let s=t.getThrottleMetadata(a)||{backoffCount:0,throttleEndTimeMillis:Date.now()},o=new $;return setTimeout(async()=>{o.abort()},void 0!==i?i:6e4),A({appId:a,apiKey:n,measurementId:r},s,o,t)}async function A(e,{throttleEndTimeMillis:t,backoffCount:i},a,n=b){var r;let{appId:s,measurementId:o}=e;try{await new Promise((e,i)=>{let n=setTimeout(e,Math.max(t-Date.now(),0));a.addEventListener(()=>{clearTimeout(n),i(p.create("fetch-throttle",{throttleEndTimeMillis:t}))})})}catch(e){if(o)return f.warn(`Timed out fetching this Firebase app's measurement ID from the server. Falling back to the measurement ID ${o} provided in the "measurementId" field in the local Firebase config. [${null==e?void 0:e.message}]`),{appId:s,measurementId:o};throw e}try{let t=await I(e);return n.deleteThrottleMetadata(s),t}catch(d){if(!function(e){if(!(e instanceof c.ZR)||!e.customData)return!1;let t=Number(e.customData.httpStatus);return 429===t||500===t||503===t||504===t}(d)){if(n.deleteThrottleMetadata(s),o)return f.warn(`Failed to fetch this Firebase app's measurement ID from the server. Falling back to the measurement ID ${o} provided in the "measurementId" field in the local Firebase config. [${null==d?void 0:d.message}]`),{appId:s,measurementId:o};throw d}let t=503===Number(null===(r=null==d?void 0:d.customData)||void 0===r?void 0:r.httpStatus)?(0,c.$s)(i,n.intervalMillis,30):(0,c.$s)(i,n.intervalMillis),l={throttleEndTimeMillis:Date.now()+t,backoffCount:i+1};return n.setThrottleMetadata(s,l),f.debug(`Calling attemptFetch again in ${t} millis`),A(e,l,a,n)}}class ${constructor(){this.listeners=[]}addEventListener(e){this.listeners.push(e)}abort(){this.listeners.forEach(e=>e())}}async function D(e,t,i,a,n){if(n&&n.global){e("event",i,a);return}{let n=await t;e("event",i,Object.assign(Object.assign({},a),{send_to:n}))}}/**
+ * @license
+ * Copyright 2020 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */async function F(){if(!(0,c.hl)())return f.warn(p.create("indexeddb-unavailable",{errorInfo:"IndexedDB is not available in this environment."}).message),!1;try{await (0,c.eu)()}catch(e){return f.warn(p.create("indexeddb-unavailable",{errorInfo:null==e?void 0:e.toString()}).message),!1}return!0}async function M(e,t,i,r,s,o,l){var c;let d=T(e);d.then(t=>{i[t.measurementId]=t.appId,e.options.measurementId&&t.measurementId!==e.options.measurementId&&f.warn(`The measurement ID in the local Firebase config (${e.options.measurementId}) does not match the measurement ID fetched from the server (${t.measurementId}). To ensure analytics events are always sent to the correct Analytics property, update the measurement ID field in the local config or remove it from the local config.`)}).catch(e=>f.error(e)),t.push(d);let u=F().then(e=>e?r.getId():void 0),[p,g]=await Promise.all([d,u]);!function(e){for(let t of Object.values(window.document.getElementsByTagName("script")))if(t.src&&t.src.includes(h)&&t.src.includes(e))return t;return null}(o)&&function(e,t){let i;let a=(window.trustedTypes&&(i=window.trustedTypes.createPolicy("firebase-js-sdk-policy",{createScriptURL:m})),i),n=document.createElement("script"),r=`${h}?l=${e}&id=${t}`;n.src=a?null==a?void 0:a.createScriptURL(r):r,n.async=!0,document.head.appendChild(n)}(o,p.measurementId),n&&(s("consent","default",n),n=void 0),s("js",new Date);let w=null!==(c=null==l?void 0:l.config)&&void 0!==c?c:{};return w.origin="firebase",w.update=!0,null!=g&&(w.firebase_id=g),s("config",p.measurementId,w),a&&(s("set",a),a=void 0),p.measurementId}/**
+ * @license
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */class k{constructor(e){this.app=e}_delete(){return delete x[this.app.options.appId],Promise.resolve()}}let x={},z=[],E={},j="dataLayer",P=!1;function C(e=(0,o.Mq)()){e=(0,c.m9)(e);let t=(0,o.qX)(e,u);return t.isInitialized()?t.getImmediate():function(e,t={}){let i=(0,o.qX)(e,u);if(i.isInitialized()){let e=i.getImmediate();if((0,c.vZ)(t,i.getOptions()))return e;throw p.create("already-initialized")}return i.initialize({options:t})}(e)}function L(e,t,i,a){e=(0,c.m9)(e),D(s,x[e.app.options.appId],t,i,a).catch(e=>f.error(e))}let _="@firebase/analytics",S="0.10.8";(0,o.Xd)(new d.wA(u,(e,{options:t})=>(function(e,t,i){!function(){let e=[];if((0,c.ru)()&&e.push("This is a browser extension environment."),(0,c.zI)()||e.push("Cookies are not available."),e.length>0){let t=e.map((e,t)=>`(${t+1}) ${e}`).join(" "),i=p.create("invalid-analytics-context",{errorInfo:t});f.warn(i.message)}}();let a=e.options.appId;if(!a)throw p.create("no-app-id");if(!e.options.apiKey){if(e.options.measurementId)f.warn(`The "apiKey" field is empty in the local Firebase config. This is needed to fetch the latest measurement ID for this Firebase app. Falling back to the measurement ID ${e.options.measurementId} provided in the "measurementId" field in the local Firebase config.`);else throw p.create("no-api-key")}if(null!=x[a])throw p.create("already-exists",{id:a});if(!P){var n,o;let e,t;e=[],Array.isArray(window[j])?e=window[j]:window[j]=e;let{wrappedGtag:i,gtagCore:a}=(n="gtag",t=function(...e){window[j].push(arguments)},window[n]&&"function"==typeof window[n]&&(t=window[n]),window[n]=(o=t,async function(e,...t){try{if("event"===e){let[e,i]=t;await y(o,x,z,e,i)}else if("config"===e){let[e,i]=t;await w(o,x,z,E,e,i)}else if("consent"===e){let[e,i]=t;o("consent",e,i)}else if("get"===e){let[e,i,a]=t;o("get",e,i,a)}else if("set"===e){let[e]=t;o("set",e)}else o(e,...t)}catch(e){f.error(e)}}),{gtagCore:t,wrappedGtag:window[n]});s=i,r=a,P=!0}return x[a]=M(e,z,E,t,r,j,i),new k(e)})(e.getProvider("app").getImmediate(),e.getProvider("installations-internal").getImmediate(),t),"PUBLIC")),(0,o.Xd)(new d.wA("analytics-internal",function(e){try{let t=e.getProvider(u).getImmediate();return{logEvent:(e,i,a)=>L(t,e,i,a)}}catch(e){throw p.create("interop-component-reg-failed",{reason:e})}},"PRIVATE")),(0,o.KN)(_,S),(0,o.KN)(_,S,"esm2017")}}]);
