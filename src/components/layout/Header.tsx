@@ -65,21 +65,22 @@ export default function Header() {
               <div className="w-8 h-8 animate-spin rounded-full border-2 border-green-600 border-t-transparent"></div>
             ) : isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <Link href="/dashboard">
-                  <Button variant="ghost" size="sm">
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/dashboard">
                     Dashboard
-                  </Button>
-                </Link>
-                {userProfile?.role === 'admin' && (
-                  <Link href="/admin">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-purple-600 hover:text-purple-700"
-                    >
-                      👑 Admin
-                    </Button>
                   </Link>
+                </Button>
+                {userProfile?.role === 'admin' && (
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="text-purple-600 hover:text-purple-700"
+                  >
+                    <Link href="/admin">
+                      👑 Admin
+                    </Link>
+                  </Button>
                 )}
                 <NotificationCenter />
                 <div className="flex items-center space-x-2">
@@ -98,14 +99,16 @@ export default function Header() {
               </div>
             ) : (
               <div className="flex items-center space-x-3">
-                <Link href="/auth/login">
-                  <Button variant="ghost" size="sm">
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/auth/login">
                     Sign In
-                  </Button>
-                </Link>
-                <Link href="/auth/register">
-                  <Button size="sm">Get Started</Button>
-                </Link>
+                  </Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link href="/auth/register">
+                    Get Started
+                  </Link>
+                </Button>
               </div>
             )}
           </div>
@@ -174,31 +177,33 @@ export default function Header() {
                   <div className="w-8 h-8 animate-spin rounded-full border-2 border-green-600 border-t-transparent"></div>
                 ) : isAuthenticated ? (
                   <div className="space-y-3">
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start"
                     >
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start"
-                      >
-                        Dashboard
-                      </Button>
-                    </Link>
-                    {userProfile?.role === 'admin' && (
                       <Link
-                        href="/admin"
+                        href="/dashboard"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-start text-purple-600 hover:text-purple-700"
+                        Dashboard
+                      </Link>
+                    </Button>
+                    {userProfile?.role === 'admin' && (
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-purple-600 hover:text-purple-700"
+                      >
+                        <Link
+                          href="/admin"
+                          onClick={() => setIsMobileMenuOpen(false)}
                         >
                           👑 Admin
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                     )}
                     <div className="flex items-center space-x-2 px-3 py-2">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -221,22 +226,22 @@ export default function Header() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <Link
-                      href="/auth/login"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Button variant="ghost" size="sm" className="w-full">
+                    <Button asChild variant="ghost" size="sm" className="w-full">
+                      <Link
+                        href="/auth/login"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
                         Sign In
-                      </Button>
-                    </Link>
-                    <Link
-                      href="/auth/register"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Button size="sm" className="w-full">
+                      </Link>
+                    </Button>
+                    <Button asChild size="sm" className="w-full">
+                      <Link
+                        href="/auth/register"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
                         Get Started
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </div>
                 )}
               </div>

@@ -5,7 +5,7 @@ const nextConfig = {
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
   distDir: 'out',
-  
+
   images: {
     domains: [
       'firebasestorage.googleapis.com',
@@ -22,7 +22,7 @@ const nextConfig = {
   },
   // Performance optimizations
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false,
     optimizePackageImports: ['@heroicons/react', 'lucide-react'],
   },
   // Bundle analyzer for production builds
@@ -60,7 +60,7 @@ const nextConfig = {
         util: false,
         buffer: false,
       };
-      
+
       // Exclude problematic modules from client bundle
       config.externals = config.externals || [];
       config.externals.push({
@@ -95,7 +95,7 @@ const nextConfig = {
       ...config.resolve.alias,
       'undici': false,
     };
-    
+
     return config;
   },
   transpilePackages: ['firebase'],

@@ -21,6 +21,29 @@ import {
   getPetitionStatusLabel,
 } from '@/lib/petition-utils';
 import { Petition } from '@/types/petition';
+import { getDocs, collection, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+// Generate static params for all petitions
+export async function generateStaticParams() {
+  // In development, we can skip generating params to speed up builds
+  // and avoid Firestore connection issues during static generation
+  if (process.env.NODE_ENV === 'development') {
+    return [];
+  }
+
+  try {
+    const q = query(collection(db, 'petitions'), where('status', '==', 'approved'));
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+    }));
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    return [];
+  }
+}
 
 export default function PetitionDetailPage() {
   const params = useParams();
@@ -336,8 +359,8 @@ export default function PetitionDetailPage() {
                   <p className="text-sm text-gray-600 mt-2">
                     {petition.targetSignatures - petition.currentSignatures > 0
                       ? `${(
-                          petition.targetSignatures - petition.currentSignatures
-                        ).toLocaleString()} more signatures needed`
+                        petition.targetSignatures - petition.currentSignatures
+                      ).toLocaleString()} more signatures needed`
                       : 'Goal reached! 🎉'}
                   </p>
                 </div>
