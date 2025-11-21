@@ -723,8 +723,8 @@ export const getPetitions = async (
       filters.sortBy === 'popular'
         ? 'currentSignatures'
         : filters.sortBy === 'signatures'
-        ? 'currentSignatures'
-        : 'createdAt';
+          ? 'currentSignatures'
+          : 'createdAt';
     const sortDirection = filters.sortOrder || 'desc';
     q = query(q, orderBy(sortField, sortDirection));
 
