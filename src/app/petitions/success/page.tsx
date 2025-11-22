@@ -2,18 +2,27 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function PetitionSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const petitionId = searchParams?.get('id');
-  const needsPayment = searchParams?.get('payment') === 'true';
+  const [petitionId, setPetitionId] = useState<string | null>(null);
+  const [needsPayment, setNeedsPayment] = useState(false);
   const [countdown, setCountdown] = useState(5);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setPetitionId(searchParams?.get('id'));
+    setNeedsPayment(searchParams?.get('payment') === 'true');
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     if (!petitionId) {
       router.push('/petitions');
       return;

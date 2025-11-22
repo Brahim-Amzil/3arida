@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/AuthProvider';
 import PhoneVerification from '@/components/auth/PhoneVerification';

@@ -75,10 +75,12 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="theme-color" content="#22c55e" />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <ProductionMonitoringProvider>
           <AuthProvider>
-            <div className="min-h-screen bg-gray-50">{children}</div>
+            <div className="min-h-screen bg-gray-50" suppressHydrationWarning>
+              {children}
+            </div>
             {/* PWA Components */}
             <InstallPWAPrompt />
             <PushNotificationPrompt />

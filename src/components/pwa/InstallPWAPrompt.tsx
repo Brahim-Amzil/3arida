@@ -11,8 +11,23 @@ export default function InstallPWAPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+
+    // Check if dismissed recently
+    if (typeof window !== 'undefined') {
+      const dismissed = localStorage.getItem('pwaInstallDismissed');
+      if (dismissed) {
+        const dismissedTime = parseInt(dismissed);
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        if (Date.now() - dismissedTime < sevenDays) {
+          return;
+        }
+      }
+    }
+
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -44,10 +59,12 @@ export default function InstallPWAPrompt() {
   const handleDismiss = () => {
     setShowPrompt(false);
     // Don't show again for 7 days
-    localStorage.setItem('pwaInstallDismissed', Date.now().toString());
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pwaInstallDismissed', Date.now().toString());
+    }
   };
 
-  if (!showPrompt || !deferredPrompt) return null;
+  if (!mounted || !showPrompt || !deferredPrompt) return null;
 
   return (
     <div className="fixed top-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-lg p-4 z-50 animate-slide-down">

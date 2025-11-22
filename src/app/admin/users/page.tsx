@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
+import AdminNav from '@/components/admin/AdminNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAdminGuard } from '@/lib/auth-guards';
@@ -163,29 +164,10 @@ export default function AdminUsersPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      <AdminNav />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Button variant="outline" asChild>
-              <Link href="/admin">
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                Back to Dashboard
-              </Link>
-            </Button>
-          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             User Management
           </h1>
@@ -296,21 +278,23 @@ export default function AdminUsersPage() {
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                         <span className="text-green-600 font-medium text-lg">
-                          {userData.name.charAt(0).toUpperCase()}
+                          {(userData.name || userData.email || 'U')
+                            .charAt(0)
+                            .toUpperCase()}
                         </span>
                       </div>
                       <div>
                         <div className="flex items-center gap-3">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {userData.name}
+                            {userData.name || userData.email || 'Unknown User'}
                           </h3>
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                               userData.role === 'admin'
                                 ? 'bg-purple-100 text-purple-800'
                                 : userData.role === 'moderator'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-gray-100 text-gray-800'
                             }`}
                           >
                             {userData.role}
