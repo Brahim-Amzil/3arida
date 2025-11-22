@@ -14,11 +14,28 @@ export default function PushNotificationPrompt() {
   const { user } = useAuth();
   const [showPrompt, setShowPrompt] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     // Check if we should show the prompt
-    if (!user) return;
+    if (!mounted || !user) return;
     if (!isPushNotificationSupported()) return;
+
+    // Check if dismissed recently
+    if (typeof window !== 'undefined') {
+      const dismissed = localStorage.getItem('pushNotificationDismissed');
+      if (dismissed) {
+        const dismissedTime = parseInt(dismissed);
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        if (Date.now() - dismissedTime < sevenDays) {
+          return;
+        }
+      }
+    }
 
     const permission = getNotificationPermission();
     if (permission === 'default') {
@@ -31,11 +48,11 @@ export default function PushNotificationPrompt() {
       // Already granted, get token
       handleEnableNotifications();
     }
-  }, [user]);
+  }, [mounted, user]);
 
   useEffect(() => {
     // Listen for foreground messages
-    if (!user) return;
+    if (!mounted || !user) return;
 
     const unsubscribe = onForegroundMessage((payload) => {
       console.log('Received foreground message:', payload);
@@ -45,7 +62,7 @@ export default function PushNotificationPrompt() {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [user]);
+  }, [mounted, user]);
 
   const handleEnableNotifications = async () => {
     if (!user) return;
@@ -67,10 +84,12 @@ export default function PushNotificationPrompt() {
   const handleDismiss = () => {
     setShowPrompt(false);
     // Don't ask again for 7 days
-    localStorage.setItem('pushNotificationDismissed', Date.now().toString());
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pushNotificationDismissed', Date.now().toString());
+    }
   };
 
-  if (!showPrompt) return null;
+  if (!mounted || !showPrompt) return null;
 
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 z-50 animate-slide-up">

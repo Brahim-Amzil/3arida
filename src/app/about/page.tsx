@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';

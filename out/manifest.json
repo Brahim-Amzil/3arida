@@ -1,0 +1,58 @@
+{
+  "name": "3arida - منصة العرائض المغربية",
+  "short_name": "3arida",
+  "description": "منصة العرائض الرقمية للمغرب - Digital Petition Platform for Morocco",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "government", "news"],
+  "lang": "ar",
+  "dir": "rtl",
+  "scope": "/",
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "إنشاء عريضة",
+      "short_name": "إنشاء",
+      "description": "إنشاء عريضة جديدة",
+      "url": "/petitions/create",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "تصفح العرائض",
+      "short_name": "تصفح",
+      "description": "تصفح جميع العرائض",
+      "url": "/petitions",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -7,6 +7,8 @@ import { doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Petition } from '@/types/petition';
 import { notifyPetitionStatusChange } from '@/lib/notifications';
+import { logAuditAction, AuditAction } from '@/lib/audit-log';
+import { getUserById } from '@/lib/petitions';
 
 interface PetitionAdminActionsProps {
   petition: Petition;
@@ -86,8 +88,72 @@ export default function PetitionAdminActions({
         updateData.moderatorNotes = notes;
       }
 
+      // If rejecting, add to resubmission history
+      if (action === 'reject') {
+        const resubmissionHistory = petition.resubmissionHistory || [];
+        // Convert existing Date objects to plain objects for Firestore
+        const historyForFirestore = resubmissionHistory.map((entry) => ({
+          rejectedAt:
+            entry.rejectedAt instanceof Date
+              ? Timestamp.fromDate(entry.rejectedAt)
+              : entry.rejectedAt,
+          reason: entry.reason,
+          resubmittedAt: entry.resubmittedAt
+            ? entry.resubmittedAt instanceof Date
+              ? Timestamp.fromDate(entry.resubmittedAt)
+              : entry.resubmittedAt
+            : null,
+        }));
+
+        // Add new rejection entry
+        historyForFirestore.push({
+          rejectedAt: Timestamp.fromDate(now),
+          reason: notes || 'No reason provided',
+          resubmittedAt: null, // Will be filled when user resubmits
+        });
+
+        updateData.resubmissionHistory = historyForFirestore;
+      }
+
       // Update in Firestore
       await updateDoc(doc(db, 'petitions', petition.id), updateData);
+
+      // Log the action to audit trail (async, won't block)
+      if (moderatorId) {
+        const actionMap: Record<string, AuditAction> = {
+          approve: 'petition.approved',
+          reject: 'petition.rejected',
+          pause: 'petition.paused',
+          delete: 'petition.deleted',
+        };
+
+        if (actionMap[action]) {
+          try {
+            const moderator = await getUserById(moderatorId);
+            await logAuditAction({
+              actorId: moderatorId,
+              actorName: moderator?.name || 'Unknown Admin',
+              actorEmail: moderator?.email || '',
+              actorRole: (moderator?.role as 'admin' | 'moderator') || 'admin',
+              action: actionMap[action],
+              targetType: 'petition',
+              targetId: petition.id,
+              targetName: petition.title,
+              details: {
+                oldValue: petition.status,
+                newValue: updateData.status,
+                reason: notes,
+              },
+            });
+            console.log('✅ Audit log created successfully');
+          } catch (auditError) {
+            console.error('❌ Error logging audit action:', auditError);
+            // Don't fail the action if audit logging fails
+          }
+        }
+      } else {
+        console.warn('⚠️ No moderatorId provided for audit logging');
+      }
 
       // Create updated petition object for local state
       const updatedPetition: Petition = {
@@ -95,7 +161,7 @@ export default function PetitionAdminActions({
         status: updateData.status,
         updatedAt: now,
         moderatedBy: updateData.moderatedBy,
-        moderationNotes: updateData.moderationNotes,
+        moderationNotes: updateData.moderatorNotes,
         isActive:
           updateData.isActive !== undefined
             ? updateData.isActive

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Check, X, QrCode, MessageSquare } from 'lucide-react';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
 
 // Define the colors for subtle accents (Tailwind CSS classes)

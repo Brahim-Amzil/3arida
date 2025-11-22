@@ -61,13 +61,27 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
         unsubscribeProfile = onSnapshot(
           userDocRef,
-          (userDoc) => {
+          async (userDoc) => {
             if (userDoc.exists()) {
               const userData = userDoc.data();
               console.log('👤 User profile updated from Firestore', {
                 hasBio: !!userData.bio,
                 bio: userData.bio,
+                isActive: userData.isActive,
               });
+
+              // Check if user is inactive
+              if (userData.isActive === false) {
+                console.warn('⚠️ User account is inactive, logging out...');
+                // Sign out the user
+                await auth.signOut();
+                // Redirect to login with message
+                if (typeof window !== 'undefined') {
+                  window.location.href = '/auth/login?error=account-inactive';
+                }
+                return;
+              }
+
               setUserProfile({
                 id: firebaseUser.uid,
                 name: userData.name || firebaseUser.displayName || '',

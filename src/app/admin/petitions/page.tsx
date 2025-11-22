@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
+import AdminNav from '@/components/admin/AdminNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useModeratorGuard } from '@/lib/auth-guards';
@@ -27,6 +28,7 @@ export default function AdminPetitionsPage() {
     | 'all'
     | 'pending'
     | 'approved'
+    | 'rejected'
     | 'paused'
     | 'archived'
     | 'deleted'
@@ -299,29 +301,10 @@ export default function AdminPetitionsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      <AdminNav />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Button variant="outline" asChild>
-              <Link href="/admin">
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                Back to Dashboard
-              </Link>
-            </Button>
-          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Petition Moderation
           </h1>
@@ -398,6 +381,12 @@ export default function AdminPetitionsPage() {
                   key: 'approved',
                   label: 'Approved',
                   count: allPetitions.filter((p) => p.status === 'approved')
+                    .length,
+                },
+                {
+                  key: 'rejected',
+                  label: 'Rejected',
+                  count: allPetitions.filter((p) => p.status === 'rejected')
                     .length,
                 },
                 {
@@ -592,8 +581,8 @@ export default function AdminPetitionsPage() {
                 {searchQuery || searchCategory !== 'all'
                   ? 'No petitions match your search criteria.'
                   : filter === 'pending'
-                  ? 'No petitions are pending review.'
-                  : `No ${filter} petitions found.`}
+                    ? 'No petitions are pending review.'
+                    : `No ${filter} petitions found.`}
               </p>
             </CardContent>
           </Card>
@@ -652,12 +641,12 @@ export default function AdminPetitionsPage() {
                                     petition.status === 'pending'
                                       ? 'bg-yellow-100 text-yellow-800'
                                       : petition.status === 'approved'
-                                      ? 'bg-green-100 text-green-800'
-                                      : petition.status === 'paused'
-                                      ? 'bg-red-100 text-red-800'
-                                      : petition.status === 'deleted'
-                                      ? 'bg-gray-800 text-white'
-                                      : 'bg-gray-100 text-gray-800'
+                                        ? 'bg-green-100 text-green-800'
+                                        : petition.status === 'paused'
+                                          ? 'bg-red-100 text-red-800'
+                                          : petition.status === 'deleted'
+                                            ? 'bg-gray-800 text-white'
+                                            : 'bg-gray-100 text-gray-800'
                                   }`}
                                 >
                                   {petition.status}
@@ -704,6 +693,59 @@ export default function AdminPetitionsPage() {
                                   </p>
                                 </div>
                               )}
+
+                              {/* Rejection History */}
+                              {petition.status === 'rejected' &&
+                                petition.resubmissionHistory &&
+                                petition.resubmissionHistory.length > 0 && (
+                                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                                    <p className="text-sm font-medium text-red-800 mb-2">
+                                      Rejection History (
+                                      {petition.resubmissionCount || 0}{' '}
+                                      resubmission
+                                      {(petition.resubmissionCount || 0) !== 1
+                                        ? 's'
+                                        : ''}
+                                      ):
+                                    </p>
+                                    <div className="space-y-2">
+                                      {petition.resubmissionHistory.map(
+                                        (entry, index) => (
+                                          <div
+                                            key={index}
+                                            className="text-xs text-red-700 border-l-2 border-red-300 pl-2"
+                                          >
+                                            <p>
+                                              <strong>
+                                                Attempt {index + 1}:
+                                              </strong>
+                                            </p>
+                                            <p>
+                                              Rejected:{' '}
+                                              {entry.rejectedAt instanceof Date
+                                                ? entry.rejectedAt.toLocaleDateString()
+                                                : new Date(
+                                                    entry.rejectedAt
+                                                  ).toLocaleDateString()}
+                                            </p>
+                                            <p>Reason: {entry.reason}</p>
+                                            {entry.resubmittedAt && (
+                                              <p>
+                                                Resubmitted:{' '}
+                                                {entry.resubmittedAt instanceof
+                                                Date
+                                                  ? entry.resubmittedAt.toLocaleDateString()
+                                                  : new Date(
+                                                      entry.resubmittedAt
+                                                    ).toLocaleDateString()}
+                                              </p>
+                                            )}
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                             </div>
 
                             <div className="ml-6 flex flex-col gap-2">

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import PetitionCard from '@/components/petitions/PetitionCard';
 import { Button } from '@/components/ui/button';
 import { getPetitions, getCategories } from '@/lib/petitions';

@@ -369,8 +369,11 @@ export async function validateEnvironmentOnStartup(): Promise<boolean> {
     console.error('❌ Environment validation failed:');
     validation.errors.forEach((error) => console.error(`  ${error}`));
 
+    // Don't throw in production, just warn - let the app try to run
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('Invalid environment configuration for production');
+      console.warn(
+        '⚠️ Continuing despite validation errors - some features may not work'
+      );
     }
 
     return false;

@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
+import Footer from '@/components/layout/Footer';
 import PetitionCard from '@/components/petitions/PetitionCard';
 import { Button } from '@/components/ui/button';
 import { getPetitions, getCategories } from '@/lib/petitions';
@@ -14,22 +15,36 @@ export default function PetitionsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
   const [filters, setFilters] = useState<PetitionFilters>({
-    category: searchParams?.get('category') || '',
-    search: searchParams?.get('search') || '',
+    category: '',
+    search: '',
     sortBy: 'recent',
     sortOrder: 'desc',
   });
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
 
+  // Initialize filters from URL params after mount
+  useEffect(() => {
+    setMounted(true);
+    setFilters({
+      category: searchParams?.get('category') || '',
+      search: searchParams?.get('search') || '',
+      sortBy: 'recent',
+      sortOrder: 'desc',
+    });
+  }, [searchParams]);
+
   useEffect(() => {
     loadCategories();
   }, []);
 
   useEffect(() => {
-    loadPetitions(true);
-  }, [filters]);
+    if (mounted) {
+      loadPetitions(true);
+    }
+  }, [filters, mounted]);
 
   const loadCategories = async () => {
     try {
@@ -305,6 +320,7 @@ export default function PetitionsPage() {
           </main>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

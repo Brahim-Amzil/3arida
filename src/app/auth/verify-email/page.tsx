@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { sendEmailVerification, applyActionCode } from 'firebase/auth';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -18,16 +18,22 @@ export default function VerifyEmailPage() {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [verificationSent, setVerificationSent] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [mode, setMode] = useState<string | null>(null);
+  const [actionCode, setActionCode] = useState<string | null>(null);
 
-  const mode = searchParams?.get('mode');
-  const actionCode = searchParams?.get('oobCode');
+  useEffect(() => {
+    setMounted(true);
+    setMode(searchParams?.get('mode'));
+    setActionCode(searchParams?.get('oobCode'));
+  }, [searchParams]);
 
   // Handle email verification link
   useEffect(() => {
-    if (mode === 'verifyEmail' && actionCode) {
+    if (mounted && mode === 'verifyEmail' && actionCode) {
       handleEmailVerification(actionCode);
     }
-  }, [mode, actionCode]);
+  }, [mounted, mode, actionCode]);
 
   const handleEmailVerification = async (code: string) => {
     try {
@@ -98,8 +104,8 @@ export default function VerifyEmailPage() {
                   {loading
                     ? 'Verifying Email...'
                     : success
-                    ? 'Email Verified!'
-                    : 'Verification Failed'}
+                      ? 'Email Verified!'
+                      : 'Verification Failed'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-center">

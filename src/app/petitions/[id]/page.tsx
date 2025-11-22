@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
 import PhoneVerification from '@/components/auth/PhoneVerification';
 import QRCodeDisplay from '@/components/petitions/QRCodeDisplay';
@@ -13,6 +13,7 @@ import PetitionShare from '@/components/petitions/PetitionShare';
 import PetitionComments from '@/components/petitions/PetitionComments';
 import PetitionManagement from '@/components/petitions/PetitionManagement';
 import PetitionUpdates from '@/components/petitions/PetitionUpdates';
+import PetitionSignees from '@/components/petitions/PetitionSignees';
 import { useRealtimePetition } from '@/hooks/useRealtimePetition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -443,7 +444,6 @@ export default function PetitionDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
-
       {/* Phone Verification Modal */}
       {showSigningFlow && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -566,6 +566,48 @@ export default function PetitionDetailPage() {
                   </span>
                 </div>
 
+                {/* Petition Info Box */}
+                <div className="mb-4 bg-gray-50 border border-gray-300 rounded-md p-3">
+                  <div className="space-y-1.5">
+                    {/* Publisher */}
+                    <div className="flex items-start">
+                      <span className="text-sm font-normal text-gray-600 min-w-[90px]">
+                        Publisher:
+                      </span>
+                      <span className="text-sm text-gray-900 font-medium">
+                        {petition.publisherName ||
+                          (creatorLoading
+                            ? 'Loading...'
+                            : creator?.name || 'Unknown User')}
+                      </span>
+                    </div>
+
+                    {/* Target (Addressed To) */}
+                    {(petition.addressedToSpecific ||
+                      petition.addressedToType) && (
+                      <div className="flex items-start">
+                        <span className="text-sm font-normal text-gray-600 min-w-[90px]">
+                          Target:
+                        </span>
+                        <span className="text-sm text-gray-900 font-medium">
+                          {petition.addressedToSpecific ||
+                            petition.addressedToType}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Subject */}
+                    <div className="flex items-start">
+                      <span className="text-sm font-normal text-gray-600 min-w-[90px]">
+                        Subject:
+                      </span>
+                      <span className="text-sm text-gray-900 font-medium">
+                        {petition.title}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* 2. Petition Media (Images only - videos appear after description) */}
                 {petition.mediaUrls && petition.mediaUrls.length > 0 && (
                   <div className="mb-6 space-y-4">
@@ -604,6 +646,72 @@ export default function PetitionDetailPage() {
                   </div>
                 )}
 
+                {/* Rejected Alert */}
+                {petition.status === 'rejected' && (
+                  <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <X className="h-5 w-5 text-red-500" />
+                      </div>
+                      <div className="ml-3 flex-1">
+                        <h3 className="text-sm font-medium text-red-800">
+                          Petition Rejected
+                        </h3>
+                        <p className="mt-1 text-sm text-red-700">
+                          This petition has been rejected by our moderation team
+                          and cannot accept signatures.
+                        </p>
+                        {/* Show rejection reason from moderationNotes or latest resubmission history */}
+                        {(petition.moderationNotes ||
+                          (petition.resubmissionHistory &&
+                            petition.resubmissionHistory.length > 0)) && (
+                          <div className="mt-2 p-2 bg-red-100 rounded">
+                            <p className="text-sm font-medium text-red-800">
+                              Reason:
+                            </p>
+                            <p className="text-sm text-red-700">
+                              {petition.moderationNotes ||
+                                (petition.resubmissionHistory &&
+                                petition.resubmissionHistory.length > 0
+                                  ? petition.resubmissionHistory[
+                                      petition.resubmissionHistory.length - 1
+                                    ].reason
+                                  : 'No reason provided')}
+                            </p>
+                          </div>
+                        )}
+                        {/* Show Edit & Resubmit button if user is creator and hasn't exceeded limit */}
+                        {user &&
+                          petition.creatorId === user.uid &&
+                          (petition.resubmissionCount || 0) < 3 && (
+                            <div className="mt-3">
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  router.push(`/petitions/${petition.id}/edit`)
+                                }
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                Edit & Resubmit (
+                                {3 - (petition.resubmissionCount || 0)} attempts
+                                left)
+                              </Button>
+                            </div>
+                          )}
+                        {user &&
+                          petition.creatorId === user.uid &&
+                          (petition.resubmissionCount || 0) >= 3 && (
+                            <div className="mt-3">
+                              <p className="text-sm text-red-600 font-medium">
+                                Maximum resubmission attempts reached (3/3)
+                              </p>
+                            </div>
+                          )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Paused Alert */}
                 {petition.status === 'paused' && (
                   <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
@@ -620,6 +728,16 @@ export default function PetitionDetailPage() {
                           new signatures at this time. It may be under review or
                           temporarily suspended by moderators.
                         </p>
+                        {petition.moderationNotes && (
+                          <div className="mt-2 p-2 bg-orange-100 rounded">
+                            <p className="text-sm font-medium text-orange-800">
+                              Reason:
+                            </p>
+                            <p className="text-sm text-orange-700">
+                              {petition.moderationNotes}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -636,9 +754,15 @@ export default function PetitionDetailPage() {
                       {petition.targetSignatures.toLocaleString()} goal
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="w-full bg-gray-200 rounded-full h-4">
                     <div
-                      className="bg-green-600 h-3 rounded-full transition-all duration-300"
+                      className={`h-4 rounded-full transition-all duration-300 ${
+                        progress < 30
+                          ? 'bg-gray-500'
+                          : progress < 60
+                            ? 'bg-yellow-600'
+                            : 'bg-blue-600'
+                      }`}
                       style={{ width: `${Math.min(progress, 100)}%` }}
                     />
                   </div>
@@ -860,12 +984,12 @@ export default function PetitionDetailPage() {
                                         creator.createdAt
                                       ).toLocaleDateString()
                                     : (creator.createdAt as any).toDate
-                                    ? (creator.createdAt as any)
-                                        .toDate()
-                                        .toLocaleDateString()
-                                    : new Date(
-                                        creator.createdAt as any
-                                      ).toLocaleDateString()
+                                      ? (creator.createdAt as any)
+                                          .toDate()
+                                          .toLocaleDateString()
+                                      : new Date(
+                                          creator.createdAt as any
+                                        ).toLocaleDateString()
                                   : 'N/A'}
                               </p>
                             </div>
@@ -922,7 +1046,7 @@ export default function PetitionDetailPage() {
                       {/* Publisher Information */}
                       {(petition.publisherType || petition.publisherName) && (
                         <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <h3 className="text-sm font-semibold text-blue-900 mb-3">
+                          <h3 className="text-base font-bold text-blue-700 mb-3">
                             Publisher Information
                           </h3>
                           <div className="grid grid-cols-2 gap-3">
@@ -952,21 +1076,26 @@ export default function PetitionDetailPage() {
                         petition.addressedToSpecific ||
                         petition.referenceCode) && (
                         <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-4">
-                          <h3 className="text-sm font-semibold text-purple-900 mb-3">
+                          <h3 className="text-base font-bold text-purple-700 mb-3">
                             Petition Details
                           </h3>
                           <div className="grid grid-cols-2 gap-3">
+                            {/* Type */}
                             {petition.petitionType && (
                               <div>
-                                <p className="text-xs text-purple-700">Type</p>
+                                <p className="text-xs text-purple-700 mb-1">
+                                  Type
+                                </p>
                                 <p className="text-sm font-medium text-purple-900">
                                   {petition.petitionType}
                                 </p>
                               </div>
                             )}
+
+                            {/* Addressed To */}
                             {petition.addressedToType && (
                               <div>
-                                <p className="text-xs text-purple-700">
+                                <p className="text-xs text-purple-700 mb-1">
                                   Addressed To
                                 </p>
                                 <p className="text-sm font-medium text-purple-900">
@@ -974,9 +1103,11 @@ export default function PetitionDetailPage() {
                                 </p>
                               </div>
                             )}
+
+                            {/* Specific Target - Full Width */}
                             {petition.addressedToSpecific && (
-                              <div className="col-span-2">
-                                <p className="text-xs text-purple-700">
+                              <div className="col-span-1">
+                                <p className="text-xs text-purple-700 mb-1">
                                   Specific Target
                                 </p>
                                 <p className="text-sm font-medium text-purple-900">
@@ -984,9 +1115,17 @@ export default function PetitionDetailPage() {
                                 </p>
                               </div>
                             )}
+
+                            {/* Reference Code */}
                             {petition.referenceCode && (
-                              <div className="col-span-2">
-                                <p className="text-xs text-purple-700">
+                              <div
+                                className={
+                                  petition.addressedToSpecific
+                                    ? ''
+                                    : 'col-start-2'
+                                }
+                              >
+                                <p className="text-xs text-purple-700 mb-1">
                                   Reference Code
                                 </p>
                                 <p className="text-lg font-bold text-purple-900 font-mono tracking-wider">
@@ -1017,35 +1156,7 @@ export default function PetitionDetailPage() {
 
                   {/* Signees Tab */}
                   {activeTab === 'signees' && (
-                    <div className="space-y-4 w-full">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {petition.currentSignatures.toLocaleString()}{' '}
-                          Supporters
-                        </h3>
-                      </div>
-                      <div className="w-full text-center py-8 text-gray-500">
-                        <svg
-                          className="w-12 h-12 mx-auto mb-4 text-gray-300"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                          />
-                        </svg>
-                        <p className="font-medium">
-                          {petition.currentSignatures} people have signed
-                        </p>
-                        <p className="text-sm mt-1">
-                          Signature details are private for security
-                        </p>
-                      </div>
-                    </div>
+                    <PetitionSignees petitionId={petition.id} />
                   )}
                 </div>
               </CardContent>
@@ -1109,6 +1220,53 @@ export default function PetitionDetailPage() {
                   onArchive={handleCreatorArchive}
                   onRequestDeletion={handleCreatorRequestDeletion}
                 />
+              )}
+
+            {/* Resubmission History - Show to admins if petition has been resubmitted */}
+            {isAdmin &&
+              petition.resubmissionHistory &&
+              petition.resubmissionHistory.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-orange-600">
+                      Resubmission History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-600">
+                        This petition has been resubmitted{' '}
+                        <strong>{petition.resubmissionCount || 0}</strong>{' '}
+                        time(s).
+                      </p>
+                      {petition.resubmissionHistory.map((history, index) => (
+                        <div
+                          key={index}
+                          className="border-l-2 border-orange-300 pl-3 py-2"
+                        >
+                          <p className="text-xs text-gray-500 mb-1">
+                            Attempt {index + 1}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            <strong>Rejected:</strong>{' '}
+                            {new Date(history.rejectedAt).toLocaleDateString()}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            <strong>Reason:</strong> {history.reason}
+                          </p>
+                          {history.resubmittedAt && (
+                            <p className="text-sm text-gray-700">
+                              <strong>Resubmitted:</strong>{' '}
+                              {new Date(
+                                history.resubmittedAt
+                              ).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
 
             {/* Admin Controls */}
@@ -1230,10 +1388,30 @@ export default function PetitionDetailPage() {
                 shareable={false}
               />
             </div>
+
+            {/* Share Button */}
+            <Button
+              onClick={handleShare}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+            >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                />
+              </svg>
+              Share This Petition
+            </Button>
           </div>
         </div>
       </div>
-
       <Footer />
     </div>
   );

@@ -41,8 +41,13 @@ export default function PetitionCard({
   if (variant === 'grid') {
     return (
       <div
-        className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden ${className}`}
+        className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden ${className} ${petition.status === 'deleted' ? 'relative' : ''}`}
       >
+        {/* Deleted Overlay */}
+        {petition.status === 'deleted' && (
+          <div className="absolute inset-0 bg-gray-900 bg-opacity-35 z-10 pointer-events-none" />
+        )}
+
         <Link href={petitionUrl} className="block">
           {/* Petition Image */}
           <div className="relative h-48 bg-gray-200">
@@ -75,7 +80,19 @@ export default function PetitionCard({
             {/* Status Badge */}
             <div className="absolute top-3 right-3">
               <span
-                className={`px-2 py-1 text-xs font-medium rounded-full text-white bg-${statusColor}-500`}
+                className={`px-2 py-1 text-xs font-medium rounded-full text-white ${
+                  petition.status === 'approved'
+                    ? 'bg-green-500'
+                    : petition.status === 'pending'
+                      ? 'bg-yellow-500'
+                      : petition.status === 'rejected'
+                        ? 'bg-red-500'
+                        : petition.status === 'paused'
+                          ? 'bg-orange-500'
+                          : petition.status === 'archived'
+                            ? 'bg-blue-500'
+                            : 'bg-gray-500'
+                }`}
               >
                 {statusLabel}
               </span>
@@ -105,7 +122,7 @@ export default function PetitionCard({
             {showCreator && (
               <div className="flex items-center mb-3">
                 <div className="flex items-center text-sm text-gray-600">
-                  <span>Created by User</span>
+                  <span>Created by {petition.creatorName || 'Anonymous'}</span>
                   {/* TODO: Add creator verification badge */}
                 </div>
               </div>
@@ -115,9 +132,15 @@ export default function PetitionCard({
             {showProgress && (
               <div className="mb-4">
                 {/* Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                   <div
-                    className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                    className={`h-2.5 rounded-full transition-all duration-300 ${
+                      progress < 30
+                        ? 'bg-gray-500'
+                        : progress < 60
+                          ? 'bg-yellow-600'
+                          : 'bg-blue-600'
+                    }`}
                     style={{ width: `${Math.min(progress, 100)}%` }}
                   />
                 </div>
@@ -223,8 +246,13 @@ export default function PetitionCard({
   if (variant === 'list') {
     return (
       <div
-        className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden ${className}`}
+        className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden ${className} ${petition.status === 'deleted' ? 'relative' : ''}`}
       >
+        {/* Deleted Overlay */}
+        {petition.status === 'deleted' && (
+          <div className="absolute inset-0 bg-gray-900 bg-opacity-45 z-10 pointer-events-none" />
+        )}
+
         <Link href={petitionUrl} className="block">
           <div className="flex items-center">
             {/* Petition Image */}
@@ -266,7 +294,19 @@ export default function PetitionCard({
                   {petition.title}
                 </h3>
                 <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full text-white bg-${statusColor}-500 flex-shrink-0`}
+                  className={`px-2 py-1 text-xs font-medium rounded-full text-white flex-shrink-0 ${
+                    petition.status === 'approved'
+                      ? 'bg-green-500'
+                      : petition.status === 'pending'
+                        ? 'bg-yellow-500'
+                        : petition.status === 'rejected'
+                          ? 'bg-red-500'
+                          : petition.status === 'paused'
+                            ? 'bg-orange-500'
+                            : petition.status === 'archived'
+                              ? 'bg-blue-500'
+                              : 'bg-gray-500'
+                  }`}
                 >
                   {statusLabel}
                 </span>
@@ -274,15 +314,23 @@ export default function PetitionCard({
 
               {showCreator && (
                 <div className="flex items-center mb-1">
-                  <span className="text-sm text-gray-600">Created by User</span>
+                  <span className="text-sm text-gray-600">
+                    Created by {petition.creatorName || 'Anonymous'}
+                  </span>
                 </div>
               )}
 
               {showProgress && (
                 <div className="mb-1">
-                  <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1">
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
                     <div
-                      className="bg-green-600 h-1.5 rounded-full transition-all duration-300"
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        progress < 30
+                          ? 'bg-gray-500'
+                          : progress < 60
+                            ? 'bg-yellow-600'
+                            : 'bg-blue-600'
+                      }`}
                       style={{ width: `${Math.min(progress, 100)}%` }}
                     />
                   </div>
@@ -312,8 +360,13 @@ export default function PetitionCard({
   if (variant === 'featured') {
     return (
       <div
-        className={`bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 overflow-hidden border-2 border-green-200 ${className}`}
+        className={`bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 overflow-hidden border-2 border-green-200 ${className} ${petition.status === 'deleted' ? 'relative' : ''}`}
       >
+        {/* Deleted Overlay */}
+        {petition.status === 'deleted' && (
+          <div className="absolute inset-0 bg-gray-900 bg-opacity-45 z-10 pointer-events-none rounded-xl" />
+        )}
+
         <Link href={petitionUrl} className="block">
           {/* Featured Badge */}
           <div className="bg-gradient-to-r from-green-500 to-green-600 text-white text-center py-2">
@@ -365,7 +418,9 @@ export default function PetitionCard({
             {showCreator && (
               <div className="flex items-center mb-4">
                 <div className="flex items-center text-gray-600">
-                  <span className="font-medium">Created by User</span>
+                  <span className="font-medium">
+                    Created by {petition.creatorName || 'Anonymous'}
+                  </span>
                 </div>
               </div>
             )}

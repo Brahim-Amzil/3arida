@@ -1,0 +1,38 @@
+{
+  "petition": {
+    "title": "نطالب بدعم وإحياء الفنون الأمازيغية التقليدية لأن الثقافة هوية",
+    "description": "تُعد الفنون الأمازيغية من أقدم الفنون الثقافية المغربية، فهي تعبر عن الأصالة والتنوع والإبداع الشعبي. لكن العديد من الفنون الأمازيغية التقليدية مهددة بالاندثار بسبب غياب الدعم وضعف الاهتمام الإعلامي والمؤسساتي.\n\nنطالب بما يلي:\n\n1. إنشاء مراكز ثقافية متخصصة في الفنون الأمازيغية في مختلف المناطق\n2. دعم الفنانين الأمازيغيين ماديًا ومعنويًا لتشجيعهم على الاستمرار\n3. إدراج الفنون الأمازيغية في المناهج التعليمية لتعريف الأجيال الجديدة بها\n4. تنظيم مهرجانات سنوية للفنون الأمازيغية على المستوى الوطني والدولي\n5. توثيق الفنون الأمازيغية التقليدية عبر الأرشفة الرقمية والسمعية البصرية\n\nالفنون الأمازيغية هي جزء لا يتجزأ من الهوية المغربية، ويجب الحفاظ عليها ونقلها للأجيال القادمة. انضم إلينا في هذه الحملة لحماية تراثنا الثقافي!",
+    "category": "Culture",
+    "subcategory": "Arts & Heritage",
+    "targetSignatures": 50000,
+    "currentSignatures": 39000,
+    "status": "approved",
+    "creatorId": "4G5VQdqzBmTXVU5UVcKmazOeLzj1",
+    "publisherType": "Organization",
+    "publisherName": "جمعية الحفاظ على التراث الأمازيغي",
+    "petitionType": "Policy Change",
+    "addressedToType": "Government",
+    "addressedToSpecific": "وزارة الثقافة والشباب والرياضة",
+    "referenceCode": "AM7845",
+    "mediaUrls": [
+      "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800",
+      "https://images.unsplash.com/photo-1514222709107-a180c68d72b4?w=800"
+    ],
+    "youtubeVideoUrl": "",
+    "tags": "ثقافة,أمازيغية,تراث,فنون,مغرب",
+    "location": {
+      "country": "Morocco",
+      "city": "Rabat",
+      "region": "Rabat-Salé-Kénitra"
+    },
+    "pricingTier": "enterprise",
+    "amountPaid": 0,
+    "paymentStatus": "unpaid",
+    "hasQrCode": false,
+    "viewCount": 15420,
+    "shareCount": 892,
+    "isPublic": true,
+    "isActive": true
+  },
+  "instructions": "To add this mock petition:\n\n1. Go to Firebase Console: https://console.firebase.google.com/project/arida-c5faf/firestore\n2. Click on 'petitions' collection\n3. Click 'Add document'\n4. Use 'Auto-ID' for document ID\n5. Copy the fields from the 'petition' object above\n6. For dates, use these values:\n   - createdAt: 45 days ago\n   - updatedAt: today\n   - approvedAt: 44 days ago\n7. Click 'Save'\n\nThe petition will then appear in your petition explorer!"
+}

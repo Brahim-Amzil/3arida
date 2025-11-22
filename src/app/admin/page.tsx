@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Header from '@/components/layout/Header';
+import Link from 'next/link';
+import Header from '@/components/layout/HeaderWrapper';
+import AdminNav from '@/components/admin/AdminNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAdminGuard } from '@/lib/auth-guards';
@@ -129,6 +131,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      <AdminNav />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -138,24 +141,6 @@ export default function AdminDashboard() {
           <p className="text-lg text-gray-600">
             Manage petitions, users, and platform statistics
           </p>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-4">
-            <Button asChild>
-              <a href="/admin/petitions">Manage Petitions</a>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="/admin/users">Manage Users</a>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="/admin/moderators">Manage Moderators</a>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="/admin/analytics">View Analytics</a>
-            </Button>
-          </div>
         </div>
 
         {loading ? (
@@ -346,10 +331,10 @@ export default function AdminDashboard() {
                                   petition.status === 'pending'
                                     ? 'bg-yellow-100 text-yellow-800'
                                     : petition.status === 'approved'
-                                    ? 'bg-green-100 text-green-800'
-                                    : petition.status === 'paused'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-gray-100 text-gray-800'
+                                      ? 'bg-green-100 text-green-800'
+                                      : petition.status === 'paused'
+                                        ? 'bg-red-100 text-red-800'
+                                        : 'bg-gray-100 text-gray-800'
                                 }`}
                               >
                                 {petition.status}
@@ -360,9 +345,9 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           <Button size="sm" variant="outline" asChild>
-                            <a href={`/admin/petitions/${petition.id}`}>
+                            <Link href={`/admin/petitions/${petition.id}`}>
                               Review
-                            </a>
+                            </Link>
                           </Button>
                         </div>
                       ))}

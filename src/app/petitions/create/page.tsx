@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -1416,8 +1416,8 @@ export default function CreatePetitionPage() {
                       index < currentStep
                         ? 'bg-green-600 border-green-600 text-white'
                         : index === currentStep
-                        ? 'border-green-600 text-green-600 bg-white'
-                        : 'border-gray-300 text-gray-400 bg-white'
+                          ? 'border-green-600 text-green-600 bg-white'
+                          : 'border-gray-300 text-gray-400 bg-white'
                     }`}
                   >
                     {index < currentStep ? '✓' : index + 1}
