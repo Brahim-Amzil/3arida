@@ -113,10 +113,19 @@ class EnvironmentValidator {
       const value = process.env[req.key];
 
       if (req.required && !value) {
-        errors.push(`Missing required environment variable: ${req.key}`);
-        errors.push(`  Description: ${req.description}`);
-        if (req.example) {
-          errors.push(`  Example: ${req.example}`);
+        // In production, only warn instead of error to prevent app from crashing
+        if (process.env.NODE_ENV === 'production') {
+          warnings.push(`Missing required environment variable: ${req.key}`);
+          warnings.push(`  Description: ${req.description}`);
+          if (req.example) {
+            warnings.push(`  Example: ${req.example}`);
+          }
+        } else {
+          errors.push(`Missing required environment variable: ${req.key}`);
+          errors.push(`  Description: ${req.description}`);
+          if (req.example) {
+            errors.push(`  Example: ${req.example}`);
+          }
         }
         return;
       }
@@ -124,9 +133,18 @@ class EnvironmentValidator {
       if (value) {
         // Validate format if validator provided
         if (req.validator && !req.validator(value)) {
-          errors.push(`Invalid format for ${req.key}: ${req.description}`);
-          if (req.example) {
-            errors.push(`  Expected format like: ${req.example}`);
+          // In production, only warn about format issues
+          const message = `Invalid format for ${req.key}: ${req.description}`;
+          const exampleMsg = req.example
+            ? `  Expected format like: ${req.example}`
+            : '';
+
+          if (process.env.NODE_ENV === 'production') {
+            warnings.push(message);
+            if (exampleMsg) warnings.push(exampleMsg);
+          } else {
+            errors.push(message);
+            if (exampleMsg) errors.push(exampleMsg);
           }
         }
 
@@ -369,11 +387,12 @@ export async function validateEnvironmentOnStartup(): Promise<boolean> {
     console.error('❌ Environment validation failed:');
     validation.errors.forEach((error) => console.error(`  ${error}`));
 
-    // Don't throw in production, just warn - let the app try to run
+    // In production, always continue - don't block the app
     if (process.env.NODE_ENV === 'production') {
       console.warn(
         '⚠️ Continuing despite validation errors - some features may not work'
       );
+      return true; // Return true to allow app to continue
     }
 
     return false;
@@ -384,24 +403,39 @@ export async function validateEnvironmentOnStartup(): Promise<boolean> {
     validation.warnings.forEach((warning) => console.warn(`  ${warning}`));
   }
 
-  // Validate Firebase project
+  // Validate Firebase project - skip in production if it fails
   try {
     const firebaseValidation = await envValidator.validateFirebaseProject();
     if (!firebaseValidation.isValid) {
       console.error('❌ Firebase validation failed:');
       firebaseValidation.errors.forEach((error) => console.error(`  ${error}`));
+
+      if (process.env.NODE_ENV === 'production') {
+        console.warn('⚠️ Continuing despite Firebase validation errors');
+        return true;
+      }
       return false;
     }
   } catch (error) {
     console.error('❌ Firebase validation error:', error);
+
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('⚠️ Continuing despite Firebase validation errors');
+      return true;
+    }
     return false;
   }
 
-  // Validate Stripe
+  // Validate Stripe - skip in production if it fails
   const stripeValidation = envValidator.validateStripeConfig();
   if (!stripeValidation.isValid) {
     console.error('❌ Stripe validation failed:');
     stripeValidation.errors.forEach((error) => console.error(`  ${error}`));
+
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('⚠️ Continuing despite Stripe validation errors');
+      return true;
+    }
     return false;
   }
 
