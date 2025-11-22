@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Header from '@/components/layout/HeaderWrapper';
+import Footer from '@/components/layout/Footer';
 
 const contactReasons = [
   { value: 'general', label: 'استفسار عام' },
@@ -109,347 +111,355 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">اتصل بنا</h1>
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-lg shadow-sm p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">اتصل بنا</h1>
 
-          <div className="space-y-8">
-            <section>
-              <p className="text-gray-700 text-lg">
-                نحن هنا لمساعدتك! إذا كان لديك أي أسئلة أو استفسارات أو تعليقات،
-                يرجى ملء النموذج أدناه وسنرد عليك في أقرب وقت ممكن.
-              </p>
-            </section>
+            <div className="space-y-8">
+              <section>
+                <p className="text-gray-700 text-lg">
+                  نحن هنا لمساعدتك! إذا كان لديك أي أسئلة أو استفسارات أو
+                  تعليقات، يرجى ملء النموذج أدناه وسنرد عليك في أقرب وقت ممكن.
+                </p>
+              </section>
 
-            {/* Contact Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Name */}
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  الاسم الكامل *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  required
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="أدخل اسمك الكامل"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  البريد الإلكتروني *
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="your@email.com"
-                />
-              </div>
-
-              {/* Reason */}
-              <div>
-                <label
-                  htmlFor="reason"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  سبب التواصل *
-                </label>
-                <select
-                  id="reason"
-                  required
-                  value={formData.reason}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      reason: e.target.value,
-                      petitionCode: '',
-                      reportDetails: '',
-                    })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="">اختر السبب</option>
-                  {contactReasons.map((reason) => (
-                    <option key={reason.value} value={reason.value}>
-                      {reason.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Petition Code - Show only when reason is 'petition' */}
-              {formData.reason === 'petition' && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label
-                      htmlFor="petitionCode"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      رمز العريضة *
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowPetitionHelp(true)}
-                      className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span>كيف أجد الرمز؟</span>
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    id="petitionCode"
-                    required
-                    value={formData.petitionCode}
-                    onChange={(e) =>
-                      setFormData({ ...formData, petitionCode: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="مثال: 3AR-ABC123"
-                  />
-
-                  {/* Petition Preview Card */}
-                  {petitionLoading && (
-                    <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200 animate-pulse">
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                    </div>
-                  )}
-
-                  {petitionError && (
-                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                      ❌ {petitionError}
-                    </div>
-                  )}
-
-                  {petitionData && !petitionLoading && (
-                    <div className="mt-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0">
-                          <svg
-                            className="w-5 h-5 text-green-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                            {petitionData.title}
-                          </h4>
-                          <div className="flex items-center gap-4 text-xs text-gray-600">
-                            <span className="flex items-center gap-1">
-                              <svg
-                                className="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                />
-                              </svg>
-                              {petitionData.signatureCount || 0} توقيع
-                            </span>
-                            <span className="px-2 py-0.5 bg-white rounded text-xs">
-                              {petitionData.referenceCode}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Report Details - Show only when reason is 'report' */}
-              {formData.reason === 'report' && (
+              {/* Contact Form */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Name */}
                 <div>
                   <label
-                    htmlFor="reportDetails"
+                    htmlFor="name"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    تفاصيل البلاغ *
+                    الاسم الكامل *
                   </label>
-                  <textarea
-                    id="reportDetails"
+                  <input
+                    type="text"
+                    id="name"
                     required
-                    rows={4}
-                    value={formData.reportDetails}
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="أدخل اسمك الكامل"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    البريد الإلكتروني *
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="your@email.com"
+                  />
+                </div>
+
+                {/* Reason */}
+                <div>
+                  <label
+                    htmlFor="reason"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    سبب التواصل *
+                  </label>
+                  <select
+                    id="reason"
+                    required
+                    value={formData.reason}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        reportDetails: e.target.value,
+                        reason: e.target.value,
+                        petitionCode: '',
+                        reportDetails: '',
                       })
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="يرجى وصف المحتوى الذي تريد الإبلاغ عنه بالتفصيل (نوع المحتوى، الرابط إن وجد، سبب البلاغ...)"
+                  >
+                    <option value="">اختر السبب</option>
+                    {contactReasons.map((reason) => (
+                      <option key={reason.value} value={reason.value}>
+                        {reason.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Petition Code - Show only when reason is 'petition' */}
+                {formData.reason === 'petition' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label
+                        htmlFor="petitionCode"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        رمز العريضة *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowPetitionHelp(true)}
+                        className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <span>كيف أجد الرمز؟</span>
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      id="petitionCode"
+                      required
+                      value={formData.petitionCode}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          petitionCode: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="مثال: 3AR-ABC123"
+                    />
+
+                    {/* Petition Preview Card */}
+                    {petitionLoading && (
+                      <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200 animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                    )}
+
+                    {petitionError && (
+                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                        ❌ {petitionError}
+                      </div>
+                    )}
+
+                    {petitionData && !petitionLoading && (
+                      <div className="mt-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0">
+                            <svg
+                              className="w-5 h-5 text-green-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                              {petitionData.title}
+                            </h4>
+                            <div className="flex items-center gap-4 text-xs text-gray-600">
+                              <span className="flex items-center gap-1">
+                                <svg
+                                  className="w-3 h-3"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                  />
+                                </svg>
+                                {petitionData.signatureCount || 0} توقيع
+                              </span>
+                              <span className="px-2 py-0.5 bg-white rounded text-xs">
+                                {petitionData.referenceCode}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Report Details - Show only when reason is 'report' */}
+                {formData.reason === 'report' && (
+                  <div>
+                    <label
+                      htmlFor="reportDetails"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      تفاصيل البلاغ *
+                    </label>
+                    <textarea
+                      id="reportDetails"
+                      required
+                      rows={4}
+                      value={formData.reportDetails}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          reportDetails: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="يرجى وصف المحتوى الذي تريد الإبلاغ عنه بالتفصيل (نوع المحتوى، الرابط إن وجد، سبب البلاغ...)"
+                    />
+                    <p className="mt-2 text-sm text-gray-500">
+                      💡 يرجى تضمين رابط العريضة أو المحتوى المبلغ عنه إن أمكن
+                    </p>
+                  </div>
+                )}
+
+                {/* Subject */}
+                <div>
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    الموضوع *
+                  </label>
+                  <input
+                    type="text"
+                    id="subject"
+                    required
+                    value={formData.subject}
+                    onChange={(e) =>
+                      setFormData({ ...formData, subject: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="موضوع رسالتك"
                   />
-                  <p className="mt-2 text-sm text-gray-500">
-                    💡 يرجى تضمين رابط العريضة أو المحتوى المبلغ عنه إن أمكن
-                  </p>
                 </div>
-              )}
 
-              {/* Subject */}
-              <div>
-                <label
-                  htmlFor="subject"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                {/* Message */}
+                <div>
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    الرسالة *
+                  </label>
+                  <textarea
+                    id="message"
+                    required
+                    rows={6}
+                    value={formData.message}
+                    onChange={(e) =>
+                      setFormData({ ...formData, message: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="اكتب رسالتك هنا..."
+                  />
+                </div>
+
+                {/* Status Messages */}
+                {status === 'success' && (
+                  <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+                    ✅ تم إرسال رسالتك بنجاح! سنرد عليك قريبًا.
+                  </div>
+                )}
+
+                {status === 'error' && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                    ❌ {errorMessage}
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={status === 'loading'}
+                  className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
-                  الموضوع *
-                </label>
-                <input
-                  type="text"
-                  id="subject"
-                  required
-                  value={formData.subject}
-                  onChange={(e) =>
-                    setFormData({ ...formData, subject: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="موضوع رسالتك"
-                />
+                  {status === 'loading' ? 'جاري الإرسال...' : 'إرسال الرسالة'}
+                </button>
+              </form>
+
+              {/* Response Times */}
+              <div className="bg-green-50 p-6 rounded-lg">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  ⏰ أوقات الاستجابة المتوقعة
+                </h2>
+                <ul className="space-y-2 text-gray-700">
+                  <li>
+                    • <strong>الاستفسارات العامة:</strong> خلال 24-48 ساعة
+                  </li>
+                  <li>
+                    • <strong>المشاكل التقنية:</strong> خلال 12-24 ساعة
+                  </li>
+                  <li>
+                    • <strong>قضايا الأمان:</strong> خلال 6 ساعات
+                  </li>
+                  <li>
+                    • <strong>الشراكات:</strong> خلال 3-5 أيام عمل
+                  </li>
+                </ul>
               </div>
 
-              {/* Message */}
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  الرسالة *
-                </label>
-                <textarea
-                  id="message"
-                  required
-                  rows={6}
-                  value={formData.message}
-                  onChange={(e) =>
-                    setFormData({ ...formData, message: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="اكتب رسالتك هنا..."
-                />
+              {/* FAQ Link */}
+              <div className="bg-blue-50 border-r-4 border-blue-400 p-6 rounded">
+                <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                  💡 نصيحة
+                </h2>
+                <p className="text-gray-700">
+                  قبل التواصل معنا، يمكنك زيارة{' '}
+                  <a
+                    href="/help"
+                    className="text-green-600 hover:text-green-700 underline"
+                  >
+                    مركز المساعدة
+                  </a>{' '}
+                  للحصول على إجابات سريعة للأسئلة الشائعة.
+                </p>
               </div>
 
-              {/* Status Messages */}
-              {status === 'success' && (
-                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-                  ✅ تم إرسال رسالتك بنجاح! سنرد عليك قريبًا.
-                </div>
-              )}
-
-              {status === 'error' && (
-                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-                  ❌ {errorMessage}
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {status === 'loading' ? 'جاري الإرسال...' : 'إرسال الرسالة'}
-              </button>
-            </form>
-
-            {/* Response Times */}
-            <div className="bg-green-50 p-6 rounded-lg">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                ⏰ أوقات الاستجابة المتوقعة
-              </h2>
-              <ul className="space-y-2 text-gray-700">
-                <li>
-                  • <strong>الاستفسارات العامة:</strong> خلال 24-48 ساعة
-                </li>
-                <li>
-                  • <strong>المشاكل التقنية:</strong> خلال 12-24 ساعة
-                </li>
-                <li>
-                  • <strong>قضايا الأمان:</strong> خلال 6 ساعات
-                </li>
-                <li>
-                  • <strong>الشراكات:</strong> خلال 3-5 أيام عمل
-                </li>
-              </ul>
-            </div>
-
-            {/* FAQ Link */}
-            <div className="bg-blue-50 border-r-4 border-blue-400 p-6 rounded">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">
-                💡 نصيحة
-              </h2>
-              <p className="text-gray-700">
-                قبل التواصل معنا، يمكنك زيارة{' '}
-                <a
-                  href="/help"
-                  className="text-green-600 hover:text-green-700 underline"
-                >
-                  مركز المساعدة
-                </a>{' '}
-                للحصول على إجابات سريعة للأسئلة الشائعة.
-              </p>
-            </div>
-
-            <div className="text-center text-gray-600">
-              <p>
-                شكرًا لاستخدامك 3arida. نحن نقدر ملاحظاتك ونتطلع إلى سماع رأيك!
-              </p>
+              <div className="text-center text-gray-600">
+                <p>
+                  شكرًا لاستخدامك 3arida. نحن نقدر ملاحظاتك ونتطلع إلى سماع
+                  رأيك!
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <Footer />
 
       {/* Petition Help Modal */}
       {showPetitionHelp && (
@@ -561,6 +571,6 @@ export default function ContactPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
