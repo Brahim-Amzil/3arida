@@ -6,7 +6,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 
 export default function AdminSetupPage() {
   const { user, userProfile } = useAuth();
@@ -133,8 +133,8 @@ export default function AdminSetupPage() {
                   message.includes('✅')
                     ? 'bg-green-50 text-green-800'
                     : message.includes('❌')
-                    ? 'bg-red-50 text-red-800'
-                    : 'bg-yellow-50 text-yellow-800'
+                      ? 'bg-red-50 text-red-800'
+                      : 'bg-yellow-50 text-yellow-800'
                 }`}
               >
                 {message}

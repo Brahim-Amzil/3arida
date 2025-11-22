@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import QRUpgrade from '@/components/petitions/QRUpgrade';
 import QRCodeDisplay from '@/components/petitions/QRCodeDisplay';
 import { Button } from '@/components/ui/button';

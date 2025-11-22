@@ -5,16 +5,18 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { registerWithEmail, loginWithGoogle } from '@/lib/auth-mock';
-import { useAuth } from '@/components/auth/AuthProvider-mock';
+import { registerWithEmail, loginWithGoogle } from '@/lib/auth';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, loading: authLoading, refreshAuth } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
+  const [redirectUrl, setRedirectUrl] = useState('/dashboard');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,14 +24,17 @@ export default function RegisterPage() {
     confirmPassword: '',
   });
 
-  const redirectUrl = searchParams?.get('redirect') || '/dashboard';
+  useEffect(() => {
+    setMounted(true);
+    setRedirectUrl(searchParams?.get('redirect') || '/dashboard');
+  }, [searchParams]);
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+    if (mounted && !authLoading && isAuthenticated) {
       router.push(redirectUrl);
     }
-  }, [authLoading, isAuthenticated, router, redirectUrl]);
+  }, [mounted, authLoading, isAuthenticated, router, redirectUrl]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -78,14 +83,12 @@ export default function RegisterPage() {
         password: formData.password,
       });
 
-      setSuccess(
-        'Account created successfully! Please check your email to verify your account.'
-      );
+      setSuccess('Account created successfully! You can now sign in.');
 
-      // Redirect after a short delay
+      // Redirect to login after a short delay
       setTimeout(() => {
-        router.push('/auth/verify-email');
-      }, 2000);
+        router.push('/auth/login');
+      }, 1500);
     } catch (err: any) {
       console.error('Registration error:', err);
       setError(err.message || 'Failed to create account. Please try again.');
@@ -100,9 +103,6 @@ export default function RegisterPage() {
       setError('');
 
       await loginWithGoogle();
-
-      // Refresh auth state
-      refreshAuth();
 
       // Redirect will happen automatically via useEffect
     } catch (err: any) {

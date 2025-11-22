@@ -1,185 +1,0 @@
-"use strict";(()=>{var e={};e.id=983,e.ids=[983],e.modules={30517:e=>{e.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},6005:e=>{e.exports=require("node:crypto")},47714:(e,a,t)=>{t.r(a),t.d(a,{headerHooks:()=>g,originalPathname:()=>b,patchFetch:()=>f,requestAsyncStorage:()=>c,routeModule:()=>h,serverHooks:()=>m,staticGenerationAsyncStorage:()=>u,staticGenerationBailout:()=>v});var r={};t.r(r),t.d(r,{POST:()=>p});var i=t(95419),o=t(69108),s=t(99678),n=t(78070),d=t(59631),l=t(64348);async function p(e){try{let{userName:a,userEmail:t,petitionTitle:r,petitionId:i,milestone:o,currentSignatures:s,targetSignatures:p}=await e.json();if(!a||!t||!r||!i||!o||!s||!p)return n.Z.json({error:"Missing required fields"},{status:400});let h=(0,l.rs)(a,r,i,o,s,p,t);if((await (0,d.C)({to:t,subject:`🎯 عريضتك وصلت إلى ${o}%: ${r}`,html:h})).success)return n.Z.json({success:!0});return n.Z.json({error:"Failed to send email"},{status:500})}catch(e){return console.error("Milestone email error:",e),n.Z.json({error:"Internal server error"},{status:500})}}let h=new i.AppRouteRouteModule({definition:{kind:o.x.APP_ROUTE,page:"/api/email/milestone/route",pathname:"/api/email/milestone",filename:"route",bundlePath:"app/api/email/milestone/route"},resolvedPagePath:"/Users/brahimamzil/Downloads/DEV_APPS/----3arida/3arida-app/src/app/api/email/milestone/route.ts",nextConfigOutput:"",userland:r}),{requestAsyncStorage:c,staticGenerationAsyncStorage:u,serverHooks:m,headerHooks:g,staticGenerationBailout:v}=h,b="/api/email/milestone/route";function f(){return(0,s.patchFetch)({serverHooks:m,staticGenerationAsyncStorage:u})}},59631:(e,a,t)=>{t.d(a,{C:()=>i,q:()=>o});let r=new(t(75180)).R(process.env.RESEND_API_KEY);async function i({to:e,subject:a,html:t}){try{let i=await r.emails.send({from:process.env.EMAIL_FROM||"onboarding@resend.dev",to:e,subject:a,html:t});return console.log("Email sent successfully:",i),{success:!0,data:i}}catch(e){return console.error("Failed to send email:",e),{success:!1,error:e}}}function o(){return`
-    <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
-      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-      .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-      .content { background: white; padding: 30px; border: 1px solid #e5e7eb; }
-      .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-      .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-    </style>
-  `}},64348:(e,a,t)=>{t.d(a,{DN:()=>s,FG:()=>i,Kh:()=>o,Qn:()=>n,rs:()=>d});var r=t(59631);function i(e,a){return`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        ${(0,r.q)()}
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🎉 مرحبا بك في 3arida</h1>
-            <p>Welcome to 3arida Platform</p>
-          </div>
-          <div class="content">
-            <h2>مرحبا ${e}!</h2>
-            <p>شكرا لانضمامك إلى منصة 3arida - منصة العرائض الرقمية للمغرب.</p>
-            <p>Thank you for joining 3arida - Morocco's digital petition platform.</p>
-            
-            <h3>ماذا يمكنك أن تفعل الآن؟</h3>
-            <ul>
-              <li>إنشاء عريضة جديدة</li>
-              <li>التوقيع على العرائض الموجودة</li>
-              <li>مشاركة العرائض مع أصدقائك</li>
-              <li>متابعة تقدم العرائض</li>
-            </ul>
-            
-            <a href="https://3arida.ma/petitions" class="button">تصفح العرائض</a>
-            
-            <p>إذا كان لديك أي أسئلة، لا تتردد في التواصل معنا.</p>
-          </div>
-          <div class="footer">
-            <p>\xa9 2025 3arida Platform. All rights reserved.</p>
-            <p><a href="https://3arida.ma/unsubscribe?email=${a}">إلغاء الاشتراك</a></p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `}function o(e,a,t,i){return`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        ${(0,r.q)()}
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>✅ تمت الموافقة على عريضتك</h1>
-            <p>Your Petition Has Been Approved</p>
-          </div>
-          <div class="content">
-            <h2>مبروك ${e}!</h2>
-            <p>تمت الموافقة على عريضتك "<strong>${a}</strong>" ونشرها على المنصة.</p>
-            <p>Your petition "<strong>${a}</strong>" has been approved and is now live on the platform.</p>
-            
-            <h3>الخطوات التالية:</h3>
-            <ul>
-              <li>شارك عريضتك مع أصدقائك وعائلتك</li>
-              <li>انشر رابط العريضة على وسائل التواصل الاجتماعي</li>
-              <li>تابع عدد التوقيعات والتعليقات</li>
-              <li>أضف تحديثات لإبقاء الموقعين على اطلاع</li>
-            </ul>
-            
-            <a href="https://3arida.ma/petitions/${t}" class="button">عرض العريضة</a>
-            
-            <p>نتمنى لك التوفيق في حملتك!</p>
-          </div>
-          <div class="footer">
-            <p>\xa9 2025 3arida Platform. All rights reserved.</p>
-            <p><a href="https://3arida.ma/unsubscribe?email=${i}">إلغاء الاشتراك</a></p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `}function s(e,a,t,i){return`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        ${(0,r.q)()}
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>✍️ شكرا على توقيعك</h1>
-            <p>Thank You for Your Signature</p>
-          </div>
-          <div class="content">
-            <h2>شكرا ${e}!</h2>
-            <p>تم تسجيل توقيعك على العريضة "<strong>${a}</strong>".</p>
-            <p>Your signature on "<strong>${a}</strong>" has been recorded.</p>
-            
-            <p>صوتك مهم ويساهم في إحداث التغيير!</p>
-            <p>Your voice matters and contributes to making change!</p>
-            
-            <h3>ساعد في نشر الكلمة:</h3>
-            <ul>
-              <li>شارك العريضة مع أصدقائك</li>
-              <li>انشرها على وسائل التواصل الاجتماعي</li>
-              <li>شجع الآخرين على التوقيع</li>
-            </ul>
-            
-            <a href="https://3arida.ma/petitions/${t}" class="button">عرض العريضة</a>
-          </div>
-          <div class="footer">
-            <p>\xa9 2025 3arida Platform. All rights reserved.</p>
-            <p><a href="https://3arida.ma/unsubscribe?email=${i}">إلغاء الاشتراك</a></p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `}function n(e,a,t,i,o,s){return`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        ${(0,r.q)()}
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>📢 تحديث جديد على العريضة</h1>
-            <p>New Petition Update</p>
-          </div>
-          <div class="content">
-            <h2>مرحبا ${e}!</h2>
-            <p>هناك تحديث جديد على العريضة "<strong>${a}</strong>" التي وقعت عليها.</p>
-            <p>There's a new update on "<strong>${a}</strong>" that you signed.</p>
-            
-            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3>${i}</h3>
-              <p>${o.substring(0,200)}${o.length>200?"...":""}</p>
-            </div>
-            
-            <a href="https://3arida.ma/petitions/${t}" class="button">قراءة التحديث الكامل</a>
-          </div>
-          <div class="footer">
-            <p>\xa9 2025 3arida Platform. All rights reserved.</p>
-            <p><a href="https://3arida.ma/unsubscribe?email=${s}">إلغاء الاشتراك</a></p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `}function d(e,a,t,i,o,s,n){return`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        ${(0,r.q)()}
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🎯 تم الوصول إلى هدف جديد!</h1>
-            <p>Milestone Reached!</p>
-          </div>
-          <div class="content">
-            <h2>مبروك ${e}!</h2>
-            <p>عريضتك "<strong>${a}</strong>" وصلت إلى ${i}% من الهدف!</p>
-            <p>Your petition "<strong>${a}</strong>" has reached ${i}% of its goal!</p>
-            
-            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-              <h1 style="color: #667eea; margin: 0;">${o.toLocaleString()}</h1>
-              <p style="margin: 10px 0;">من ${s.toLocaleString()} توقيع</p>
-              <div style="background: #e5e7eb; height: 20px; border-radius: 10px; overflow: hidden;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100%; width: ${i}%;"></div>
-              </div>
-            </div>
-            
-            <p>استمر في المشاركة للوصول إلى الهدف الكامل!</p>
-            
-            <a href="https://3arida.ma/petitions/${t}" class="button">عرض العريضة</a>
-          </div>
-          <div class="footer">
-            <p>\xa9 2025 3arida Platform. All rights reserved.</p>
-            <p><a href="https://3arida.ma/unsubscribe?email=${n}">إلغاء الاشتراك</a></p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `}}};var a=require("../../../../webpack-runtime.js");a.C(e);var t=e=>a(a.s=e),r=a.X(0,[1638,6206,5180],()=>t(47714));module.exports=r})();

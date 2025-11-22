@@ -1,16 +1,14 @@
+// Next.js automatically loads .env.local - no need for manual dotenv loading
+
 const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
+  disable: process.env.NODE_ENV === 'development', // Disabled in dev, enabled in production
 });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Dynamic rendering for Firebase Hosting
-  trailingSlash: true,
-  skipTrailingSlashRedirect: true,
-  
   images: {
     domains: [
       'firebasestorage.googleapis.com',
@@ -20,14 +18,12 @@ const nextConfig = {
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    unoptimized: true, // Required for static export
   },
-  env: {
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://3arida.ma',
-  },
+  // Next.js automatically exposes NEXT_PUBLIC_* variables to the browser
+  // No need to explicitly define them in the env section
   // Performance optimizations
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false, // Disabled due to critters module issue
     optimizePackageImports: ['@heroicons/react', 'lucide-react'],
   },
   // Bundle analyzer for production builds

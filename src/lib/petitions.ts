@@ -22,6 +22,7 @@ import {
   generateSignatureFingerprint,
 } from './security-tracking';
 import { moderateComment } from './content-moderation';
+import { logAuditAction, AuditAction } from './audit-log';
 import {
   ref,
   uploadBytes,
@@ -48,6 +49,58 @@ import {
 // Collection references
 const PETITIONS_COLLECTION = 'petitions';
 const SIGNATURES_COLLECTION = 'signatures';
+
+// Reference Code Generation
+function generateReferenceCode(): string {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const numbers = '0123456789';
+
+  let code = '';
+  // 2 random letters
+  code += letters.charAt(Math.floor(Math.random() * letters.length));
+  code += letters.charAt(Math.floor(Math.random() * letters.length));
+  // 4 random numbers
+  for (let i = 0; i < 4; i++) {
+    code += numbers.charAt(Math.floor(Math.random() * numbers.length));
+  }
+
+  return code;
+}
+
+async function isReferenceCodeUnique(code: string): Promise<boolean> {
+  try {
+    const q = query(
+      collection(db, PETITIONS_COLLECTION),
+      where('referenceCode', '==', code),
+      limit(1)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.empty;
+  } catch (error) {
+    console.error('Error checking reference code uniqueness:', error);
+    return false;
+  }
+}
+
+async function generateUniqueReferenceCode(): Promise<string> {
+  let attempts = 0;
+  const maxAttempts = 10;
+
+  while (attempts < maxAttempts) {
+    const code = generateReferenceCode();
+    const isUnique = await isReferenceCodeUnique(code);
+
+    if (isUnique) {
+      return code;
+    }
+
+    attempts++;
+  }
+
+  // Fallback: add timestamp digits if all attempts fail
+  const timestamp = Date.now().toString().slice(-4);
+  return `ZZ${timestamp}`;
+}
 const CATEGORIES_COLLECTION = 'categories';
 const USERS_COLLECTION = 'users';
 
@@ -76,6 +129,9 @@ export const createPetition = async (
       petitionData.targetSignatures
     );
 
+    // Generate unique reference code
+    const referenceCode = await generateUniqueReferenceCode();
+
     const petitionDoc: Omit<Petition, 'id'> = {
       title: petitionData.title.trim(),
       description: petitionData.description.trim(),
@@ -85,6 +141,7 @@ export const createPetition = async (
       currentSignatures: 0,
       status: amountRequired > 0 ? 'draft' : 'pending', // Free petitions go to pending, paid ones stay draft until payment
       creatorId,
+      creatorName,
       mediaUrls: petitionData.mediaUrls || [],
       qrCodeUrl: '',
       hasQrCode: false,
@@ -100,6 +157,7 @@ export const createPetition = async (
       petitionType: petitionData.petitionType,
       addressedToType: petitionData.addressedToType,
       addressedToSpecific: petitionData.addressedToSpecific,
+      referenceCode,
 
       // Additional content
       youtubeVideoUrl: petitionData.youtubeVideoUrl,
@@ -246,6 +304,12 @@ export const getPetition = async (
             // Additional content
             youtubeVideoUrl: data.youtubeVideoUrl,
             tags: data.tags,
+
+            // Moderation fields
+            moderatedBy: data.moderatedBy,
+            moderationNotes: data.moderationNotes,
+            resubmissionCount: data.resubmissionCount || 0,
+            resubmissionHistory: data.resubmissionHistory || [],
           };
           return petition;
         }
@@ -270,6 +334,25 @@ export const getPetition = async (
     console.log('✅ Petition found, processing data...');
 
     const data = docSnap.data();
+
+    // Lazy generation: If petition doesn't have a reference code, generate one
+    let referenceCode = data.referenceCode;
+    if (!referenceCode) {
+      console.log('🔄 Generating reference code for petition:', docSnap.id);
+      try {
+        referenceCode = await generateUniqueReferenceCode();
+        // Update the petition with the new code
+        await updateDoc(docRef, {
+          referenceCode,
+          updatedAt: new Date(),
+        });
+        console.log('✅ Reference code generated and saved:', referenceCode);
+      } catch (error) {
+        console.error('❌ Failed to generate reference code:', error);
+        // Continue without code - not critical
+      }
+    }
+
     const petition: Petition = {
       id: docSnap.id,
       title: data.title,
@@ -313,6 +396,8 @@ export const getPetition = async (
       // Moderation
       moderatedBy: data.moderatedBy,
       moderationNotes: data.moderationNotes,
+      resubmissionCount: data.resubmissionCount || 0,
+      resubmissionHistory: data.resubmissionHistory || [],
 
       // Public visibility
       isPublic: data.isPublic !== false,
@@ -326,7 +411,7 @@ export const getPetition = async (
       petitionType: data.petitionType,
       addressedToType: data.addressedToType,
       addressedToSpecific: data.addressedToSpecific,
-      referenceCode: data.referenceCode,
+      referenceCode, // Use the generated or existing code
 
       // Additional content
       youtubeVideoUrl: data.youtubeVideoUrl,
@@ -939,7 +1024,12 @@ export const updatePetitionStatus = async (
   notes?: string
 ): Promise<void> => {
   try {
+    // Get petition details for audit log
     const docRef = doc(db, PETITIONS_COLLECTION, petitionId);
+    const petitionSnap = await getDoc(docRef);
+    const petition = petitionSnap.data() as Petition;
+    const oldStatus = petition?.status;
+
     const updateData: any = {
       status,
       moderatedBy: moderatorId,
@@ -960,6 +1050,34 @@ export const updatePetitionStatus = async (
     }
 
     await updateDoc(docRef, updateData);
+
+    // Log the action (async, won't block)
+    const moderator = await getUserById(moderatorId);
+    const actionMap: Record<string, AuditAction> = {
+      approved: 'petition.approved',
+      rejected: 'petition.rejected',
+      paused: 'petition.paused',
+      deleted: 'petition.deleted',
+      archived: 'petition.archived',
+    };
+
+    if (actionMap[status]) {
+      logAuditAction({
+        actorId: moderatorId,
+        actorName: moderator?.name || 'Unknown',
+        actorEmail: moderator?.email || '',
+        actorRole: (moderator?.role as 'admin' | 'moderator') || 'moderator',
+        action: actionMap[status],
+        targetType: 'petition',
+        targetId: petitionId,
+        targetName: petition?.title,
+        details: {
+          oldValue: oldStatus,
+          newValue: status,
+          reason: notes,
+        },
+      });
+    }
   } catch (error) {
     console.error('Error updating petition status:', error);
     throw new Error('Failed to update petition status. Please try again.');
@@ -1067,6 +1185,28 @@ export const getCategories = async (): Promise<Category[]> => {
         updatedAt: new Date(),
       }));
     }
+
+    // Calculate actual petition counts for each category
+    const petitionsRef = collection(db, PETITIONS_COLLECTION);
+    const petitionsQuery = query(
+      petitionsRef,
+      where('status', '==', 'approved')
+    );
+    const petitionsSnapshot = await getDocs(petitionsQuery);
+
+    // Count petitions by category
+    const categoryCounts: Record<string, number> = {};
+    petitionsSnapshot.forEach((doc) => {
+      const category = doc.data().category;
+      if (category) {
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      }
+    });
+
+    // Update petition counts
+    categories.forEach((cat) => {
+      cat.petitionCount = categoryCounts[cat.name] || 0;
+    });
 
     // Sort by name
     categories.sort((a, b) => a.name.localeCompare(b.name));

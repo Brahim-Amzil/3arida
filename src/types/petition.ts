@@ -22,6 +22,7 @@ export interface Petition {
   currentSignatures: number;
   status: PetitionStatus;
   creatorId: string;
+  creatorName?: string;
   creatorPageId?: string;
   mediaUrls: string[];
   qrCodeUrl?: string;
@@ -68,6 +69,12 @@ export interface Petition {
   // Moderation
   moderatedBy?: string;
   moderationNotes?: string;
+  resubmissionCount?: number;
+  resubmissionHistory?: Array<{
+    rejectedAt: Date;
+    reason: string;
+    resubmittedAt?: Date;
+  }>;
 
   // Public visibility
   isPublic: boolean;

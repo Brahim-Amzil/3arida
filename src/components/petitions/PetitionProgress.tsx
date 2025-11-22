@@ -93,11 +93,11 @@ export default function PetitionProgress({
           </span>
           <span className="text-gray-600">{progress.toFixed(0)}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 rounded-full h-2.5">
           <div
             className={`${getProgressColor(
               progress
-            )} h-2 rounded-full transition-all duration-500`}
+            )} h-2.5 rounded-full transition-all duration-500`}
             style={{ width: `${Math.min(progress, 100)}%` }}
           />
         </div>
@@ -136,11 +136,11 @@ export default function PetitionProgress({
               of {petition.targetSignatures.toLocaleString()} signatures
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-4 relative">
+          <div className="w-full bg-gray-200 rounded-full h-5 relative">
             <div
               className={`${getProgressColor(
                 progress
-              )} h-4 rounded-full transition-all duration-500 relative`}
+              )} h-5 rounded-full transition-all duration-500 relative`}
               style={{ width: `${Math.min(progress, 100)}%` }}
             >
               {progress > 10 && (
@@ -242,11 +242,11 @@ export default function PetitionProgress({
             {petition.targetSignatures.toLocaleString()}
           </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
+        <div className="w-full bg-gray-200 rounded-full h-4">
           <div
             className={`${getProgressColor(
               progress
-            )} h-3 rounded-full transition-all duration-500`}
+            )} h-4 rounded-full transition-all duration-500`}
             style={{ width: `${Math.min(progress, 100)}%` }}
           />
         </div>
