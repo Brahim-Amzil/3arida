@@ -245,15 +245,25 @@ export default function PetitionDetailPage() {
       setSigningLoading(true);
 
       // Update user profile with verified phone
+      console.log('📱 Phone verified, updating user profile...', {
+        userId: user.uid,
+        phoneNumber,
+        currentVerifiedStatus: userProfile?.verifiedPhone,
+      });
+
       if (userProfile && !userProfile.verifiedPhone) {
         const { doc, updateDoc } = await import('firebase/firestore');
         const { db } = await import('@/lib/firebase');
 
+        console.log('🔄 Updating Firestore document...');
         await updateDoc(doc(db, 'users', user.uid), {
           phone: phoneNumber,
           verifiedPhone: true,
           updatedAt: new Date(),
         });
+        console.log('✅ User profile updated successfully');
+      } else {
+        console.log('ℹ️ Skipping update - already verified or no profile');
       }
 
       await signPetition(petition.id, {
