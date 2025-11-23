@@ -829,24 +829,28 @@ export default function ProfilePage() {
                   if (user) {
                     try {
                       const userRef = doc(db, 'users', user.uid);
+                      console.log(
+                        '📱 Updating user profile with verified phone:',
+                        {
+                          userId: user.uid,
+                          phoneNumber,
+                        }
+                      );
+
                       await updateDoc(userRef, {
                         phone: phoneNumber,
-                        phoneVerified: true,
+                        verifiedPhone: true,
                         updatedAt: new Date(),
                       });
 
-                      console.log('Phone verified and saved:', phoneNumber);
+                      console.log('✅ Phone verified and saved successfully');
                       setSuccess(true);
                       setShowPhoneVerification(false);
 
-                      // Wait a moment for Firestore to sync, then refresh
-                      setTimeout(() => {
-                        if (typeof window !== 'undefined') {
-                          window.location.reload();
-                        }
-                      }, 500);
+                      // Real-time listener will update the UI automatically
+                      // No need to reload
                     } catch (err) {
-                      console.error('Error updating phone:', err);
+                      console.error('❌ Error updating phone:', err);
                       setError('Failed to update phone number');
                       setShowPhoneVerification(false);
                     }
