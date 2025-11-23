@@ -1,7 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { auth } from '@/lib/firebase';
+import {
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
+} from 'firebase/auth';
 
 interface PhoneVerificationProps {
   onVerified: (phoneNumber: string) => void;
@@ -17,6 +23,49 @@ export default function PhoneVerification({
   const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmationResult, setConfirmationResult] =
+    useState<ConfirmationResult | null>(null);
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+
+  // Initialize reCAPTCHA when component mounts
+  useEffect(() => {
+    const initRecaptcha = () => {
+      try {
+        if (!recaptchaVerifierRef.current) {
+          recaptchaVerifierRef.current = new RecaptchaVerifier(
+            auth,
+            'recaptcha-container',
+            {
+              size: 'invisible',
+              callback: () => {
+                console.log('✅ reCAPTCHA solved');
+              },
+              'expired-callback': () => {
+                console.log('⚠️ reCAPTCHA expired');
+                setError('انتهت صلاحية التحقق. يرجى المحاولة مرة أخرى');
+              },
+            }
+          );
+        }
+      } catch (error) {
+        console.error('Error initializing reCAPTCHA:', error);
+      }
+    };
+
+    initRecaptcha();
+
+    return () => {
+      // Cleanup reCAPTCHA on unmount
+      if (recaptchaVerifierRef.current) {
+        try {
+          recaptchaVerifierRef.current.clear();
+        } catch (error) {
+          console.error('Error clearing reCAPTCHA:', error);
+        }
+        recaptchaVerifierRef.current = null;
+      }
+    };
+  }, []);
 
   const handleSendCode = async () => {
     if (!phoneNumber.trim()) {
@@ -26,7 +75,8 @@ export default function PhoneVerification({
 
     // Validate phone number format (basic validation)
     const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    if (!phoneRegex.test(phoneNumber.replace(/\s/g, ''))) {
+    const cleanPhone = phoneNumber.replace(/\s/g, '');
+    if (!phoneRegex.test(cleanPhone)) {
       setError('رقم الهاتف غير صحيح. يجب أن يبدأ بـ + ورمز الدولة');
       return;
     }
@@ -35,15 +85,53 @@ export default function PhoneVerification({
     setError('');
 
     try {
-      // Mock phone verification - simulates sending SMS
-      // In production, this would integrate with Firebase Auth phone verification
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setStep('code');
+      if (!recaptchaVerifierRef.current) {
+        throw new Error('reCAPTCHA not initialized');
+      }
 
-      // Show a helpful message for demo mode
-      console.log('📱 DEMO MODE: Any 6-digit code will work for verification');
-    } catch (err) {
-      setError('فشل إرسال رمز التحقق');
+      console.log('📱 Sending SMS to:', cleanPhone);
+
+      // Send SMS verification code via Firebase
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        cleanPhone,
+        recaptchaVerifierRef.current
+      );
+
+      setConfirmationResult(confirmation);
+      setStep('code');
+      console.log('✅ SMS sent successfully');
+    } catch (err: any) {
+      console.error('❌ Error sending SMS:', err);
+
+      // Handle specific Firebase errors
+      if (err.code === 'auth/invalid-phone-number') {
+        setError('رقم الهاتف غير صحيح');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('تم تجاوز عدد المحاولات. يرجى المحاولة لاحقًا');
+      } else if (err.code === 'auth/quota-exceeded') {
+        setError('تم تجاوز حد الرسائل اليومي');
+      } else if (err.code === 'auth/invalid-app-credential') {
+        setError('خطأ في إعدادات التحقق. يرجى التواصل مع الدعم الفني');
+      } else {
+        setError('فشل إرسال رمز التحقق. يرجى المحاولة مرة أخرى');
+      }
+
+      // Reset reCAPTCHA on error
+      if (recaptchaVerifierRef.current) {
+        try {
+          recaptchaVerifierRef.current.clear();
+          recaptchaVerifierRef.current = new RecaptchaVerifier(
+            auth,
+            'recaptcha-container',
+            {
+              size: 'invisible',
+            }
+          );
+        } catch (resetError) {
+          console.error('Error resetting reCAPTCHA:', resetError);
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -55,21 +143,32 @@ export default function PhoneVerification({
       return;
     }
 
+    if (!confirmationResult) {
+      setError('خطأ في التحقق. يرجى إعادة إرسال الرمز');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      // Mock code verification - accepts any 6-digit code for demo
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log('🔍 Verifying code:', verificationCode);
 
-      // For demo purposes, accept any 6-digit code
-      if (verificationCode.length === 6) {
-        onVerified(phoneNumber);
+      // Verify the SMS code
+      await confirmationResult.confirm(verificationCode);
+
+      console.log('✅ Phone number verified successfully');
+      onVerified(phoneNumber);
+    } catch (err: any) {
+      console.error('❌ Error verifying code:', err);
+
+      if (err.code === 'auth/invalid-verification-code') {
+        setError('رمز التحقق غير صحيح');
+      } else if (err.code === 'auth/code-expired') {
+        setError('انتهت صلاحية الرمز. يرجى إعادة إرسال الرمز');
       } else {
-        setError('رمز التحقق غير صحيح. يجب أن يكون 6 أرقام');
+        setError('فشل التحقق من الرمز. يرجى المحاولة مرة أخرى');
       }
-    } catch (err) {
-      setError('فشل التحقق من الرمز');
     } finally {
       setLoading(false);
     }
@@ -81,6 +180,9 @@ export default function PhoneVerification({
         <h3 className="text-lg font-semibold mb-4">
           التحقق من رقم الهاتف مطلوب
         </h3>
+
+        {/* reCAPTCHA container (invisible) */}
+        <div id="recaptcha-container"></div>
 
         {step === 'phone' ? (
           <div className="space-y-4">
@@ -106,14 +208,6 @@ export default function PhoneVerification({
             </div>
 
             {error && <p className="text-red-600 text-sm">{error}</p>}
-
-            {/* Demo mode notice */}
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-              <p className="text-xs text-blue-800">
-                💡 <strong>وضع التجربة:</strong> أي رمز مكون من 6 أرقام سيعمل
-                للتحقق
-              </p>
-            </div>
 
             <div className="flex gap-3">
               <Button
@@ -154,13 +248,6 @@ export default function PhoneVerification({
 
             {error && <p className="text-red-600 text-sm">{error}</p>}
 
-            {/* Demo mode hint */}
-            <div className="bg-green-50 border border-green-200 rounded-md p-3">
-              <p className="text-xs text-green-800">
-                💡 <strong>وضع التجربة:</strong> أدخل أي 6 أرقام (مثال: 123456)
-              </p>
-            </div>
-
             <div className="flex gap-3">
               <Button
                 onClick={handleVerifyCode}
@@ -175,12 +262,21 @@ export default function PhoneVerification({
                   setStep('phone');
                   setVerificationCode('');
                   setError('');
+                  setConfirmationResult(null);
                 }}
                 disabled={loading}
               >
                 رجوع
               </Button>
             </div>
+
+            <button
+              onClick={handleSendCode}
+              disabled={loading}
+              className="w-full text-sm text-green-600 hover:text-green-700 underline"
+            >
+              إعادة إرسال الرمز
+            </button>
           </div>
         )}
       </div>
