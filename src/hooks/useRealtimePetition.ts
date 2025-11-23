@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPetition } from '@/lib/petitions';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Petition } from '@/types/petition';
 
 export const useRealtimePetition = (petitionId: string) => {
@@ -15,28 +16,37 @@ export const useRealtimePetition = (petitionId: string) => {
       return;
     }
 
-    const loadPetition = async () => {
-      try {
-        setLoading(true);
-        const petitionData = await getPetition(petitionId);
+    // Set up real-time listener
+    const petitionRef = doc(db, 'petitions', petitionId);
 
-        if (petitionData) {
-          setPetition(petitionData);
+    const unsubscribe = onSnapshot(
+      petitionRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          setPetition({
+            id: snapshot.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date(),
+          } as Petition);
           setError('');
         } else {
           setError('Petition not found');
           setPetition(null);
         }
-      } catch (err: any) {
-        console.error('Error loading petition:', err);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error listening to petition:', err);
         setError('Failed to load petition');
         setPetition(null);
-      } finally {
         setLoading(false);
       }
-    };
+    );
 
-    loadPetition();
+    // Cleanup listener on unmount
+    return () => unsubscribe();
   }, [petitionId]);
 
   return { petition, loading, error };
