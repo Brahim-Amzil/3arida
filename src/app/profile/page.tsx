@@ -419,29 +419,27 @@ export default function ProfilePage() {
                             Phone Verification
                           </span>
                           <p className="text-sm text-gray-500">
-                            {(userProfile as any)?.phoneVerified
-                              ? 'Required to create and sign petitions'
+                            {userProfile?.verifiedPhone
+                              ? 'Verify phone to create and sign petitions'
                               : 'Verify phone to create and sign petitions'}
                           </p>
                         </div>
                       </div>
                       <span
                         className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          (userProfile as any)?.phoneVerified
+                          userProfile?.verifiedPhone
                             ? 'bg-green-100 text-green-800'
                             : 'bg-yellow-100 text-yellow-800'
                         }`}
                       >
-                        {(userProfile as any)?.phoneVerified
-                          ? 'Verified'
-                          : 'Pending'}
+                        {userProfile?.verifiedPhone ? 'Verified' : 'Pending'}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Action Required Section */}
-                {!(userProfile as any)?.phoneVerified && (
+                {!userProfile?.verifiedPhone && (
                   <div className="border-t border-gray-200 pt-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-4">
                       Action Required
