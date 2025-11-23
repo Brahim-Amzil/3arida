@@ -29,8 +29,12 @@ export const useRealtimePetition = (petitionIdOrCode: string) => {
       try {
         let docId = petitionIdOrCode;
 
-        // Check if it's a reference code (starts with 3AR- or similar pattern)
-        if (petitionIdOrCode.includes('-') || petitionIdOrCode.length < 20) {
+        // Check if it's a reference code (contains dash and is short)
+        // Reference codes are like "3AR-XXXXX" or similar short formats
+        const isReferenceCode =
+          petitionIdOrCode.includes('-') && petitionIdOrCode.length <= 15;
+
+        if (isReferenceCode) {
           console.log(
             '🔍 Looking up petition by reference code:',
             petitionIdOrCode
