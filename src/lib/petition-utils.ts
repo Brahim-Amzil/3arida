@@ -268,8 +268,8 @@ export const generatePetitionSlug = (title: string, id: string): string => {
 
 // Get petition URL
 export const getPetitionUrl = (petition: Petition): string => {
-  const slug = generatePetitionSlug(petition.title, petition.id);
-  return `/petitions/${slug}`;
+  // Use petition ID directly instead of slug to avoid issues with non-Latin characters
+  return `/petitions/${petition.id}`;
 };
 
 // Extract petition ID from slug
