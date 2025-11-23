@@ -244,6 +244,18 @@ export default function PetitionDetailPage() {
     try {
       setSigningLoading(true);
 
+      // Update user profile with verified phone
+      if (userProfile && !userProfile.verifiedPhone) {
+        const { doc, updateDoc } = await import('firebase/firestore');
+        const { db } = await import('@/lib/firebase');
+
+        await updateDoc(doc(db, 'users', user.uid), {
+          phone: phoneNumber,
+          verifiedPhone: true,
+          updatedAt: new Date(),
+        });
+      }
+
       await signPetition(petition.id, {
         name: userProfile?.name || user.displayName || 'Anonymous',
         phone: phoneNumber,
@@ -259,10 +271,10 @@ export default function PetitionDetailPage() {
       setShowSigningFlow(false);
 
       // Show success message
-      alert('Thank you for signing this petition!');
+      alert('شكرًا لتوقيعك على هذه العريضة!');
     } catch (err: any) {
       console.error('Error signing petition:', err);
-      alert(err.message || 'Failed to sign petition. Please try again.');
+      alert(err.message || 'فشل التوقيع على العريضة. يرجى المحاولة مرة أخرى.');
     } finally {
       setSigningLoading(false);
     }

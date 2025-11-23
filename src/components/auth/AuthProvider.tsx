@@ -87,18 +87,19 @@ export default function AuthProvider({ children }: AuthProviderProps) {
                 name: userData.name || firebaseUser.displayName || '',
                 email: userData.email || firebaseUser.email || '',
                 phone: userData.phone,
-                verifiedEmail: userData.verifiedEmail || false,
+                photoURL: userData.photoURL || firebaseUser.photoURL,
+                bio: userData.bio,
+                verifiedEmail:
+                  userData.verifiedEmail || firebaseUser.emailVerified || false,
                 verifiedPhone: userData.verifiedPhone || false,
                 role: userData.role || 'user',
                 creatorPageId: userData.creatorPageId,
+                fcmToken: userData.fcmToken,
+                fcmTokenUpdatedAt: userData.fcmTokenUpdatedAt?.toDate?.(),
                 createdAt: userData.createdAt?.toDate?.() || new Date(),
                 updatedAt: userData.updatedAt?.toDate?.(),
                 lastLoginAt: userData.lastLoginAt?.toDate?.(),
                 isActive: userData.isActive !== false,
-                ...((userData.bio || userData.photoURL) && {
-                  bio: userData.bio,
-                  photoURL: userData.photoURL,
-                }),
               } as User);
             } else {
               // Create a basic profile from Firebase user
