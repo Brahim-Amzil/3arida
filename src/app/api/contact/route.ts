@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail } from '@/lib/email-smtp';
 
 const reasonLabels: Record<string, string> = {
   general: 'استفسار عام',
@@ -48,9 +46,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Resend API key is configured
-    if (!process.env.RESEND_API_KEY) {
-      console.error('RESEND_API_KEY not configured');
+    // Check if SMTP is configured
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      console.error('SMTP not configured');
       return NextResponse.json(
         { error: 'خدمة البريد الإلكتروني غير مكونة' },
         { status: 500 }
@@ -68,14 +66,11 @@ export async function POST(request: NextRequest) {
 
     const reasonLabel = reasonLabels[reason] || reason;
 
-    // Send email using verified domain
-    // Note: Sending to 3aridapp@gmail.com since contact@3arida.ma uses Hostinger MX records
-    // and may not receive emails sent through Resend
-    const { data, error } = await resend.emails.send({
-      from: 'contact@3arida.ma',
-      to: '3aridapp@gmail.com', // Change this to an email you can access
-      replyTo: email,
+    // Send email using Hostinger SMTP
+    const emailResult = await sendEmail({
+      to: 'contact@3arida.ma',
       subject: `[3arida Contact Form] [${reasonLabel}] ${subject}`,
+      replyTo: email,
       html: `
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
@@ -202,21 +197,8 @@ export async function POST(request: NextRequest) {
       `,
     });
 
-    if (error) {
-      console.error('Error sending email:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      // Return a more user-friendly error
-      return NextResponse.json(
-        {
-          error: 'فشل إرسال البريد الإلكتروني. يرجى المحاولة مرة أخرى لاحقًا.',
-          details: process.env.NODE_ENV === 'development' ? error : undefined,
-        },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json(
-      { success: true, messageId: data?.id },
+      { success: true, messageId: emailResult.messageId },
       { status: 200 }
     );
   } catch (error) {
