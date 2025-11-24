@@ -15,8 +15,8 @@ async function testContactEmail() {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: '3aridapp@gmail.com',
+      from: 'contact@3arida.ma',
+      to: 'contact@3arida.ma',
       replyTo: 'test@example.com',
       subject: '[Test] 3arida Contact Form',
       html: `
