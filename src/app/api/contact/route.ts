@@ -69,9 +69,11 @@ export async function POST(request: NextRequest) {
     const reasonLabel = reasonLabels[reason] || reason;
 
     // Send email using verified domain
+    // Note: Sending to 3aridapp@gmail.com since contact@3arida.ma uses Hostinger MX records
+    // and may not receive emails sent through Resend
     const { data, error } = await resend.emails.send({
       from: 'contact@3arida.ma',
-      to: 'contact@3arida.ma',
+      to: '3aridapp@gmail.com', // Change this to an email you can access
       replyTo: email,
       subject: `[3arida Contact Form] [${reasonLabel}] ${subject}`,
       html: `
