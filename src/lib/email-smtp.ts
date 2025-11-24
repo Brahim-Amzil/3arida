@@ -10,7 +10,7 @@ interface EmailOptions {
 
 export async function sendEmail({ to, subject, html, replyTo }: EmailOptions) {
   // Create transporter using Hostinger SMTP
-  const transporter = nodemailer.createTransporter({
+  const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.hostinger.com',
     port: parseInt(process.env.SMTP_PORT || '465'),
     secure: true, // use SSL
