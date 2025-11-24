@@ -69,10 +69,11 @@ export async function POST(request: NextRequest) {
     const reasonLabel = reasonLabels[reason] || reason;
 
     // Send email using Resend
-    // Note: Using onboarding@resend.dev for testing. Replace with verified domain in production.
+    // Note: Using onboarding@resend.dev for testing. With test domain, can only send to API key owner's email
+    // In production, verify a domain at resend.com/domains and update the 'from' address
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev',
-      to: email, // Send to user's email for now (testing)
+      to: '3aridapp@gmail.com', // API key owner's email (required for test domain)
       replyTo: email,
       subject: `[3arida Contact Form] [${reasonLabel}] ${subject}`,
       html: `
