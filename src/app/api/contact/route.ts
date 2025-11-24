@@ -203,10 +203,12 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error sending email:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       // Return a more user-friendly error
       return NextResponse.json(
         {
           error: 'فشل إرسال البريد الإلكتروني. يرجى المحاولة مرة أخرى لاحقًا.',
+          details: process.env.NODE_ENV === 'development' ? error : undefined,
         },
         { status: 500 }
       );
