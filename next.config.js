@@ -60,7 +60,7 @@ const nextConfig = {
     },
   }),
   webpack: (config, { isServer }) => {
-    // Fix for undici compatibility issue - ONLY on client side
+    // Only apply fallbacks and externals on client side
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -80,44 +80,31 @@ const nextConfig = {
         buffer: false,
       };
       
-      // Exclude problematic modules from client bundle ONLY
+      // Exclude server-only modules from client bundle
       config.externals = config.externals || [];
       config.externals.push({
-        'undici': 'undici',
         'firebase-admin': 'firebase-admin',
       });
-
-      // Exclude undici from client-side bundle ONLY
-      config.module.rules.push({
-        test: /node_modules\/undici/,
-        use: 'null-loader',
-      });
-
-      // Add alias to prevent undici from being bundled on CLIENT SIDE ONLY
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'undici': false,
-      };
     }
 
-    // Handle module resolution issues (both client and server)
+    // Exclude undici from being processed by Next.js loaders
+    config.module.rules.unshift({
+      test: /node_modules\/undici/,
+      type: 'javascript/auto',
+      use: 'ignore-loader',
+    });
+
+    // Handle module resolution issues
     config.module.rules.push({
       test: /\.m?js$/,
       resolve: {
         fullySpecified: false,
       },
     });
-
-    // Ignore undici warnings (both client and server)
-    config.ignoreWarnings = [
-      { module: /node_modules\/undici/ },
-      { file: /node_modules\/undici/ },
-      { message: /Module parse failed.*undici/ },
-    ];
     
     return config;
   },
-  transpilePackages: ['firebase'],
+  transpilePackages: ['firebase', '@firebase/storage'],
 }
 
 module.exports = withPWA(nextConfig)
