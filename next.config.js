@@ -60,7 +60,7 @@ const nextConfig = {
     },
   }),
   webpack: (config, { isServer }) => {
-    // Fix for undici compatibility issue
+    // Fix for undici compatibility issue - ONLY on client side
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -80,21 +80,27 @@ const nextConfig = {
         buffer: false,
       };
       
-      // Exclude problematic modules from client bundle
+      // Exclude problematic modules from client bundle ONLY
       config.externals = config.externals || [];
       config.externals.push({
         'undici': 'undici',
         'firebase-admin': 'firebase-admin',
       });
+
+      // Exclude undici from client-side bundle ONLY
+      config.module.rules.push({
+        test: /node_modules\/undici/,
+        use: 'null-loader',
+      });
+
+      // Add alias to prevent undici from being bundled on CLIENT SIDE ONLY
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'undici': false,
+      };
     }
 
-    // Completely exclude undici from webpack processing
-    config.module.rules.push({
-      test: /node_modules\/undici/,
-      use: 'null-loader',
-    });
-
-    // Handle module resolution issues
+    // Handle module resolution issues (both client and server)
     config.module.rules.push({
       test: /\.m?js$/,
       resolve: {
@@ -102,18 +108,12 @@ const nextConfig = {
       },
     });
 
-    // Ignore undici and related warnings
+    // Ignore undici warnings (both client and server)
     config.ignoreWarnings = [
       { module: /node_modules\/undici/ },
       { file: /node_modules\/undici/ },
       { message: /Module parse failed.*undici/ },
     ];
-
-    // Add alias to prevent undici from being bundled
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'undici': false,
-    };
     
     return config;
   },
