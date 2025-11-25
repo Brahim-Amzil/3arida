@@ -69,3 +69,4 @@ yarn
 npm-debug.ldules/moe_nod
 node_modules
 .vercel
+.next/cache/

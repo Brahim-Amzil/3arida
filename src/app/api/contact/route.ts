@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
     console.log('Sending email from:', fromEmail, 'to:', toEmail);
 
     const emailResult = await resend.emails.send({
-      from: fromEmail,
+      from: `3arida Platform <${fromEmail}>`,
       to: toEmail,
       subject: `[3arida Contact Form] [${reasonLabel}] ${subject}`,
       replyTo: email,
