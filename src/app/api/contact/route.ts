@@ -196,7 +196,8 @@ export async function POST(request: NextRequest) {
 
     // Use verified domain email or fallback to test email
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-    const toEmail = process.env.CONTACT_EMAIL || 'contact@3arida.ma';
+    // In test mode, Resend only allows sending to the account owner's email
+    const toEmail = process.env.CONTACT_EMAIL || '3aridapp@gmail.com';
 
     console.log('Sending email from:', fromEmail, 'to:', toEmail);
 
