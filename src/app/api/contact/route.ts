@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendEmail } from '@/lib/email-smtp';
+import { Resend } from 'resend';
 
 const reasonLabels: Record<string, string> = {
   general: 'استفسار عام',
@@ -46,12 +46,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if either SMTP or Resend is configured
-    const hasSmtp = process.env.SMTP_USER && process.env.SMTP_PASSWORD;
-    const hasResend = process.env.RESEND_API_KEY;
-
-    if (!hasSmtp && !hasResend) {
-      console.error('No email service configured');
+    // Check if Resend is configured
+    if (!process.env.RESEND_API_KEY) {
+      console.error('Resend API key not configured');
       return NextResponse.json(
         { error: 'خدمة البريد الإلكتروني غير مكونة' },
         { status: 500 }
@@ -194,50 +191,23 @@ export async function POST(request: NextRequest) {
         </html>
       `;
 
-    // Try SMTP first, fallback to Resend
-    let emailResult;
-    try {
-      if (hasSmtp) {
-        emailResult = await sendEmail({
-          to: 'contact@3arida.ma',
-          subject: `[3arida Contact Form] [${reasonLabel}] ${subject}`,
-          replyTo: email,
-          html: emailHtml,
-        });
-      } else {
-        // Fallback to Resend
-        const { Resend } = await import('resend');
-        const resend = new Resend(process.env.RESEND_API_KEY);
-        emailResult = await resend.emails.send({
-          from: '3arida <noreply@3arida.ma>',
-          to: 'contact@3arida.ma',
-          subject: `[3arida Contact Form] [${reasonLabel}] ${subject}`,
-          replyTo: email,
-          html: emailHtml,
-        });
-      }
-    } catch (smtpError) {
-      console.error('Primary email service failed:', smtpError);
+    // Send email using Resend
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const emailResult = await resend.emails.send({
+      from: '3arida <onboarding@resend.dev>',
+      to: 'contact@3arida.ma',
+      subject: `[3arida Contact Form] [${reasonLabel}] ${subject}`,
+      replyTo: email,
+      html: emailHtml,
+    });
 
-      // Try Resend as fallback
-      if (hasResend && hasSmtp) {
-        console.log('Trying Resend as fallback...');
-        const { Resend } = await import('resend');
-        const resend = new Resend(process.env.RESEND_API_KEY);
-        emailResult = await resend.emails.send({
-          from: '3arida <noreply@3arida.ma>',
-          to: 'contact@3arida.ma',
-          subject: `[3arida Contact Form] [${reasonLabel}] ${subject}`,
-          replyTo: email,
-          html: emailHtml,
-        });
-      } else {
-        throw smtpError;
-      }
+    if (emailResult.error) {
+      console.error('Resend error:', emailResult.error);
+      throw new Error(emailResult.error.message);
     }
 
     return NextResponse.json(
-      { success: true, messageId: emailResult.messageId || emailResult.id },
+      { success: true, messageId: emailResult.data?.id },
       { status: 200 }
     );
   } catch (error) {
