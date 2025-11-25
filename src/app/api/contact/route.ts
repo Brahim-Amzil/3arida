@@ -193,9 +193,16 @@ export async function POST(request: NextRequest) {
 
     // Send email using Resend
     const resend = new Resend(process.env.RESEND_API_KEY);
+
+    // Use verified domain email or fallback to test email
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const toEmail = process.env.CONTACT_EMAIL || 'contact@3arida.ma';
+
+    console.log('Sending email from:', fromEmail, 'to:', toEmail);
+
     const emailResult = await resend.emails.send({
-      from: '3arida <onboarding@resend.dev>',
-      to: 'contact@3arida.ma',
+      from: fromEmail,
+      to: toEmail,
       subject: `[3arida Contact Form] [${reasonLabel}] ${subject}`,
       replyTo: email,
       html: emailHtml,
