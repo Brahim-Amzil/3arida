@@ -177,9 +177,50 @@ export default function PhoneVerification({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 className="text-lg font-semibold mb-4">
-          التحقق من رقم الهاتف مطلوب
-        </h3>
+        <div className="flex items-center gap-2 mb-4">
+          <svg
+            className="w-6 h-6 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+            />
+          </svg>
+          <h3 className="text-lg font-semibold">التحقق من رقم الهاتف مطلوب</h3>
+        </div>
+
+        {/* Trust Message */}
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <svg
+              className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div className="text-sm">
+              <p className="font-medium text-blue-900 mb-1">
+                نحن نقدر الشفافية والمصداقية
+              </p>
+              <p className="text-blue-700">
+                فقط الأشخاص الموثقون يمكنهم التوقيع. هذا الرمز مطلوب مرة واحدة
+                فقط، وبعدها يمكنك التوقيع على أي عريضة بنقرة واحدة.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* reCAPTCHA container (invisible) */}
         <div id="recaptcha-container"></div>

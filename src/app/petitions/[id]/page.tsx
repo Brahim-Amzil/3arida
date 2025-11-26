@@ -64,6 +64,7 @@ export default function PetitionDetailPage() {
   >('petition');
   const [commentsCount, setCommentsCount] = useState(0);
   const [hasUserSigned, setHasUserSigned] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Check if current user is admin/moderator
   const isAdmin =
@@ -370,7 +371,12 @@ export default function PetitionDetailPage() {
       setShowSigningFlow(false);
 
       // Show success message
-      alert('شكرًا لتوقيعك على هذه العريضة!');
+      setShowSuccessMessage(true);
+
+      // Auto-dismiss after 10 seconds
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 10000);
     } catch (err: any) {
       console.error('Error signing petition:', err);
 
@@ -875,6 +881,29 @@ export default function PetitionDetailPage() {
 
                 {/* 5. Signatures Progress Bar */}
                 <div className="mb-6 w-full">
+                  {/* Verified Signatures Badge */}
+                  <div className="mb-3 flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-200 rounded-full">
+                      <svg
+                        className="w-4 h-4 text-green-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span className="font-medium text-green-700">
+                        100% Verified Signatures
+                      </span>
+                    </div>
+                    <span className="text-gray-500">
+                      All signers are verified users
+                    </span>
+                  </div>
+
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-2xl font-bold text-gray-900">
                       {petition.currentSignatures.toLocaleString()}
@@ -904,6 +933,136 @@ export default function PetitionDetailPage() {
                       : 'Goal reached! 🎉'}
                   </p>
                 </div>
+
+                {/* Success Message */}
+                {showSuccessMessage && (
+                  <div className="mb-4 p-4 bg-green-50 border-2 border-green-500 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                          <svg
+                            className="w-6 h-6 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-lg font-bold text-green-900 mb-1">
+                          شكرًا لتوقيعك! Thank you for signing!
+                        </h4>
+                        <p className="text-sm text-green-700 mb-3">
+                          تم تسجيل توقيعك بنجاح. Your signature has been
+                          recorded successfully.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            onClick={handleShare}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <svg
+                              className="w-4 h-4 mr-1"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                              />
+                            </svg>
+                            Share Petition
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setActiveTab('signees')}
+                            className="border-green-600 text-green-700 hover:bg-green-50"
+                          >
+                            <svg
+                              className="w-4 h-4 mr-1"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                              />
+                            </svg>
+                            View Signatures
+                          </Button>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowSuccessMessage(false)}
+                        className="flex-shrink-0 text-green-600 hover:text-green-800 p-1"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Verification Notice */}
+                {!hasUserSigned &&
+                  !showSuccessMessage &&
+                  petition.status === 'approved' && (
+                    <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <svg
+                          className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                        <div className="text-sm">
+                          <p className="font-medium text-gray-900">
+                            Verified Account Required
+                          </p>
+                          <p className="text-gray-600 mt-0.5">
+                            To maintain credibility, only verified users can
+                            sign.{' '}
+                            {userProfile?.verifiedPhone
+                              ? "You're verified - sign instantly!"
+                              : 'One-time phone verification required.'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                 {/* 6. Action Buttons */}
                 <div className="flex gap-3 mb-6 w-full">
