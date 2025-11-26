@@ -63,6 +63,7 @@ export default function PetitionDetailPage() {
     'petition' | 'publisher' | 'comments' | 'signees'
   >('petition');
   const [commentsCount, setCommentsCount] = useState(0);
+  const [hasUserSigned, setHasUserSigned] = useState(false);
 
   // Check if current user is admin/moderator
   const isAdmin =
@@ -114,6 +115,38 @@ export default function PetitionDetailPage() {
 
     fetchCommentsCount();
   }, [petition?.id]);
+
+  // Check if user has already signed this petition
+  useEffect(() => {
+    const checkUserSignature = async () => {
+      if (!petition?.id || !user) {
+        setHasUserSigned(false);
+        return;
+      }
+
+      try {
+        const { collection, query, where, getDocs } = await import(
+          'firebase/firestore'
+        );
+        const { db } = await import('@/lib/firebase');
+
+        const signaturesRef = collection(db, 'signatures');
+        const q = query(
+          signaturesRef,
+          where('petitionId', '==', petition.id),
+          where('userId', '==', user.uid)
+        );
+
+        const snapshot = await getDocs(q);
+        setHasUserSigned(!snapshot.empty);
+      } catch (error) {
+        console.error('Error checking user signature:', error);
+        setHasUserSigned(false);
+      }
+    };
+
+    checkUserSignature();
+  }, [petition?.id, user]);
 
   // Check for notification parameters in URL and show alert
   useEffect(() => {
@@ -226,12 +259,57 @@ export default function PetitionDetailPage() {
     }
   }, [petition, searchParams]);
 
-  const handleSignPetition = () => {
+  const handleSignPetition = async () => {
     if (!user) {
       // Redirect to login with return URL using window.location for full page reload
       const redirectUrl = `/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`;
       window.location.href = redirectUrl;
       return;
+    }
+
+    // Check if user already signed this petition
+    try {
+      const { collection, query, where, getDocs } = await import(
+        'firebase/firestore'
+      );
+      const { db } = await import('@/lib/firebase');
+
+      const signaturesRef = collection(db, 'signatures');
+      const q = query(
+        signaturesRef,
+        where('petitionId', '==', petition?.id),
+        where('userId', '==', user.uid)
+      );
+
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        alert(
+          'لقد قمت بالفعل بالتوقيع على هذه العريضة!\nYou have already signed this petition!'
+        );
+        return;
+      }
+
+      // Also check by phone if user has verified phone
+      if (userProfile?.phone) {
+        const phoneQuery = query(
+          signaturesRef,
+          where('petitionId', '==', petition?.id),
+          where('signerPhone', '==', userProfile.phone)
+        );
+
+        const phoneSnapshot = await getDocs(phoneQuery);
+
+        if (!phoneSnapshot.empty) {
+          alert(
+            'رقم هاتفك قد تم استخدامه بالفعل للتوقيع على هذه العريضة!\nYour phone number has already been used to sign this petition!'
+          );
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking existing signature:', error);
+      // Continue anyway - the server-side check will catch duplicates
     }
 
     setShowSigningFlow(true);
@@ -287,7 +365,26 @@ export default function PetitionDetailPage() {
       alert('شكرًا لتوقيعك على هذه العريضة!');
     } catch (err: any) {
       console.error('Error signing petition:', err);
-      alert(err.message || 'فشل التوقيع على العريضة. يرجى المحاولة مرة أخرى.');
+
+      // Show more specific error messages
+      let errorMessage =
+        'فشل التوقيع على العريضة. يرجى المحاولة مرة أخرى.\nFailed to sign petition. Please try again.';
+
+      if (
+        err.message?.includes('already been used') ||
+        err.message?.includes('already signed')
+      ) {
+        errorMessage =
+          'لقد قمت بالفعل بالتوقيع على هذه العريضة!\nYou have already signed this petition!';
+      } else if (err.message?.includes('not available')) {
+        errorMessage =
+          'هذه العريضة غير متاحة للتوقيع حاليًا.\nThis petition is not available for signing.';
+      } else if (err.message?.includes('reached its signature goal')) {
+        errorMessage =
+          'لقد وصلت هذه العريضة إلى هدفها من التوقيعات!\nThis petition has reached its signature goal!';
+      }
+
+      alert(errorMessage);
     } finally {
       setSigningLoading(false);
     }
@@ -804,13 +901,34 @@ export default function PetitionDetailPage() {
                 <div className="flex gap-3 mb-6 w-full">
                   <Button
                     onClick={handleSignPetition}
-                    disabled={petition.status !== 'approved' || signingLoading}
+                    disabled={
+                      petition.status !== 'approved' ||
+                      signingLoading ||
+                      hasUserSigned
+                    }
                     className="flex-1"
                   >
                     {signingLoading ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                         Signing...
+                      </>
+                    ) : hasUserSigned ? (
+                      <>
+                        <svg
+                          className="w-5 h-5 mr-2 inline"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        Already Signed
                       </>
                     ) : (
                       'Sign This Petition'
