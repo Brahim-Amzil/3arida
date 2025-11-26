@@ -312,6 +312,14 @@ export default function PetitionDetailPage() {
       // Continue anyway - the server-side check will catch duplicates
     }
 
+    // OPTIMIZATION: If user already has a verified phone, skip OTP and sign directly
+    if (userProfile?.verifiedPhone && userProfile?.phone) {
+      console.log('✅ User has verified phone, signing directly without OTP');
+      await handlePhoneVerified(userProfile.phone);
+      return;
+    }
+
+    // Show phone verification modal for users without verified phone
     setShowSigningFlow(true);
   };
 
