@@ -683,7 +683,7 @@ export const signPetition = async (
       now
     );
 
-    const signatureData = {
+    const signatureData: any = {
       petitionId,
       signerName: signerData.isAnonymous ? 'Anonymous' : signerData.name,
       signerPhone: signerData.phone,
@@ -697,6 +697,11 @@ export const signPetition = async (
       comment: signerData.comment,
       createdAt: now,
     };
+
+    // Add userId if provided
+    if (userId) {
+      signatureData.userId = userId;
+    }
 
     // Add signature to collection
     await addDoc(collection(db, SIGNATURES_COLLECTION), {
