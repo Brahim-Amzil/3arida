@@ -228,10 +228,9 @@ export default function PetitionDetailPage() {
 
   const handleSignPetition = () => {
     if (!user) {
-      // Redirect to login with return URL
-      router.push(
-        `/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`
-      );
+      // Redirect to login with return URL using window.location for full page reload
+      const redirectUrl = `/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      window.location.href = redirectUrl;
       return;
     }
 
@@ -266,14 +265,18 @@ export default function PetitionDetailPage() {
         console.log('ℹ️ Skipping update - already verified or no profile');
       }
 
-      await signPetition(petition.id, {
-        name: userProfile?.name || user.displayName || 'Anonymous',
-        phone: phoneNumber,
-        location: {
-          country: 'Morocco',
+      await signPetition(
+        petition.id,
+        {
+          name: userProfile?.name || user.displayName || 'Anonymous',
+          phone: phoneNumber,
+          location: {
+            country: 'Morocco',
+          },
+          comment: '',
         },
-        comment: '',
-      });
+        user.uid
+      );
 
       // The petition will be updated via real-time listener
       // No need to manually update state

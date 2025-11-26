@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
         <body>
           <div class="container">
             <div class="header">
-              <h2 style="margin: 0;">رسالة جديدة من نموذج الاتصال</h2>
+              <h2 style="margin: 0;"># 3arida.ma #/h2>
             </div>
             <div class="content">
               <div class="field">
@@ -194,9 +194,8 @@ export async function POST(request: NextRequest) {
     // Send email using Resend
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    // Use verified domain email or fallback to test email
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-    // In test mode, Resend only allows sending to the account owner's email
+    // Use verified domain for sender, configurable recipient
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'contact@3arida.ma';
     const toEmail = process.env.CONTACT_EMAIL || '3aridapp@gmail.com';
 
     console.log('Sending email from:', fromEmail, 'to:', toEmail);
