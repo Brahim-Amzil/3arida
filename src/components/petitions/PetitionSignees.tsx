@@ -53,7 +53,7 @@ export default function PetitionSignees({ petitionId }: PetitionSigneesProps) {
       let q = query(
         signaturesRef,
         where('petitionId', '==', petitionId),
-        orderBy('signedAt', 'desc'),
+        orderBy('createdAt', 'desc'),
         limit(PAGE_SIZE)
       );
 
@@ -61,7 +61,7 @@ export default function PetitionSignees({ petitionId }: PetitionSigneesProps) {
         q = query(
           signaturesRef,
           where('petitionId', '==', petitionId),
-          orderBy('signedAt', 'desc'),
+          orderBy('createdAt', 'desc'),
           startAfter(lastDoc),
           limit(PAGE_SIZE)
         );
@@ -78,10 +78,11 @@ export default function PetitionSignees({ petitionId }: PetitionSigneesProps) {
         const data = doc.data();
         return {
           id: doc.id,
-          name: data.name || 'Anonymous',
-          location: data.location,
+          name: data.signerName || data.name || 'Anonymous',
+          location: data.signerLocation || data.location,
           comment: data.comment,
-          signedAt: data.signedAt?.toDate() || new Date(),
+          signedAt:
+            data.createdAt?.toDate() || data.verifiedAt?.toDate() || new Date(),
         };
       });
 
