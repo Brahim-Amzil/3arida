@@ -39,10 +39,12 @@ A modern, scalable petition platform designed specifically for Morocco, enabling
 ### Core Functionality ✅ **All Implemented**
 
 - **Petition Creation**: Complete petition management with multimedia content and tiered pricing
-- **Phone Verification**: Full OTP verification system for petition signing with Moroccan phone support
+- **Phone Verification**: WhatsApp-based verification (FREE for first 1,000/month) - See [`WHATSAPP_DOCS/`](./WHATSAPP_DOCS/)
 - **QR Code Integration**: Complete QR generation, branding, download, and upgrade system
 - **Role-Based Access**: Full user, moderator, and admin roles with comprehensive permissions
 - **Morocco-Optimized**: MAD currency, Moroccan phone formats, and localization ready
+
+> 💡 **NEW**: WhatsApp phone verification saves 80-90% on SMS costs! See [`WHATSAPP_DOCS/WHATSAPP-QUICK-START.md`](./WHATSAPP_DOCS/WHATSAPP-QUICK-START.md)
 
 ### Pricing Tiers ✅ **Fully Implemented**
 
@@ -94,7 +96,6 @@ A modern, scalable petition platform designed specifically for Morocco, enabling
    Fill in your Firebase, Stripe, and other configuration values.
 
 4. **Configure Firebase**
-
    - Create a Firebase project
    - Enable Authentication (Email/Password, Google, Phone)
    - Set up Firestore database
