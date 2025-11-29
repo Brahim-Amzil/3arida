@@ -13,6 +13,7 @@ const nextConfig = {
     domains: [
       'firebasestorage.googleapis.com',
       'storage.googleapis.com',
+      'images.unsplash.com',
     ],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,

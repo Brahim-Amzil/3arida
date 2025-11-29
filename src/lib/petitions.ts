@@ -1161,10 +1161,12 @@ export const getCategories = async (): Promise<Category[]> => {
     const categoriesRef = collection(db, CATEGORIES_COLLECTION);
     const querySnapshot = await getDocs(categoriesRef);
     const categories: Category[] = [];
+    const seenNames = new Set<string>();
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.isActive !== false) {
+      if (data.isActive !== false && !seenNames.has(data.name)) {
+        seenNames.add(data.name);
         categories.push({
           id: doc.id,
           name: data.name,
