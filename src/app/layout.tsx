@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import AuthProvider from '@/components/auth/AuthProvider';
 import { ProductionMonitoringProvider } from '@/components/monitoring/ProductionMonitoringProvider';
+import { BannerProvider } from '@/contexts/BannerContext';
 import InstallPWAPrompt from '@/components/pwa/InstallPWAPrompt';
 import PushNotificationPrompt from '@/components/pwa/PushNotificationPrompt';
 
@@ -77,14 +78,16 @@ export default function RootLayout({
       </head>
       <body className={inter.className} suppressHydrationWarning>
         <ProductionMonitoringProvider>
-          <AuthProvider>
-            <div className="min-h-screen bg-gray-50" suppressHydrationWarning>
-              {children}
-            </div>
-            {/* PWA Components */}
-            <InstallPWAPrompt />
-            <PushNotificationPrompt />
-          </AuthProvider>
+          <BannerProvider>
+            <AuthProvider>
+              <div className="min-h-screen bg-gray-50" suppressHydrationWarning>
+                {children}
+              </div>
+              {/* PWA Components */}
+              <InstallPWAPrompt />
+              <PushNotificationPrompt />
+            </AuthProvider>
+          </BannerProvider>
         </ProductionMonitoringProvider>
       </body>
     </html>

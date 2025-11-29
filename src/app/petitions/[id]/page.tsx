@@ -10,10 +10,9 @@ import PhoneVerification from '@/components/auth/PhoneVerification';
 import QRCodeDisplay from '@/components/petitions/QRCodeDisplay';
 import PetitionProgress from '@/components/petitions/PetitionProgress';
 import PetitionShare from '@/components/petitions/PetitionShare';
-import PetitionComments from '@/components/petitions/PetitionComments';
 import PetitionManagement from '@/components/petitions/PetitionManagement';
 import PetitionUpdates from '@/components/petitions/PetitionUpdates';
-import PetitionSignees from '@/components/petitions/PetitionSignees';
+import PetitionSupporters from '@/components/petitions/PetitionSupporters';
 import { useRealtimePetition } from '@/hooks/useRealtimePetition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,9 +59,8 @@ export default function PetitionDetailPage() {
   const [creator, setCreator] = useState<User | null>(null);
   const [creatorLoading, setCreatorLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    'petition' | 'publisher' | 'comments' | 'signees'
+    'petition' | 'publisher' | 'supporters'
   >('petition');
-  const [commentsCount, setCommentsCount] = useState(0);
   const [hasUserSigned, setHasUserSigned] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
@@ -89,33 +87,6 @@ export default function PetitionDetailPage() {
 
     fetchCreator();
   }, [petition?.creatorId, creator, creatorLoading]);
-
-  // Fetch comments count when petition is loaded
-  useEffect(() => {
-    const fetchCommentsCount = async () => {
-      if (!petition?.id) return;
-
-      try {
-        const { collection, query, where, getCountFromServer } = await import(
-          'firebase/firestore'
-        );
-        const { db } = await import('@/lib/firebase');
-
-        const commentsRef = collection(db, 'comments');
-        const commentsQuery = query(
-          commentsRef,
-          where('petitionId', '==', petition.id)
-        );
-
-        const snapshot = await getCountFromServer(commentsQuery);
-        setCommentsCount(snapshot.data().count);
-      } catch (error) {
-        console.error('Error fetching comments count:', error);
-      }
-    };
-
-    fetchCommentsCount();
-  }, [petition?.id]);
 
   // Check if user has already signed this petition
   useEffect(() => {
@@ -247,8 +218,10 @@ export default function PetitionDetailPage() {
         console.log('✅ Setting notification alert:', alertData);
         setNotificationAlert(alertData);
         // Clean up URL parameters
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
+        if (typeof window !== 'undefined') {
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        }
       } else {
         console.log(
           '❌ No alert data created for notification type:',
@@ -263,8 +236,10 @@ export default function PetitionDetailPage() {
   const handleSignPetition = async () => {
     if (!user) {
       // Redirect to login with return URL using window.location for full page reload
-      const redirectUrl = `/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-      window.location.href = redirectUrl;
+      if (typeof window !== 'undefined') {
+        const redirectUrl = `/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        window.location.href = redirectUrl;
+      }
       return;
     }
 
@@ -437,7 +412,9 @@ export default function PetitionDetailPage() {
       alert(`Petition ${newStatus} successfully!`);
 
       // Refresh the page to show updated status
-      window.location.reload();
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
     } catch (error) {
       console.error('Error updating petition:', error);
       alert('Error updating petition status');
@@ -987,7 +964,7 @@ export default function PetitionDetailPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setActiveTab('signees')}
+                            onClick={() => setActiveTab('supporters')}
                             className="border-green-600 text-green-700 hover:bg-green-50"
                           >
                             <svg
@@ -1003,7 +980,7 @@ export default function PetitionDetailPage() {
                                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                               />
                             </svg>
-                            View Signatures
+                            View Discussion
                           </Button>
                         </div>
                       </div>
@@ -1157,31 +1134,29 @@ export default function PetitionDetailPage() {
                       Petition
                     </button>
                     <button
-                      onClick={() => setActiveTab('comments')}
-                      className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors relative ${
-                        activeTab === 'comments'
+                      onClick={() => setActiveTab('supporters')}
+                      className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                        activeTab === 'supporters'
                           ? 'border-green-600 text-green-600'
                           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                       }`}
                     >
                       <span className="flex items-center gap-2">
-                        Comments
-                        {commentsCount > 0 && (
-                          <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-red-500 rounded-full">
-                            {commentsCount > 99 ? '99+' : commentsCount}
-                          </span>
-                        )}
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        Supporters
                       </span>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('signees')}
-                      className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                        activeTab === 'signees'
-                          ? 'border-green-600 text-green-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      Signees
                     </button>
                     <button
                       onClick={() => setActiveTab('publisher')}
@@ -1452,21 +1427,11 @@ export default function PetitionDetailPage() {
                     </div>
                   )}
 
-                  {/* Comments Tab */}
-                  {activeTab === 'comments' && (
+                  {/* Supporters Tab - Unified Comments & Signatures */}
+                  {activeTab === 'supporters' && (
                     <div className="w-full">
-                      <PetitionComments
-                        petitionId={petition.id}
-                        onCommentsCountChange={(count) =>
-                          setCommentsCount(count)
-                        }
-                      />
+                      <PetitionSupporters petitionId={petition.id} />
                     </div>
-                  )}
-
-                  {/* Signees Tab */}
-                  {activeTab === 'signees' && (
-                    <PetitionSignees petitionId={petition.id} />
                   )}
                 </div>
               </CardContent>

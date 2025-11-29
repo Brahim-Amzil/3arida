@@ -51,6 +51,24 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "category",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "currentSignatures",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "petitions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "creatorId",
           "order": "ASCENDING"
         },

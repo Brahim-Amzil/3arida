@@ -386,7 +386,9 @@ export default function PetitionComments({
             <Button asChild>
               <a
                 href={`/auth/login?redirect=${encodeURIComponent(
-                  window.location.pathname
+                  typeof window !== 'undefined'
+                    ? window.location.pathname
+                    : '/petitions'
                 )}`}
               >
                 Sign In to Comment

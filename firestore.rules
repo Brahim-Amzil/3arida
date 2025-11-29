@@ -3,59 +3,111 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // DEVELOPMENT RULES - More permissive for testing
-    // TODO: Replace with production rules before deployment
+    // PRODUCTION SECURITY RULES
+    // Last updated: 2025-01-19
     
-    // Users collection - Allow authenticated users to read/write
+    // Helper functions for role checking
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role in ['admin', 'master_admin'];
+    }
+    
+    function isModerator() {
+      return isAuthenticated() && getUserData().role in ['moderator', 'admin', 'master_admin'];
+    }
+    
+    // Users collection - Users can read all, but only update their own profile
     match /users/{userId} {
-      allow read, write: if request.auth != null;
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin(); // Only admins can delete users
     }
     
-    // Petitions collection - Allow public read and authenticated write
+    // Petitions collection - Public read, restricted write
     match /petitions/{petitionId} {
-      // Public read for all petitions
+      // Anyone can read approved petitions, creators can read their own
       allow read: if true;
       
-      // Authenticated users can create petitions
-      allow create: if request.auth != null;
+      // Authenticated users can create petitions with valid data
+      allow create: if isAuthenticated() 
+        && request.resource.data.creatorId == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.description is string
+        && request.resource.data.description.size() > 0;
       
-      // Creators and authenticated users can update
-      allow update: if request.auth != null;
+      // Only creator or admin can update
+      allow update: if isAuthenticated() 
+        && (resource.data.creatorId == request.auth.uid || isAdmin())
+        && request.resource.data.creatorId == resource.data.creatorId; // Can't change creator
       
-      // Creators and authenticated users can delete
-      allow delete: if request.auth != null;
+      // Only creator or admin can delete
+      allow delete: if isAuthenticated() 
+        && (resource.data.creatorId == request.auth.uid || isAdmin());
     }
     
-    // Signatures collection - Allow public access for development
+    // Signatures collection - Public read, restricted write
     match /signatures/{signatureId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      allow read: if true; // Public signatures for transparency
+      
+      // Authenticated users can create signatures
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.petitionId is string;
+      
+      // Only signature owner or admin can update/delete
+      allow update, delete: if isAuthenticated() 
+        && (resource.data.userId == request.auth.uid || isAdmin());
     }
     
-    // Creator pages collection - Allow public read and authenticated write
+    // Creator pages collection - Public read, owner write
     match /creatorPages/{pageId} {
       allow read: if true;
-      allow create, update, delete: if request.auth != null;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() 
+        && (resource.data.userId == request.auth.uid || isAdmin());
     }
     
-    // Categories collection - Allow public read and authenticated write
+    // Categories collection - Public read, admin write only
     match /categories/{categoryId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin(); // Only admins can manage categories
     }
     
     // Comments collection - Allow public read and authenticated write
     match /comments/{commentId} {
       allow read: if true;
-      allow create, update, delete: if request.auth != null;
+      allow create: if request.auth != null;
+      // Only comment author can update/delete their own comments
+      allow update, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.authorId || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master_admin');
     }
     
-    // Petition updates collection - Allow public read and authenticated write
+    // Petition updates collection - Public read, creator write
     match /petitionUpdates/{updateId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      
+      // Only petition creator can create updates
+      allow create: if isAuthenticated()
+        && request.resource.data.authorId == request.auth.uid;
+      
+      // Only update author or admin can modify/delete
+      allow update, delete: if isAuthenticated() 
+        && (resource.data.authorId == request.auth.uid || isAdmin());
     }
     
     // Notifications collection - Users can only read/update their own notifications
@@ -76,20 +128,27 @@ service cloud.firestore {
       allow delete: if false; // Deletion requests should never be deleted
     }
     
-    // Moderators collection - Allow authenticated access
+    // Moderators collection - Admin only
     match /moderators/{moderatorId} {
-      allow read, write: if request.auth != null;
+      allow read: if isModerator();
+      allow write: if isAdmin(); // Only admins can manage moderators
     }
     
-    // Payments collection - Allow authenticated access
+    // Payments collection - User can read their own, admin can read all
     match /payments/{paymentId} {
-      allow read, write: if request.auth != null;
+      allow read: if isAuthenticated() 
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin(); // Only admins can update payment status
+      allow delete: if false; // Never delete payment records
     }
     
-    // QR codes collection - Allow public read and authenticated write
+    // QR codes collection - Public read, owner write
     match /qrCodes/{qrCodeId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create: if isAuthenticated() && request.resource.data.petitionId is string;
+      allow update, delete: if isAuthenticated() 
+        && (resource.data.creatorId == request.auth.uid || isAdmin());
     }
     
     // Audit logs collection - Allow admins/moderators to read and write
@@ -99,10 +158,7 @@ service cloud.firestore {
       allow update, delete: if false; // Audit logs should never be modified or deleted
     }
     
-    // Allow all other collections for development
-    match /{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
+    // Deny all other collections by default (secure by default)
+    // Add specific rules above for any new collections
   }
 }

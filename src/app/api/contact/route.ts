@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
         <body>
           <div class="container">
             <div class="header">
-              <h2 style="margin: 0;"># 3arida.ma #/h2>
+              <h2 style="margin: 0;"># 3arida.ma #</h2>
             </div>
             <div class="content">
               <div class="field">
