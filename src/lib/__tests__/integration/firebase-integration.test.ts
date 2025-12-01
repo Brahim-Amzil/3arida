@@ -2,6 +2,8 @@
  * Integration tests for Firebase operations
  * These tests require Firebase emulators to be running
  * Run: firebase emulators:start --only auth,firestore,storage
+ *
+ * To run these tests: FIREBASE_EMULATOR=true npm test
  */
 
 import { initializeApp, getApps, deleteApp } from 'firebase/app';
@@ -32,7 +34,11 @@ const testFirebaseConfig = {
   appId: 'test-app-id',
 };
 
-describe('Firebase Integration Tests', () => {
+// Skip these tests unless Firebase emulators are running
+const describeIfEmulator =
+  process.env.FIREBASE_EMULATOR === 'true' ? describe : describe.skip;
+
+describeIfEmulator('Firebase Integration Tests', () => {
   let app: any;
   let auth: any;
   let db: any;

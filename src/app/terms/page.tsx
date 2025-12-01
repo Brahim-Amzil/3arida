@@ -1,5 +1,11 @@
+import { Metadata } from 'next';
 import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
+
+export const metadata: Metadata = {
+  title: 'شروط الخدمة - 3arida',
+  description: 'شروط وأحكام استخدام منصة 3arida للعرائض الرقمية',
+};
 
 export default function TermsPage() {
   return (

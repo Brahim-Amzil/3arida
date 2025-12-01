@@ -26,7 +26,6 @@ function PetitionsPage() {
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
 
-  // Initialize filters from URL params after mount
   useEffect(() => {
     setMounted(true);
     setFilters({
@@ -102,7 +101,6 @@ function PetitionsPage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      {/* Page Header */}
       <section className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -124,10 +122,8 @@ function PetitionsPage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Horizontal Filters */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4 items-center">
-            {/* Search */}
             <div className="flex-1 md:max-w-md">
               <input
                 type="text"
@@ -138,7 +134,6 @@ function PetitionsPage() {
               />
             </div>
 
-            {/* Category Dropdown */}
             <div className="w-full md:w-64">
               <select
                 value={filters.category || ''}
@@ -156,7 +151,6 @@ function PetitionsPage() {
               </select>
             </div>
 
-            {/* Sort Dropdown */}
             <div className="w-full md:w-48">
               <select
                 value={filters.sortBy || 'recent'}
@@ -171,7 +165,6 @@ function PetitionsPage() {
               </select>
             </div>
 
-            {/* Results Count */}
             <div className="w-full md:w-auto md:ml-4">
               <p className="text-blue-600 font-bold text-lg whitespace-nowrap">
                 {loading ? 'Loading...' : `${petitions.length} petitions found`}
@@ -180,9 +173,7 @@ function PetitionsPage() {
           </div>
         </div>
 
-        {/* Main Content */}
         <main>
-          {/* Error State */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
               <p className="text-red-600">{error}</p>
@@ -196,7 +187,6 @@ function PetitionsPage() {
             </div>
           )}
 
-          {/* Petitions Grid */}
           {!loading && petitions.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
               {petitions.map((petition) => (
@@ -211,7 +201,6 @@ function PetitionsPage() {
             </div>
           )}
 
-          {/* Empty State */}
           {!loading && petitions.length === 0 && !error && (
             <div className="text-center py-12">
               <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -243,7 +232,6 @@ function PetitionsPage() {
             </div>
           )}
 
-          {/* Loading State */}
           {loading && petitions.length === 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
@@ -266,7 +254,6 @@ function PetitionsPage() {
             </div>
           )}
 
-          {/* Load More Button */}
           {!loading && hasMore && (
             <div className="text-center">
               <Button onClick={handleLoadMore} variant="outline" size="lg">

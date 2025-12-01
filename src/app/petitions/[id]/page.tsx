@@ -288,15 +288,39 @@ export default function PetitionDetailPage() {
       // Continue anyway - the server-side check will catch duplicates
     }
 
-    // OPTIMIZATION: If user already has a verified phone, skip OTP and sign directly
-    if (userProfile?.verifiedPhone && userProfile?.phone) {
-      console.log('✅ User has verified phone, signing directly without OTP');
-      await handlePhoneVerified(userProfile.phone);
-      return;
+    // reCAPTCHA v3 verification (invisible - runs in background)
+    const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+    if (siteKey) {
+      try {
+        setSigningLoading(true);
+        const { executeRecaptcha, verifyRecaptchaToken } = await import(
+          '@/lib/recaptcha'
+        );
+
+        // Execute reCAPTCHA (invisible to user)
+        const token = await executeRecaptcha(siteKey, 'sign_petition');
+
+        // Verify with backend
+        const verification = await verifyRecaptchaToken(token);
+
+        if (!verification.success) {
+          alert('Security verification failed. Please try again.');
+          setSigningLoading(false);
+          return;
+        }
+
+        console.log('✅ reCAPTCHA passed with score:', verification.score);
+      } catch (error) {
+        console.error('reCAPTCHA error:', error);
+        // Continue anyway - don't block users if reCAPTCHA fails
+      } finally {
+        setSigningLoading(false);
+      }
     }
 
-    // Show phone verification modal for users without verified phone
-    setShowSigningFlow(true);
+    // Sign petition directly - no phone verification needed for signers
+    // Phone verification is only required for petition creators
+    await handlePhoneVerified(userProfile?.phone || '');
   };
 
   const handlePhoneVerified = async (phoneNumber: string) => {
@@ -312,20 +336,9 @@ export default function PetitionDetailPage() {
         currentVerifiedStatus: userProfile?.verifiedPhone,
       });
 
-      if (userProfile && !userProfile.verifiedPhone) {
-        const { doc, updateDoc } = await import('firebase/firestore');
-        const { db } = await import('@/lib/firebase');
-
-        console.log('🔄 Updating Firestore document...');
-        await updateDoc(doc(db, 'users', user.uid), {
-          phone: phoneNumber,
-          verifiedPhone: true,
-          updatedAt: new Date(),
-        });
-        console.log('✅ User profile updated successfully');
-      } else {
-        console.log('ℹ️ Skipping update - already verified or no profile');
-      }
+      // No need to update phone verification for signers
+      // Phone verification is only required for petition creators
+      console.log('ℹ️ Signing petition without phone verification requirement');
 
       await signPetition(
         petition.id,
@@ -1006,14 +1019,14 @@ export default function PetitionDetailPage() {
                   </div>
                 )}
 
-                {/* Verification Notice */}
+                {/* Security Notice */}
                 {!hasUserSigned &&
                   !showSuccessMessage &&
                   petition.status === 'approved' && (
-                    <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <div className="flex items-start gap-2">
                         <svg
-                          className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0"
+                          className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -1022,19 +1035,16 @@ export default function PetitionDetailPage() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                           />
                         </svg>
                         <div className="text-sm">
-                          <p className="font-medium text-gray-900">
-                            Verified Account Required
+                          <p className="font-medium text-blue-900">
+                            Protected by reCAPTCHA
                           </p>
-                          <p className="text-gray-600 mt-0.5">
-                            To maintain credibility, only verified users can
-                            sign.{' '}
-                            {userProfile?.verifiedPhone
-                              ? "You're verified - sign instantly!"
-                              : 'One-time phone verification required.'}
+                          <p className="text-blue-700 mt-0.5">
+                            This petition is protected against bots and spam
+                            with invisible security verification.
                           </p>
                         </div>
                       </div>

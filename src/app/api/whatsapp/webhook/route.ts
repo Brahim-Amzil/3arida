@@ -11,14 +11,24 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
-  const VERIFY_TOKEN =
-    process.env.WHATSAPP_VERIFY_TOKEN || 'your_verify_token_here';
+  const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN?.trim();
 
-  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-    console.log('Webhook verified');
+  console.log('Webhook verification attempt:', {
+    mode,
+    receivedToken: token,
+    receivedLength: token?.length,
+    expectedToken: VERIFY_TOKEN,
+    expectedLength: VERIFY_TOKEN?.length,
+    tokensMatch: token === VERIFY_TOKEN,
+    challenge,
+  });
+
+  if (mode === 'subscribe' && token && VERIFY_TOKEN && token === VERIFY_TOKEN) {
+    console.log('✅ Webhook verified successfully');
     return new NextResponse(challenge, { status: 200 });
   }
 
+  console.log('❌ Webhook verification failed');
   return NextResponse.json({ error: 'Verification failed' }, { status: 403 });
 }
 

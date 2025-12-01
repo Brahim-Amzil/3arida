@@ -36,6 +36,8 @@ Your WhatsApp verification system is **fully implemented** and ready to use! Her
 3. Create account (use your Facebook account)
 4. Verify email
 
+https://business.facebook.com/latest/whatsapp_manager/message_templates?business_id=1264861992115457&tab=message-templates&psp_linking_success=false&filters=%7B%22date_range%22%3A7%2C%22language%22%3A[]%2C%22quality%22%3A[]%2C%22search_text%22%3A%22%22%2C%22status%22%3A[%22APPROVED%22%2C%22IN_APPEAL%22%2C%22PAUSED%22%2C%22PENDING%22%2C%22REJECTED%22]%2C%22tag%22%3A[]%7D&nav_ref=whatsapp_manager&asset_id=1868774937849601
+
 ### Step 2: Create WhatsApp App (15 min)
 
 1. Click "Create App"

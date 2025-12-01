@@ -211,13 +211,4 @@ export default function CaptchaProtection({
   );
 }
 
-// Extend Window interface for TypeScript
-declare global {
-  interface Window {
-    grecaptcha: {
-      render: (container: Element, parameters: any) => number;
-      reset: (widgetId: number) => void;
-      getResponse: (widgetId: number) => string;
-    };
-  }
-}
+// Type declaration moved to src/lib/recaptcha.ts to avoid conflicts

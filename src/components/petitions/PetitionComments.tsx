@@ -140,6 +140,23 @@ export default function PetitionComments({
     try {
       setSubmitting(true);
 
+      // Check rate limits (client-side check - also enforced server-side)
+      const userCreatedAt = userProfile.createdAt || new Date();
+      const { checkCommentRateLimit } = await import('@/lib/rate-limiting');
+      const rateLimit = checkCommentRateLimit(user.uid, userCreatedAt);
+
+      if (!rateLimit.allowed) {
+        const resetDate = new Date(rateLimit.resetTime);
+        const timeRemaining = Math.ceil(
+          (rateLimit.resetTime - Date.now()) / 60000
+        );
+        alert(
+          `${rateLimit.message}\n\nYou can comment again in ${timeRemaining} minute${timeRemaining !== 1 ? 's' : ''}.`
+        );
+        setSubmitting(false);
+        return;
+      }
+
       const commentData = {
         petitionId,
         authorId: user.uid,

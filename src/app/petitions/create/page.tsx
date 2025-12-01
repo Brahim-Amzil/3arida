@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
+import PhoneVerification from '@/components/auth/PhoneVerification';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -94,10 +95,16 @@ const SUBCATEGORIES: Record<string, string[]> = {
 
 export default function CreatePetitionPage() {
   const router = useRouter();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const {
+    user,
+    userProfile,
+    isAuthenticated,
+    loading: authLoading,
+  } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [formData, setFormData] = useState<PetitionFormData>({
     publisherType: '',
@@ -440,6 +447,32 @@ export default function CreatePetitionPage() {
     }));
   };
 
+  const handlePhoneVerified = async (phoneNumber: string) => {
+    if (!user) return;
+
+    try {
+      // Update user profile with verified phone
+      const { doc, updateDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      await updateDoc(doc(db, 'users', user.uid), {
+        phone: phoneNumber,
+        verifiedPhone: true,
+        updatedAt: new Date(),
+      });
+
+      console.log('✅ Phone verified for petition creator');
+      setShowPhoneVerification(false);
+      setError('');
+
+      // Retry submission after verification
+      // The form will now pass the phone verification check
+    } catch (error) {
+      console.error('Error updating phone verification:', error);
+      setError('Failed to verify phone. Please try again.');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -459,6 +492,15 @@ export default function CreatePetitionPage() {
 
     if (!user) {
       setError('You must be logged in to create a petition');
+      return;
+    }
+
+    // PHONE VERIFICATION REQUIRED FOR PETITION CREATORS
+    if (!userProfile?.verifiedPhone) {
+      setError(
+        'Phone verification required to create petitions. This helps prevent spam and ensures accountability.'
+      );
+      setShowPhoneVerification(true);
       return;
     }
 
@@ -1362,6 +1404,19 @@ export default function CreatePetitionPage() {
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
       `}</style>
+
+      {/* Phone Verification Modal */}
+      {showPhoneVerification && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <PhoneVerification
+              onVerified={handlePhoneVerified}
+              onCancel={() => setShowPhoneVerification(false)}
+            />
+          </div>
+        </div>
+      )}
+
       <Header />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

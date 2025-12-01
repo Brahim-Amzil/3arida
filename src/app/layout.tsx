@@ -6,6 +6,7 @@ import { ProductionMonitoringProvider } from '@/components/monitoring/Production
 import { BannerProvider } from '@/contexts/BannerContext';
 import InstallPWAPrompt from '@/components/pwa/InstallPWAPrompt';
 import PushNotificationPrompt from '@/components/pwa/PushNotificationPrompt';
+import CookieConsent from '@/components/legal/CookieConsent';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -72,9 +73,22 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Mobile-First Viewport */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes"
+        />
+
+        {/* Icons */}
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#22c55e" />
+
+        {/* Theme Colors */}
+        <meta name="theme-color" content="#10B981" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+        {/* Prevent auto-zoom on iOS */}
+        <meta name="format-detection" content="telephone=no" />
       </head>
       <body className={inter.className} suppressHydrationWarning>
         <ProductionMonitoringProvider>
@@ -86,6 +100,8 @@ export default function RootLayout({
               {/* PWA Components */}
               <InstallPWAPrompt />
               <PushNotificationPrompt />
+              {/* Cookie Consent Banner */}
+              <CookieConsent />
             </AuthProvider>
           </BannerProvider>
         </ProductionMonitoringProvider>

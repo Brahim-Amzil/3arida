@@ -27,8 +27,8 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142 76% 36%;
-    --primary-foreground: 355 100% 97%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 84% 4.9%;
     --muted: 210 40% 96%;
@@ -39,7 +39,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 142 76% 36%;
+    --ring: 160 84% 39%;
     --radius: 0.5rem;
   }
 
@@ -106,6 +106,27 @@
   color: #006233;
 }
 
+/* New Theme 02 - Category Colors */
+.category-culture {
+  background-color: #3B82F6;
+  color: #FFFFFF;
+}
+
+.category-environment {
+  background-color: #10B981;
+  color: #FFFFFF;
+}
+
+.category-education {
+  background-color: #F59E0B;
+  color: #FFFFFF;
+}
+
+.category-default {
+  background-color: #6B7280;
+  color: #FFFFFF;
+}
+
 /* Arabic text support */
 .rtl {
   direction: rtl;
@@ -115,4 +136,51 @@
 .ltr {
   direction: ltr;
   text-align: left;
+}
+
+/* Mobile-First Optimizations */
+@media (max-width: 768px) {
+  /* Improve tap targets on mobile */
+  button, a, input[type="checkbox"], input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent text size adjustment on iOS */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* Smooth scrolling on mobile */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+}
+
+/* iOS Safe Area Support */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Touch-friendly focus states */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  button:hover, a:hover {
+    opacity: 1;
+  }
+  
+  /* Add active states for touch feedback */
+  button:active, a:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
 }

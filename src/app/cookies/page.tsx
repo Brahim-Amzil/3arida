@@ -1,13 +1,21 @@
+'use client';
+
+import { useState } from 'react';
 import { Metadata } from 'next';
 import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
-
-export const metadata: Metadata = {
-  title: 'سياسة ملفات تعريف الارتباط - 3arida',
-  description: 'سياسة ملفات تعريف الارتباط (Cookies) لمنصة 3arida',
-};
+import { clearCookieConsent } from '@/lib/cookie-consent';
 
 export default function CookiesPage() {
+  const [showResetMessage, setShowResetMessage] = useState(false);
+
+  const handleResetConsent = () => {
+    clearCookieConsent();
+    setShowResetMessage(true);
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  };
   return (
     <>
       <Header />
@@ -101,6 +109,23 @@ export default function CookiesPage() {
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">
                   كيفية التحكم في ملفات تعريف الارتباط
                 </h2>
+
+                <div className="bg-blue-50 border-r-4 border-blue-400 p-4 mb-6">
+                  <p className="text-sm text-blue-800 mb-3">
+                    يمكنك إعادة تعيين تفضيلات ملفات تعريف الارتباط في أي وقت:
+                  </p>
+                  <button
+                    onClick={handleResetConsent}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    إعادة تعيين تفضيلات ملفات تعريف الارتباط
+                  </button>
+                  {showResetMessage && (
+                    <p className="text-sm text-green-700 mt-2">
+                      ✓ تم إعادة التعيين. سيتم إعادة تحميل الصفحة...
+                    </p>
+                  )}
+                </div>
 
                 <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-6">
                   إعدادات المتصفح

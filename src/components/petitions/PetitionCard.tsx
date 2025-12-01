@@ -41,14 +41,14 @@ export default function PetitionCard({
   if (variant === 'grid') {
     return (
       <div
-        className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden ${className} ${petition.status === 'deleted' ? 'relative' : ''}`}
+        className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden flex flex-col ${className} ${petition.status === 'deleted' ? 'relative' : ''}`}
       >
         {/* Deleted Overlay */}
         {petition.status === 'deleted' && (
           <div className="absolute inset-0 bg-gray-900 bg-opacity-35 z-10 pointer-events-none" />
         )}
 
-        <Link href={petitionUrl} className="block">
+        <Link href={petitionUrl} className="block flex-1 flex flex-col">
           {/* Petition Image */}
           <div className="relative h-48 bg-gray-200">
             {petition.mediaUrls && petition.mediaUrls.length > 0 ? (
@@ -107,28 +107,27 @@ export default function PetitionCard({
           </div>
 
           {/* Petition Content */}
-          <div className="p-4">
-            {/* Title */}
-            <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+          <div className="p-4 flex flex-col">
+            {/* Title - Fixed height */}
+            <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 h-14">
               {petition.title}
             </h3>
 
-            {/* Description Preview */}
-            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-              {petition.description.substring(0, 120)}...
+            {/* Description Preview - Fixed height */}
+            <p className="text-sm text-gray-600 mb-3 line-clamp-1 h-5">
+              {petition.description.substring(0, 80)}...
             </p>
 
-            {/* Creator Info */}
+            {/* Creator Info - Fixed height */}
             {showCreator && (
-              <div className="flex items-center mb-3">
+              <div className="flex items-center mb-3 h-5">
                 <div className="flex items-center text-sm text-gray-600">
                   <span>Created by {petition.creatorName || 'Anonymous'}</span>
-                  {/* TODO: Add creator verification badge */}
                 </div>
               </div>
             )}
 
-            {/* Progress Section */}
+            {/* Progress Section - Fixed height */}
             {showProgress && (
               <div className="mb-4">
                 {/* Progress Bar */}
@@ -159,7 +158,7 @@ export default function PetitionCard({
             )}
 
             {/* Petition Stats */}
-            <div className="flex justify-between items-center text-sm text-gray-600">
+            <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
               <div className="flex items-center">
                 <svg
                   className="w-4 h-4 mr-1"
@@ -201,6 +200,16 @@ export default function PetitionCard({
             </div>
           </div>
         </Link>
+
+        {/* Sign Button - Outside Link */}
+        <div className="px-4 pb-4">
+          <Link
+            href={petitionUrl}
+            className="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-2.5 px-4 rounded-md transition-colors font-medium"
+          >
+            Sign Petition
+          </Link>
+        </div>
 
         {/* Action Buttons */}
         {showActions && (
@@ -345,9 +354,27 @@ export default function PetitionCard({
                 </div>
               )}
 
-              <div className="flex justify-between items-center text-sm text-gray-600">
-                <span>{petition.viewCount} views</span>
-                <span>{petition.shareCount} shares</span>
+              <div className="flex justify-between items-center text-sm text-gray-600 border-t pt-2">
+                <div className="flex items-center">
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  {new Date(petition.createdAt).toLocaleDateString()}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>{petition.viewCount}</span>
+                  <span>{petition.shareCount}</span>
+                </div>
               </div>
             </div>
           </div>
