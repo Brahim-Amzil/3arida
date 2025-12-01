@@ -872,10 +872,10 @@ export default function PetitionDetailPage() {
                 {/* 5. Signatures Progress Bar */}
                 <div className="mb-6 w-full">
                   {/* Verified Signatures Badge */}
-                  <div className="mb-3 flex items-center gap-2 text-sm">
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-200 rounded-full">
+                  <div className="mb-3">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-200 rounded-full text-sm">
                       <svg
-                        className="w-4 h-4 text-green-600"
+                        className="w-4 h-4 text-green-600 flex-shrink-0"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -885,13 +885,10 @@ export default function PetitionDetailPage() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      <span className="font-medium text-green-700">
+                      <span className="font-medium text-green-700 whitespace-nowrap">
                         100% Verified Signatures
                       </span>
                     </div>
-                    <span className="text-gray-500">
-                      All signers are verified users
-                    </span>
                   </div>
 
                   <div className="flex justify-between items-center mb-2">
