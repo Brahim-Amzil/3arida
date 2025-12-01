@@ -538,7 +538,7 @@ export default function PetitionSupporters({
     <Card className={className}>
       <CardHeader>
         {/* View Filter - Simplified */}
-        <div className="flex items-center justify-between">
+        <div className="space-y-3">
           <div className="flex gap-2">
             <button
               onClick={() => setView('comments')}
@@ -562,9 +562,13 @@ export default function PetitionSupporters({
             </button>
           </div>
 
-          {/* Add Comment Button - Only show in comments view */}
+          {/* Add Comment Button - Below tabs, only show in comments view */}
           {view === 'comments' && user && !showCommentForm && (
-            <Button onClick={() => setShowCommentForm(true)} size="sm">
+            <Button
+              onClick={() => setShowCommentForm(true)}
+              size="sm"
+              className="w-full sm:w-auto"
+            >
               Add Comment
             </Button>
           )}
