@@ -558,50 +558,51 @@ export default function PetitionSupporters({
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              All Signatures ({signatures.length})
+              Signatures ({signatures.length})
             </button>
           </div>
 
-          {/* Add Comment Button - Below tabs, only show in comments view */}
-          {view === 'comments' && user && !showCommentForm && (
-            <Button
-              onClick={() => setShowCommentForm(true)}
-              size="sm"
-              className="w-full sm:w-auto"
-            >
-              Add Comment
-            </Button>
+          {/* Add Comment & Sort - Only show in comments view */}
+          {view === 'comments' && (
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Add Comment Button with Icon */}
+              {user && !showCommentForm && (
+                <button
+                  onClick={() => setShowCommentForm(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  <span className="text-base">✏️</span>
+                </button>
+              )}
+
+              {/* Sort Buttons - Only show if there are comments */}
+              {comments.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setSortBy('latest')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      sortBy === 'latest'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Latest
+                  </button>
+                  <button
+                    onClick={() => setSortBy('mostLiked')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      sortBy === 'mostLiked'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Most Liked
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
-
-        {/* Sort Filter (only for comments view) */}
-        {view === 'comments' && comments.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Sort by:</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSortBy('latest')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  sortBy === 'latest'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Latest
-              </button>
-              <button
-                onClick={() => setSortBy('mostLiked')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  sortBy === 'mostLiked'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Most Liked
-              </button>
-            </div>
-          </div>
-        )}
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Comment Form */}
