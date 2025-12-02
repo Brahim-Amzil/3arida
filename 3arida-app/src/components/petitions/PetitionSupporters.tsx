@@ -536,14 +536,14 @@ export default function PetitionSupporters({
 
   return (
     <Card className={className}>
-      <CardHeader>
+      <CardHeader className="pb-4">
         {/* Modern Tab Design */}
-        <div className="space-y-4">
-          {/* Pill-shaped Tabs */}
-          <div className="inline-flex gap-3 p-1 bg-gray-100 rounded-full">
+        <div className="space-y-3">
+          {/* Full-width Pill-shaped Tabs */}
+          <div className="flex gap-2 p-1 bg-gray-100 rounded-full w-full">
             <button
               onClick={() => setView('comments')}
-              className={`px-6 py-2.5 text-sm font-medium rounded-full transition-all ${
+              className={`flex-1 py-2 text-sm font-medium rounded-full transition-all whitespace-nowrap ${
                 view === 'comments'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
@@ -553,7 +553,7 @@ export default function PetitionSupporters({
             </button>
             <button
               onClick={() => setView('signatures')}
-              className={`px-6 py-2.5 text-sm font-medium rounded-full transition-all ${
+              className={`flex-1 py-2 text-sm font-medium rounded-full transition-all whitespace-nowrap ${
                 view === 'signatures'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
@@ -570,7 +570,7 @@ export default function PetitionSupporters({
               {user && !showCommentForm && (
                 <button
                   onClick={() => setShowCommentForm(true)}
-                  className="w-12 h-12 flex items-center justify-center bg-green-600 text-white rounded-full hover:bg-green-700 transition-all shadow-md hover:shadow-lg"
+                  className="w-11 h-11 flex items-center justify-center bg-green-600 text-white rounded-full hover:bg-green-700 transition-all shadow-md hover:shadow-lg flex-shrink-0"
                   title="Add Comment"
                 >
                   <svg
@@ -594,7 +594,7 @@ export default function PetitionSupporters({
                 <div className="flex gap-2">
                   <button
                     onClick={() => setSortBy('latest')}
-                    className={`px-5 py-2 text-sm font-medium rounded-full transition-all ${
+                    className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
                       sortBy === 'latest'
                         ? 'bg-green-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -604,7 +604,7 @@ export default function PetitionSupporters({
                   </button>
                   <button
                     onClick={() => setSortBy('mostLiked')}
-                    className={`px-5 py-2 text-sm font-medium rounded-full transition-all ${
+                    className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
                       sortBy === 'mostLiked'
                         ? 'bg-green-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -618,7 +618,7 @@ export default function PetitionSupporters({
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-0">
         {/* Comment Form */}
         {showCommentForm && user && (
           <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
