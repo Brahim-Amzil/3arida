@@ -378,7 +378,7 @@ textarea {
 | Gap              | Priority | Status          |
 | ---------------- | -------- | --------------- |
 | Secrets in Git   | CRITICAL | [x] ✅ Fixed    |
-| Security Headers | HIGH     | [ ] Fix         |
+| Security Headers | HIGH     | [x] ✅ Fixed    |
 | CSRF Protection  | MEDIUM   | [ ] Post-Launch |
 
 ---
@@ -453,11 +453,11 @@ textarea {
 
 ### 🟡 HIGH PRIORITY (Should Complete):
 
-| #   | Task                              | Time   | Status |
-| --- | --------------------------------- | ------ | ------ |
-| 6   | Add security headers              | 15 min | [ ]    |
-| 7   | Test on physical mobile devices   | 30 min | [ ]    |
-| 8   | Verify all env vars in production | 15 min | [ ]    |
+| #   | Task                              | Time   | Status        |
+| --- | --------------------------------- | ------ | ------------- |
+| 6   | Add security headers              | 15 min | [x] ✅ DONE   |
+| 7   | Test on physical mobile devices   | 30 min | [ ] ⚠️ MANUAL |
+| 8   | Verify all env vars in production | 15 min | [ ] ⚠️ MANUAL |
 
 **Total High Priority Time: ~1 hour**
 
