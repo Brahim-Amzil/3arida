@@ -463,12 +463,12 @@ textarea {
 
 ### 🟢 NICE TO HAVE (Post-Launch):
 
-| #   | Task                          | Time    | Status |
-| --- | ----------------------------- | ------- | ------ |
-| 9   | Add iOS input zoom prevention | 5 min   | [ ]    |
-| 10  | Enable ESLint during builds   | 30 min  | [ ]    |
-| 11  | Implement Redis rate limiting | 4 hours | [ ]    |
-| 12  | Add CSRF protection           | 2 hours | [ ]    |
+| #   | Task                          | Time    | Status      |
+| --- | ----------------------------- | ------- | ----------- |
+| 9   | Add iOS input zoom prevention | 5 min   | [x] ✅ DONE |
+| 10  | Enable ESLint during builds   | 30 min  | [ ]         |
+| 11  | Implement Redis rate limiting | 4 hours | [ ]         |
+| 12  | Add CSRF protection           | 2 hours | [ ]         |
 
 ---
 
