@@ -2,7 +2,7 @@
 
 **Platform:** 3arida Petition Platform  
 **Focus:** Mobile-First (Morocco market)  
-**Date:** December 1, 2025
+**Date:** December 2, 2025
 
 ---
 

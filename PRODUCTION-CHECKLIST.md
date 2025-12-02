@@ -1,6 +1,18 @@
 # 🚀 Production Deployment Checklist
 
-## Recent Improvements (2025-01-19)
+## Recent Improvements (December 2, 2025)
+
+### ✅ Mobile UI/UX Improvements (Dec 2)
+
+- [x] Supporters tab redesigned (cleaner, minimal design)
+- [x] Comment button changed to message icon (better UX)
+- [x] Sort options simplified to text links with underline active state
+- [x] Sign Petition button layout fixed (no more cropping)
+- [x] Security modal with reCAPTCHA info implemented
+- [x] Card container removed for better space utilization
+- [x] Mobile-first testing setup completed
+
+## Previous Improvements (2025-01-19)
 
 ### ✅ Security Hardening
 

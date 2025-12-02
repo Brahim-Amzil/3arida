@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useBanner } from '@/contexts/BannerContext';
 import {
@@ -62,7 +62,9 @@ export default function PetitionSupporters({
 }: PetitionSupportersProps) {
   const { user, userProfile } = useAuth();
   const banner = useBanner();
-  const [view, setView] = useState<'all' | 'comments' | 'signatures'>('all');
+  const [view, setView] = useState<'all' | 'comments' | 'signatures'>(
+    'comments'
+  );
   const [comments, setComments] = useState<Comment[]>([]);
   const [signatures, setSignatures] = useState<Signature[]>([]);
   const [loading, setLoading] = useState(true);
@@ -533,85 +535,91 @@ export default function PetitionSupporters({
         : signatures.length;
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <div className="flex items-center justify-between mb-4">
-          <CardTitle>Supporters Discussion ({totalCount})</CardTitle>
-          {user && !showCommentForm && (
-            <Button onClick={() => setShowCommentForm(true)} size="sm">
-              Add Comment
-            </Button>
-          )}
+    <div className={className}>
+      {/* Modern Tab Design */}
+      <div className="space-y-3 mb-4">
+        {/* Full-width Pill-shaped Tabs */}
+        <div className="flex gap-2 p-1 bg-gray-100 rounded-full w-full">
+          <button
+            onClick={() => setView('comments')}
+            className={`flex-1 py-2 text-sm font-medium rounded-full transition-all whitespace-nowrap ${
+              view === 'comments'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Comments ({comments.length})
+          </button>
+          <button
+            onClick={() => setView('signatures')}
+            className={`flex-1 py-2 text-sm font-medium rounded-full transition-all whitespace-nowrap ${
+              view === 'signatures'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Signatures ({signatures.length})
+          </button>
         </div>
 
-        {/* View Filter */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-sm text-gray-600">Show:</span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setView('all')}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                view === 'all'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              All (
-              {comments.length + signatures.filter((s) => s.comment).length})
-            </button>
-            <button
-              onClick={() => setView('comments')}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                view === 'comments'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Comments ({comments.length})
-            </button>
-            <button
-              onClick={() => setView('signatures')}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                view === 'signatures'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              All Signatures ({signatures.length})
-            </button>
-          </div>
-        </div>
+        {/* Add Comment & Sort - Only show in comments view */}
+        {view === 'comments' && (
+          <div className="flex items-center justify-between">
+            {/* Circular Add Comment Button */}
+            {user && !showCommentForm && (
+              <button
+                onClick={() => setShowCommentForm(true)}
+                className="w-11 h-11 flex items-center justify-center bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-all shadow-sm hover:shadow-md flex-shrink-0"
+                title="Add Comment"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              </button>
+            )}
 
-        {/* Sort Filter (only for comments view) */}
-        {view === 'comments' && comments.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Sort by:</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSortBy('latest')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  sortBy === 'latest'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Latest
-              </button>
-              <button
-                onClick={() => setSortBy('mostLiked')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  sortBy === 'mostLiked'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Most Liked
-              </button>
-            </div>
+            {/* Sort Links - Only show if there are comments */}
+            {comments.length > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <button
+                  onClick={() => setSortBy('latest')}
+                  className={`font-medium transition-colors ${
+                    sortBy === 'latest'
+                      ? 'text-gray-900 underline decoration-2 underline-offset-4'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Latest
+                </button>
+                <span className="text-gray-300">|</span>
+                <button
+                  onClick={() => setSortBy('mostLiked')}
+                  className={`font-medium transition-colors ${
+                    sortBy === 'mostLiked'
+                      ? 'text-gray-900 underline decoration-2 underline-offset-4'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Most Liked
+                </button>
+              </div>
+            )}
           </div>
         )}
-      </CardHeader>
-      <CardContent className="space-y-6">
+      </div>
+
+      {/* Content */}
+      <div className="space-y-6">
         {/* Comment Form */}
         {showCommentForm && user && (
           <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
@@ -1572,7 +1580,7 @@ export default function PetitionSupporters({
             </button>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

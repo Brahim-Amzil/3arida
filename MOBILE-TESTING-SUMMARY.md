@@ -2,7 +2,7 @@
 
 **Platform:** 3arida (Mobile-First)  
 **Market:** Morocco (80% mobile users)  
-**Date:** December 1, 2025
+**Date:** December 2, 2025
 
 ---
 
@@ -102,6 +102,15 @@ Chrome DevTools > Network tab:
 - ✅ Smooth scrolling
 - ✅ Prevent horizontal scroll
 - ✅ Text size adjustment disabled
+
+### UI Components (Dec 2, 2025):
+
+- ✅ Supporters tab redesigned (cleaner, minimal)
+- ✅ Comment button uses message icon (better UX)
+- ✅ Sort options as text links with underline active state
+- ✅ Sign Petition button layout fixed (no cropping)
+- ✅ Security modal with reCAPTCHA info
+- ✅ Card container removed for better space
 
 ---
 
