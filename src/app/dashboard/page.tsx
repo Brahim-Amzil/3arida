@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/layout/HeaderWrapper';
 import PetitionCard from '@/components/petitions/PetitionCard';
+import CreatorAppealsSection from '@/components/appeals/CreatorAppealsSection';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { getUserPetitions } from '@/lib/petitions';
 import { Petition } from '@/types/petition';
@@ -23,6 +23,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<'petitions' | 'appeals'>(
+    'petitions'
+  );
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -249,219 +252,66 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab('petitions')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors
+                  ${
+                    activeTab === 'petitions'
+                      ? 'border-green-600 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+              >
+                Your Petitions ({petitions.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('appeals')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors
+                  ${
+                    activeTab === 'appeals'
+                      ? 'border-green-600 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+              >
+                Appeals
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Appeals Section */}
+        {activeTab === 'appeals' && user && (
+          <div className="mb-8">
+            <CreatorAppealsSection />
+          </div>
+        )}
+
         {/* User Petitions */}
-        <div>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-            <h2 className="text-2xl font-bold text-gray-900">Your Petitions</h2>
-          </div>
-
-          {/* Status Filters */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            <Button
-              variant={statusFilter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('all')}
-              className="flex items-center gap-2"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-              All
-              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
-                {statusCounts.all}
-              </span>
-            </Button>
-            <Button
-              variant={statusFilter === 'active' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('active')}
-              className="flex items-center gap-2"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              Active
-              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
-                {statusCounts.active}
-              </span>
-            </Button>
-            <Button
-              variant={statusFilter === 'pending' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('pending')}
-              className="flex items-center gap-2"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              Pending Review
-              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
-                {statusCounts.pending}
-              </span>
-            </Button>
-            <Button
-              variant={statusFilter === 'rejected' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('rejected')}
-              className="flex items-center gap-2"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-              Rejected
-              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
-                {statusCounts.rejected}
-              </span>
-            </Button>
-            <Button
-              variant={statusFilter === 'paused' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('paused')}
-              className="flex items-center gap-2"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              Paused
-              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
-                {statusCounts.paused}
-              </span>
-            </Button>
-            <Button
-              variant={statusFilter === 'deleted' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('deleted')}
-              className="flex items-center gap-2"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-              Deleted
-              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
-                {statusCounts.deleted}
-              </span>
-            </Button>
-          </div>
-
-          {/* Loading State */}
-          {loading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse"
-                >
-                  <div className="h-48 bg-gray-200"></div>
-                  <div className="p-4">
-                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                    <div className="h-2 bg-gray-200 rounded mb-2"></div>
-                    <div className="flex justify-between">
-                      <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        {activeTab === 'petitions' && (
+          <div>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Your Petitions
+              </h2>
             </div>
-          )}
 
-          {/* Error State */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-              <p className="text-red-600">{error}</p>
+            {/* Status Filters */}
+            <div className="flex flex-wrap gap-2 mb-6">
               <Button
-                onClick={loadUserPetitions}
-                className="mt-4"
-                variant="outline"
+                variant={statusFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('all')}
+                className="flex items-center gap-2"
               >
-                Try Again
-              </Button>
-            </div>
-          )}
-
-          {/* Petitions Grid */}
-          {!loading && !error && filteredPetitions.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPetitions.map((petition) => (
-                <PetitionCard
-                  key={petition.id}
-                  petition={petition}
-                  variant="grid"
-                  showProgress={true}
-                  showCreator={false}
-                  showActions={true}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!loading && !error && petitions.length === 0 && (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                 <svg
-                  className="w-12 h-12 text-gray-400"
+                  className="w-4 h-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -470,28 +320,191 @@ export default function DashboardPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    d="M4 6h16M4 12h16M4 18h16"
                   />
                 </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No petitions yet
-              </h3>
-              <p className="text-gray-600 mb-6">
-                You haven't created any petitions yet. Start your first petition
-                to make change happen!
-              </p>
-              <Button asChild>
-                <Link href="/petitions/create">Create Your First Petition</Link>
+                All
+                <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                  {statusCounts.all}
+                </span>
+              </Button>
+              <Button
+                variant={statusFilter === 'active' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('active')}
+                className="flex items-center gap-2"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Active
+                <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                  {statusCounts.active}
+                </span>
+              </Button>
+              <Button
+                variant={statusFilter === 'pending' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('pending')}
+                className="flex items-center gap-2"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Pending Review
+                <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                  {statusCounts.pending}
+                </span>
+              </Button>
+              <Button
+                variant={statusFilter === 'rejected' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('rejected')}
+                className="flex items-center gap-2"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+                Rejected
+                <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                  {statusCounts.rejected}
+                </span>
+              </Button>
+              <Button
+                variant={statusFilter === 'paused' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('paused')}
+                className="flex items-center gap-2"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Paused
+                <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                  {statusCounts.paused}
+                </span>
+              </Button>
+              <Button
+                variant={statusFilter === 'deleted' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('deleted')}
+                className="flex items-center gap-2"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                Deleted
+                <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                  {statusCounts.deleted}
+                </span>
               </Button>
             </div>
-          )}
 
-          {/* No Results for Filter */}
-          {!loading &&
-            !error &&
-            petitions.length > 0 &&
-            filteredPetitions.length === 0 && (
+            {/* Loading State */}
+            {loading && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse"
+                  >
+                    <div className="h-48 bg-gray-200"></div>
+                    <div className="p-4">
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                      <div className="h-2 bg-gray-200 rounded mb-2"></div>
+                      <div className="flex justify-between">
+                        <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <p className="text-red-600">{error}</p>
+                <Button
+                  onClick={loadUserPetitions}
+                  className="mt-4"
+                  variant="outline"
+                >
+                  Try Again
+                </Button>
+              </div>
+            )}
+
+            {/* Petitions Grid */}
+            {!loading && !error && filteredPetitions.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPetitions.map((petition) => (
+                  <PetitionCard
+                    key={petition.id}
+                    petition={petition}
+                    variant="grid"
+                    showProgress={true}
+                    showCreator={false}
+                    showActions={true}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && petitions.length === 0 && (
               <div className="text-center py-12">
                 <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                   <svg
@@ -504,25 +517,62 @@ export default function DashboardPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No {statusFilter} petitions
+                  No petitions yet
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  You don't have any {statusFilter} petitions at the moment.
+                  You haven't created any petitions yet. Start your first
+                  petition to make change happen!
                 </p>
-                <Button
-                  onClick={() => setStatusFilter('all')}
-                  variant="outline"
-                >
-                  Show All Petitions
+                <Button asChild>
+                  <Link href="/petitions/create">
+                    Create Your First Petition
+                  </Link>
                 </Button>
               </div>
             )}
-        </div>
+
+            {/* No Results for Filter */}
+            {!loading &&
+              !error &&
+              petitions.length > 0 &&
+              filteredPetitions.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-12 h-12 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No {statusFilter} petitions
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    You don't have any {statusFilter} petitions at the moment.
+                  </p>
+                  <Button
+                    onClick={() => setStatusFilter('all')}
+                    variant="outline"
+                  >
+                    Show All Petitions
+                  </Button>
+                </div>
+              )}
+          </div>
+        )}
       </div>
     </div>
   );

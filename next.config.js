@@ -10,8 +10,8 @@ const withPWA = require('next-pwa')({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    // Temporarily ignore ESLint errors during builds for Lighthouse audit
-    ignoreDuringBuilds: true,
+    // ESLint enabled during builds
+    ignoreDuringBuilds: false,
   },
   typescript: {
     // We already verified TypeScript is clean

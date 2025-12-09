@@ -2,9 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export default function AdminNav() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const [pendingAppealsCount, setPendingAppealsCount] = useState(0);
 
   const navItems = [
     {
@@ -41,6 +45,25 @@ export default function AdminNav() {
             strokeLinejoin="round"
             strokeWidth={2}
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: 'Appeals',
+      href: '/admin/appeals',
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
           />
         </svg>
       ),
@@ -123,6 +146,31 @@ export default function AdminNav() {
     },
   ];
 
+  // Fetch pending appeals count
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchPendingCount = async () => {
+      try {
+        const response = await fetch(
+          `/api/appeals?userId=${user.uid}&userRole=moderator&status=pending`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setPendingAppealsCount(data.total || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching pending appeals:', error);
+      }
+    };
+
+    fetchPendingCount();
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchPendingCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   const isActive = (href: string) => {
     if (href === '/admin') {
       return pathname === '/admin';
@@ -144,7 +192,7 @@ export default function AdminNav() {
                 key={item.name}
                 href={item.href}
                 className={`
-                  flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors
+                  flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors relative
                   ${
                     active
                       ? 'border-green-600 text-green-600'
@@ -154,6 +202,11 @@ export default function AdminNav() {
               >
                 {item.icon}
                 {item.name}
+                {item.name === 'Appeals' && pendingAppealsCount > 0 && (
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                    {pendingAppealsCount}
+                  </span>
+                )}
               </Link>
             );
           })}

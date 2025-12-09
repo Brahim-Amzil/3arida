@@ -163,6 +163,23 @@ service cloud.firestore {
       allow update, delete: if false; // Audit logs should never be modified or deleted
     }
     
+    // Appeals collection - Creators can read their own, moderators can read all
+    match /appeals/{appealId} {
+      // Creators can read their own appeals, moderators/admins can read all
+      allow read: if isAuthenticated() &&
+        (resource.data.creatorId == request.auth.uid || isModerator());
+      
+      // Creators can create appeals - simplified rules for now
+      allow create: if isAuthenticated()
+        && request.resource.data.creatorId == request.auth.uid;
+      
+      // Only moderators/admins can update appeals
+      allow update: if isAuthenticated() && isModerator();
+      
+      // No one can delete appeals (audit trail preservation)
+      allow delete: if false;
+    }
+    
     // Deny all other collections by default (secure by default)
     // Add specific rules above for any new collections
   }

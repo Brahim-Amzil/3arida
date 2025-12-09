@@ -31,7 +31,16 @@ export default function PhoneVerification({
   useEffect(() => {
     const initRecaptcha = () => {
       try {
+        // Wait for DOM to be ready
+        const container = document.getElementById('recaptcha-container');
+        if (!container) {
+          console.warn('reCAPTCHA container not found, retrying...');
+          setTimeout(initRecaptcha, 100);
+          return;
+        }
+
         if (!recaptchaVerifierRef.current) {
+          console.log('🔐 Initializing reCAPTCHA verifier...');
           recaptchaVerifierRef.current = new RecaptchaVerifier(
             auth,
             'recaptcha-container',
@@ -46,15 +55,19 @@ export default function PhoneVerification({
               },
             }
           );
+          console.log('✅ reCAPTCHA verifier initialized');
         }
       } catch (error) {
-        console.error('Error initializing reCAPTCHA:', error);
+        console.error('❌ Error initializing reCAPTCHA:', error);
+        setError('خطأ في تهيئة التحقق. يرجى إعادة تحميل الصفحة');
       }
     };
 
-    initRecaptcha();
+    // Delay initialization slightly to ensure DOM is ready
+    const timer = setTimeout(initRecaptcha, 100);
 
     return () => {
+      clearTimeout(timer);
       // Cleanup reCAPTCHA on unmount
       if (recaptchaVerifierRef.current) {
         try {
@@ -121,16 +134,31 @@ export default function PhoneVerification({
       if (recaptchaVerifierRef.current) {
         try {
           recaptchaVerifierRef.current.clear();
+          recaptchaVerifierRef.current = null;
+        } catch (resetError) {
+          console.error('Error clearing reCAPTCHA:', resetError);
+        }
+      }
+
+      // Reinitialize with visible reCAPTCHA as fallback
+      try {
+        const container = document.getElementById('recaptcha-container');
+        if (container) {
+          container.innerHTML = ''; // Clear container
           recaptchaVerifierRef.current = new RecaptchaVerifier(
             auth,
             'recaptcha-container',
             {
-              size: 'invisible',
+              size: 'normal', // Use visible reCAPTCHA as fallback
+              callback: () => {
+                console.log('✅ reCAPTCHA solved (visible mode)');
+              },
             }
           );
-        } catch (resetError) {
-          console.error('Error resetting reCAPTCHA:', resetError);
+          recaptchaVerifierRef.current.render();
         }
+      } catch (resetError) {
+        console.error('Error reinitializing reCAPTCHA:', resetError);
       }
     } finally {
       setLoading(false);
@@ -212,11 +240,12 @@ export default function PhoneVerification({
             </svg>
             <div className="text-sm">
               <p className="font-medium text-blue-900 mb-1">
-                نحن نقدر الشفافية والمصداقية
+                نحن نقدر الشفافية و المصداقية
               </p>
               <p className="text-blue-700">
-                فقط الأشخاص الموثقون يمكنهم التوقيع. هذا الرمز مطلوب مرة واحدة
-                فقط، وبعدها يمكنك التوقيع على أي عريضة بنقرة واحدة.
+                فقط الأشخاص الموثَّقون يمكنهم نشر العرائض. هذا الرمز مطلوب مرة
+                واحدة فقط، وبعدها يمكنك إنشاء عدد غير محدود من العرائض والتوقيع
+                على أي عريضة بنقرة واحدة.{' '}
               </p>
             </div>
           </div>

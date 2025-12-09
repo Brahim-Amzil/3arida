@@ -1,1 +1,100 @@
-{}
+{
+  "app/admin/petitions/page.tsx -> @/lib/notifications": {
+    "id": "app/admin/petitions/page.tsx -> @/lib/notifications",
+    "files": []
+  },
+  "app/admin/petitions/page.tsx -> firebase/firestore": {
+    "id": "app/admin/petitions/page.tsx -> firebase/firestore",
+    "files": []
+  },
+  "app/petitions/[id]/page.tsx -> @/lib/firebase": {
+    "id": "app/petitions/[id]/page.tsx -> @/lib/firebase",
+    "files": []
+  },
+  "app/petitions/[id]/page.tsx -> @/lib/notifications": {
+    "id": "app/petitions/[id]/page.tsx -> @/lib/notifications",
+    "files": []
+  },
+  "app/petitions/[id]/page.tsx -> @/lib/recaptcha": {
+    "id": "app/petitions/[id]/page.tsx -> @/lib/recaptcha",
+    "files": [
+      "static/chunks/_app-pages-browser_src_lib_recaptcha_ts.js"
+    ]
+  },
+  "app/petitions/[id]/page.tsx -> firebase/firestore": {
+    "id": "app/petitions/[id]/page.tsx -> firebase/firestore",
+    "files": []
+  },
+  "app/petitions/create/page.tsx -> @/lib/firebase": {
+    "id": "app/petitions/create/page.tsx -> @/lib/firebase",
+    "files": []
+  },
+  "app/petitions/create/page.tsx -> @/lib/petition-utils": {
+    "id": "app/petitions/create/page.tsx -> @/lib/petition-utils",
+    "files": []
+  },
+  "app/petitions/create/page.tsx -> firebase/firestore": {
+    "id": "app/petitions/create/page.tsx -> firebase/firestore",
+    "files": []
+  },
+  "components/layout/HeaderWrapper.tsx -> ./Header": {
+    "id": "components/layout/HeaderWrapper.tsx -> ./Header",
+    "files": [
+      "static/chunks/_app-pages-browser_src_components_layout_Header_tsx.js"
+    ]
+  },
+  "components/petitions/PetitionUpdates.tsx -> @/lib/firebase": {
+    "id": "components/petitions/PetitionUpdates.tsx -> @/lib/firebase",
+    "files": []
+  },
+  "components/petitions/PetitionUpdates.tsx -> firebase/firestore": {
+    "id": "components/petitions/PetitionUpdates.tsx -> firebase/firestore",
+    "files": []
+  },
+  "lib/env-validator.ts -> firebase/app": {
+    "id": "lib/env-validator.ts -> firebase/app",
+    "files": []
+  },
+  "lib/env-validator.ts -> firebase/auth": {
+    "id": "lib/env-validator.ts -> firebase/auth",
+    "files": []
+  },
+  "lib/env-validator.ts -> firebase/firestore": {
+    "id": "lib/env-validator.ts -> firebase/firestore",
+    "files": []
+  },
+  "lib/env-validator.ts -> firebase/storage": {
+    "id": "lib/env-validator.ts -> firebase/storage",
+    "files": []
+  },
+  "lib/monitoring.ts -> ./firebase": {
+    "id": "lib/monitoring.ts -> ./firebase",
+    "files": []
+  },
+  "lib/monitoring.ts -> firebase/analytics": {
+    "id": "lib/monitoring.ts -> firebase/analytics",
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_firebase_analytics_dist_esm_index_esm_js.js"
+    ]
+  },
+  "lib/monitoring.ts -> firebase/auth": {
+    "id": "lib/monitoring.ts -> firebase/auth",
+    "files": []
+  },
+  "lib/monitoring.ts -> firebase/firestore": {
+    "id": "lib/monitoring.ts -> firebase/firestore",
+    "files": []
+  },
+  "lib/monitoring.ts -> firebase/storage": {
+    "id": "lib/monitoring.ts -> firebase/storage",
+    "files": []
+  },
+  "lib/push-notifications.ts -> ./firebase": {
+    "id": "lib/push-notifications.ts -> ./firebase",
+    "files": []
+  },
+  "lib/push-notifications.ts -> firebase/firestore": {
+    "id": "lib/push-notifications.ts -> firebase/firestore",
+    "files": []
+  }
+}

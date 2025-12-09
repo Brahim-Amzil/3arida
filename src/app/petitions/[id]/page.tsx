@@ -13,6 +13,7 @@ import PetitionShare from '@/components/petitions/PetitionShare';
 import PetitionManagement from '@/components/petitions/PetitionManagement';
 import PetitionUpdates from '@/components/petitions/PetitionUpdates';
 import PetitionSupporters from '@/components/petitions/PetitionSupporters';
+import ContactModeratorModal from '@/components/moderation/ContactModeratorModal';
 import { useRealtimePetition } from '@/hooks/useRealtimePetition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,6 +53,7 @@ export default function PetitionDetailPage() {
   const [showSigningFlow, setShowSigningFlow] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showContactModerator, setShowContactModerator] = useState(false);
   const [signingLoading, setSigningLoading] = useState(false);
   const [adminActionLoading, setAdminActionLoading] = useState(false);
   const [notificationAlert, setNotificationAlert] =
@@ -630,6 +632,14 @@ export default function PetitionDetailPage() {
         </div>
       )}
 
+      {/* Contact Moderator Modal */}
+      {showContactModerator && (
+        <ContactModeratorModal
+          petition={petition}
+          onClose={() => setShowContactModerator(false)}
+        />
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="mb-6">
@@ -831,8 +841,41 @@ export default function PetitionDetailPage() {
                               <p className="text-sm text-red-600 font-medium">
                                 Maximum resubmission attempts reached (3/3)
                               </p>
+                              <Button
+                                size="sm"
+                                onClick={() => setShowContactModerator(true)}
+                                className="mt-2 bg-orange-600 hover:bg-orange-700"
+                              >
+                                Contact Moderator
+                              </Button>
                             </div>
                           )}
+                        {/* Contact Moderator button for all creators with rejected petitions */}
+                        {user && petition.creatorId === user.uid && (
+                          <div className="mt-3">
+                            <Button
+                              size="sm"
+                              onClick={() => setShowContactModerator(true)}
+                              variant="outline"
+                              className="border-red-300 text-red-700 hover:bg-red-50"
+                            >
+                              <svg
+                                className="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                                />
+                              </svg>
+                              Contact Moderator
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -845,7 +888,7 @@ export default function PetitionDetailPage() {
                       <div className="flex-shrink-0">
                         <Pause className="h-5 w-5 text-orange-500" />
                       </div>
-                      <div className="ml-3">
+                      <div className="ml-3 flex-1">
                         <h3 className="text-sm font-medium text-orange-800">
                           Petition Temporarily Paused
                         </h3>
@@ -862,6 +905,32 @@ export default function PetitionDetailPage() {
                             <p className="text-sm text-orange-700">
                               {petition.moderationNotes}
                             </p>
+                          </div>
+                        )}
+                        {/* Contact Moderator button for creators with paused petitions */}
+                        {user && petition.creatorId === user.uid && (
+                          <div className="mt-3">
+                            <Button
+                              size="sm"
+                              onClick={() => setShowContactModerator(true)}
+                              variant="outline"
+                              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                            >
+                              <svg
+                                className="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                                />
+                              </svg>
+                              Contact Moderator
+                            </Button>
                           </div>
                         )}
                       </div>
