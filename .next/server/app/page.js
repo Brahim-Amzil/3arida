@@ -122,6 +122,17 @@ module.exports = require("http2");
 
 /***/ }),
 
+/***/ "https":
+/*!************************!*\
+  !*** external "https" ***!
+  \************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("https");
+
+/***/ }),
+
 /***/ "net":
 /*!**********************!*\
   !*** external "net" ***!
@@ -155,14 +166,14 @@ module.exports = require("path");
 
 /***/ }),
 
-/***/ "process":
-/*!**************************!*\
-  !*** external "process" ***!
-  \**************************/
+/***/ "punycode":
+/*!***************************!*\
+  !*** external "punycode" ***!
+  \***************************/
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("process");
+module.exports = require("punycode");
 
 /***/ }),
 
@@ -731,7 +742,7 @@ const e1 = (0,next_dist_build_webpack_loaders_next_flight_loader_module_proxy__W
 var __webpack_require__ = require("../webpack-runtime.js");
 __webpack_require__.C(exports);
 var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-var __webpack_exports__ = __webpack_require__.X(0, ["vendor-chunks/@firebase","vendor-chunks/next","vendor-chunks/firebase","vendor-chunks/@opentelemetry","vendor-chunks/@grpc","vendor-chunks/protobufjs","vendor-chunks/tailwind-merge","vendor-chunks/long","vendor-chunks/@protobufjs","vendor-chunks/lodash.camelcase","vendor-chunks/idb","vendor-chunks/@radix-ui","vendor-chunks/class-variance-authority","vendor-chunks/@swc","vendor-chunks/clsx"], () => (__webpack_exec__("(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fpage&page=%2Fpage&appPaths=%2Fpage&pagePath=private-next-app-dir%2Fpage.tsx&appDir=%2FUsers%2Fbrahimamzil%2FDownloads%2FDEV_APPS%2F----3arida%2F3arida-app%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fbrahimamzil%2FDownloads%2FDEV_APPS%2F----3arida%2F3arida-app&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!")));
+var __webpack_exports__ = __webpack_require__.X(0, ["vendor-chunks/@firebase","vendor-chunks/firebase","vendor-chunks/next","vendor-chunks/@grpc","vendor-chunks/node-fetch","vendor-chunks/protobufjs","vendor-chunks/@opentelemetry","vendor-chunks/tailwind-merge","vendor-chunks/long","vendor-chunks/@protobufjs","vendor-chunks/lodash.camelcase","vendor-chunks/tslib","vendor-chunks/idb","vendor-chunks/@radix-ui","vendor-chunks/class-variance-authority","vendor-chunks/@swc","vendor-chunks/clsx"], () => (__webpack_exec__("(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fpage&page=%2Fpage&appPaths=%2Fpage&pagePath=private-next-app-dir%2Fpage.tsx&appDir=%2FUsers%2Fbrahimamzil%2FDownloads%2FDEV_APPS%2F----3arida%2F3arida-app%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fbrahimamzil%2FDownloads%2FDEV_APPS%2F----3arida%2F3arida-app&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!")));
 module.exports = __webpack_exports__;
 
 })();

@@ -1,10 +1,6 @@
 {
-  "/page": "app/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/api/appeals/route": "app/api/appeals/route.js",
-  "/auth/login/page": "app/auth/login/page.js",
-  "/admin/petitions/page": "app/admin/petitions/page.js",
   "/_not-found/page": "app/_not-found/page.js",
-  "/petitions/[id]/page": "app/petitions/[id]/page.js",
-  "/petitions/create/page": "app/petitions/create/page.js"
+  "/page": "app/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/test-phone/page": "app/test-phone/page.js"
 }

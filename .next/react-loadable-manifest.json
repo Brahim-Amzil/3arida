@@ -1,55 +1,9 @@
 {
-  "app/admin/petitions/page.tsx -> @/lib/notifications": {
-    "id": "app/admin/petitions/page.tsx -> @/lib/notifications",
-    "files": []
-  },
-  "app/admin/petitions/page.tsx -> firebase/firestore": {
-    "id": "app/admin/petitions/page.tsx -> firebase/firestore",
-    "files": []
-  },
-  "app/petitions/[id]/page.tsx -> @/lib/firebase": {
-    "id": "app/petitions/[id]/page.tsx -> @/lib/firebase",
-    "files": []
-  },
-  "app/petitions/[id]/page.tsx -> @/lib/notifications": {
-    "id": "app/petitions/[id]/page.tsx -> @/lib/notifications",
-    "files": []
-  },
-  "app/petitions/[id]/page.tsx -> @/lib/recaptcha": {
-    "id": "app/petitions/[id]/page.tsx -> @/lib/recaptcha",
-    "files": [
-      "static/chunks/_app-pages-browser_src_lib_recaptcha_ts.js"
-    ]
-  },
-  "app/petitions/[id]/page.tsx -> firebase/firestore": {
-    "id": "app/petitions/[id]/page.tsx -> firebase/firestore",
-    "files": []
-  },
-  "app/petitions/create/page.tsx -> @/lib/firebase": {
-    "id": "app/petitions/create/page.tsx -> @/lib/firebase",
-    "files": []
-  },
-  "app/petitions/create/page.tsx -> @/lib/petition-utils": {
-    "id": "app/petitions/create/page.tsx -> @/lib/petition-utils",
-    "files": []
-  },
-  "app/petitions/create/page.tsx -> firebase/firestore": {
-    "id": "app/petitions/create/page.tsx -> firebase/firestore",
-    "files": []
-  },
   "components/layout/HeaderWrapper.tsx -> ./Header": {
     "id": "components/layout/HeaderWrapper.tsx -> ./Header",
     "files": [
       "static/chunks/_app-pages-browser_src_components_layout_Header_tsx.js"
     ]
-  },
-  "components/petitions/PetitionUpdates.tsx -> @/lib/firebase": {
-    "id": "components/petitions/PetitionUpdates.tsx -> @/lib/firebase",
-    "files": []
-  },
-  "components/petitions/PetitionUpdates.tsx -> firebase/firestore": {
-    "id": "components/petitions/PetitionUpdates.tsx -> firebase/firestore",
-    "files": []
   },
   "lib/env-validator.ts -> firebase/app": {
     "id": "lib/env-validator.ts -> firebase/app",
