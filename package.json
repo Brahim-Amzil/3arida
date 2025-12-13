@@ -29,6 +29,7 @@
     "postdeploy": "npm run performance:audit"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "@radix-ui/react-slot": "^1.0.2",
     "@react-email/components": "^1.0.1",
     "@types/nodemailer": "^7.0.4",

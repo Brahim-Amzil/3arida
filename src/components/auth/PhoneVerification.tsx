@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { auth } from '@/lib/firebase';
 import {
@@ -14,6 +14,14 @@ interface PhoneVerificationProps {
   onCancel: () => void;
 }
 
+// Extend Window interface
+declare global {
+  interface Window {
+    recaptchaVerifier?: RecaptchaVerifier;
+    confirmationResult?: ConfirmationResult;
+  }
+}
+
 export default function PhoneVerification({
   onVerified,
   onCancel,
@@ -23,53 +31,92 @@ export default function PhoneVerification({
   const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [recaptchaReady, setRecaptchaReady] = useState(false);
+  const [recaptchaInitialized, setRecaptchaInitialized] = useState(false);
 
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-  const confirmationResultRef = useRef<ConfirmationResult | null>(null);
-
-  // Setup visible reCAPTCHA
   useEffect(() => {
-    if (window.recaptchaVerifier) {
-      setRecaptchaReady(true);
-      return;
-    }
-
-    const setupRecaptcha = () => {
+    // Initialize reCAPTCHA when component mounts
+    // Using the EXACT same approach as Firebase demo
+    const initializeRecaptcha = () => {
       try {
-        console.log('🔐 Setting up reCAPTCHA...');
+        // Clear any existing verifier
+        if (window.recaptchaVerifier) {
+          try {
+            window.recaptchaVerifier.clear();
+          } catch (e) {
+            console.log('Clearing old verifier');
+          }
+          window.recaptchaVerifier = undefined;
+        }
 
+        console.log('🔐 Initializing reCAPTCHA verifier...');
+
+        // Ensure auth is initialized
+        if (!auth) {
+          console.error('❌ Auth object is undefined');
+          setError('Firebase authentication not initialized');
+          return;
+        }
+
+        // CRITICAL FIX: Use invisible reCAPTCHA like Firebase demo
+        // This avoids domain/configuration issues with visible reCAPTCHA
         window.recaptchaVerifier = new RecaptchaVerifier(
+          auth,
           'recaptcha-container',
           {
-            size: 'normal',
+            size: 'invisible',
             callback: () => {
-              console.log('✅ reCAPTCHA solved');
-              setRecaptchaReady(true);
+              console.log('✅ reCAPTCHA solved automatically');
+              setRecaptchaInitialized(true);
             },
             'expired-callback': () => {
               console.log('⚠️ reCAPTCHA expired');
-              setRecaptchaReady(false);
+              setRecaptchaInitialized(false);
+              setError('Verification expired. Please try again.');
             },
-          },
-          auth
+          }
         );
 
-        window.recaptchaVerifier.render().then(() => {
-          console.log('✅ reCAPTCHA rendered');
+        // Render the reCAPTCHA
+        window.recaptchaVerifier
+          .render()
+          .then((widgetId) => {
+            console.log('✅ reCAPTCHA rendered with widget ID:', widgetId);
+            setRecaptchaInitialized(true);
+          })
+          .catch((error) => {
+            console.error('❌ reCAPTCHA render error:', error);
+            console.error('Error details:', {
+              code: error.code,
+              message: error.message,
+              stack: error.stack,
+            });
+            setError(
+              'Failed to initialize reCAPTCHA. Please check console for details.'
+            );
+          });
+      } catch (error: any) {
+        console.error('❌ reCAPTCHA initialization error:', error);
+        console.error('Error details:', {
+          code: error.code,
+          message: error.message,
+          stack: error.stack,
         });
-      } catch (err) {
-        console.error('❌ reCAPTCHA error:', err);
+        setError('Failed to initialize verification. Please refresh the page.');
       }
     };
 
-    setTimeout(setupRecaptcha, 300);
+    // Delay initialization to ensure DOM is ready
+    const timer = setTimeout(initializeRecaptcha, 500);
 
     return () => {
+      clearTimeout(timer);
+      // Cleanup on unmount
       if (window.recaptchaVerifier) {
         try {
           window.recaptchaVerifier.clear();
-        } catch (e) { }
+        } catch (e) {
+          console.log('Cleanup: verifier already cleared');
+        }
         window.recaptchaVerifier = undefined;
       }
     };
@@ -77,19 +124,23 @@ export default function PhoneVerification({
 
   const handleSendCode = async () => {
     if (!phoneNumber.trim()) {
-      setError('الرجاء إدخال رقم هاتف صحيح');
+      setError('Please enter a valid phone number');
       return;
     }
 
+    // Validate phone number format (E.164)
     const phoneRegex = /^\+[1-9]\d{1,14}$/;
     const cleanPhone = phoneNumber.replace(/\s/g, '');
+
     if (!phoneRegex.test(cleanPhone)) {
-      setError('رقم الهاتف غير صحيح. يجب أن يبدأ بـ + ورمز الدولة');
+      setError(
+        'Invalid phone number. Must start with + and country code (e.g., +34612345678)'
+      );
       return;
     }
 
     if (!window.recaptchaVerifier) {
-      setError('خطأ في التحقق. يرجى إعادة تحميل الصفحة');
+      setError('Verification not ready. Please refresh the page.');
       return;
     }
 
@@ -97,7 +148,7 @@ export default function PhoneVerification({
     setError('');
 
     try {
-      console.log('📱 Sending SMS to:', cleanPhone);
+      console.log('📱 Sending verification code to:', cleanPhone);
 
       const confirmationResult = await signInWithPhoneNumber(
         auth,
@@ -105,27 +156,40 @@ export default function PhoneVerification({
         window.recaptchaVerifier
       );
 
+      console.log('✅ SMS sent successfully');
       window.confirmationResult = confirmationResult;
       setStep('code');
-      console.log('✅ SMS sent successfully');
     } catch (err: any) {
       console.error('❌ Error sending SMS:', err);
+      console.error('Error code:', err.code);
+      console.error('Error message:', err.message);
+
+      // Handle specific error codes
+      if (err.code === 'auth/invalid-phone-number') {
+        setError('Invalid phone number format');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many attempts. Please try again later');
+      } else if (err.code === 'auth/quota-exceeded') {
+        setError('SMS quota exceeded. Please contact support');
+      } else if (err.code === 'auth/captcha-check-failed') {
+        setError('reCAPTCHA verification failed. Please try again');
+      } else if (err.code === 'auth/invalid-app-credential') {
+        setError('Invalid app configuration. Please contact support');
+      } else if (err.code === 'auth/internal-error') {
+        setError(
+          'Server error. Please check Firebase console logs for details'
+        );
+      } else {
+        setError(`Error: ${err.message || err.code}`);
+      }
 
       // Reset reCAPTCHA on error
       if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
+        try {
+          window.recaptchaVerifier.clear();
+        } catch (e) {}
         window.recaptchaVerifier = undefined;
-        setRecaptchaReady(false);
-      }
-
-      if (err.code === 'auth/invalid-phone-number') {
-        setError('رقم الهاتف غير صحيح');
-      } else if (err.code === 'auth/too-many-requests') {
-        setError('تم تجاوز عدد المحاولات. يرجى المحاولة لاحقًا');
-      } else if (err.code === 'auth/operation-not-allowed') {
-        setError('خدمة SMS غير مفعلة لهذه المنطقة');
-      } else {
-        setError(`خطأ: ${err.message || err.code}`);
+        setRecaptchaInitialized(false);
       }
     } finally {
       setLoading(false);
@@ -134,12 +198,12 @@ export default function PhoneVerification({
 
   const handleVerifyCode = async () => {
     if (!verificationCode.trim() || verificationCode.length !== 6) {
-      setError('الرجاء إدخال رمز التحقق المكون من 6 أرقام');
+      setError('Please enter the 6-digit verification code');
       return;
     }
 
     if (!window.confirmationResult) {
-      setError('خطأ في التحقق. يرجى إعادة إرسال الرمز');
+      setError('Verification session expired. Please request a new code');
       return;
     }
 
@@ -148,18 +212,22 @@ export default function PhoneVerification({
 
     try {
       console.log('🔍 Verifying code...');
-      await window.confirmationResult.confirm(verificationCode);
-      console.log('✅ Phone verified!');
+      const result = await window.confirmationResult.confirm(verificationCode);
+      console.log('✅ Phone verified successfully!', result.user.uid);
+
+      // Sign out immediately - we only need verification, not authentication
+      await auth.signOut();
+
       onVerified(phoneNumber);
     } catch (err: any) {
       console.error('❌ Verification error:', err);
 
       if (err.code === 'auth/invalid-verification-code') {
-        setError('رمز التحقق غير صحيح');
+        setError('Invalid verification code');
       } else if (err.code === 'auth/code-expired') {
-        setError('انتهت صلاحية الرمز');
+        setError('Code expired. Please request a new one');
       } else {
-        setError('فشل التحقق');
+        setError('Verification failed. Please try again');
       }
     } finally {
       setLoading(false);
@@ -169,60 +237,88 @@ export default function PhoneVerification({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 className="text-lg font-semibold mb-4">التحقق من رقم الهاتف</h3>
+        <h3 className="text-lg font-semibold mb-4">Phone Verification</h3>
 
         {step === 'phone' ? (
           <div className="space-y-4">
             <p className="text-gray-600 text-sm">
-              أدخل رقم هاتفك لتلقي رمز التحقق
+              Enter your phone number to receive a verification code
             </p>
 
-            <input
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="+34612345678"
-              className="w-full px-3 py-2 border rounded-md"
-              dir="ltr"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="+34612345678"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                dir="ltr"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Include country code (e.g., +34 for Spain, +212 for Morocco)
+              </p>
+            </div>
 
-            <div id="recaptcha-container" className="flex justify-center"></div>
+            {/* Invisible reCAPTCHA container */}
+            <div id="recaptcha-container"></div>
 
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
 
             <div className="flex gap-3">
               <Button
-                id="sign-in-button"
                 onClick={handleSendCode}
-                disabled={loading || !recaptchaReady}
+                disabled={loading || !recaptchaInitialized}
                 className="flex-1"
               >
-                {loading ? 'جاري الإرسال...' : 'إرسال الرمز'}
+                {loading ? 'Sending...' : 'Send Code'}
               </Button>
-              <Button variant="outline" onClick={onCancel}>
-                إلغاء
+              <Button variant="outline" onClick={onCancel} disabled={loading}>
+                Cancel
               </Button>
             </div>
+
+            {!recaptchaInitialized && !error && (
+              <p className="text-xs text-gray-500 text-center">
+                Initializing verification...
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
             <p className="text-gray-600 text-sm">
-              أدخل الرمز المرسل إلى {phoneNumber}
+              Enter the 6-digit code sent to <strong>{phoneNumber}</strong>
             </p>
 
-            <input
-              type="text"
-              value={verificationCode}
-              onChange={(e) =>
-                setVerificationCode(e.target.value.replace(/\D/g, ''))
-              }
-              placeholder="123456"
-              maxLength={6}
-              className="w-full px-3 py-2 border rounded-md text-center text-xl tracking-widest"
-              dir="ltr"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Verification Code
+              </label>
+              <input
+                type="text"
+                value={verificationCode}
+                onChange={(e) =>
+                  setVerificationCode(e.target.value.replace(/\D/g, ''))
+                }
+                placeholder="123456"
+                maxLength={6}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-center text-2xl tracking-widest focus:outline-none focus:ring-2 focus:ring-green-500"
+                dir="ltr"
+                autoFocus
+              />
+            </div>
 
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
 
             <div className="flex gap-3">
               <Button
@@ -230,16 +326,18 @@ export default function PhoneVerification({
                 disabled={loading}
                 className="flex-1"
               >
-                {loading ? 'جاري التحقق...' : 'تحقق'}
+                {loading ? 'Verifying...' : 'Verify'}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => {
                   setStep('phone');
                   setError('');
+                  setVerificationCode('');
                 }}
+                disabled={loading}
               >
-                رجوع
+                Back
               </Button>
             </div>
           </div>

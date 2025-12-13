@@ -6,15 +6,23 @@ import { Petition } from '../../types/petition';
 
 // Mock Next.js components
 jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  );
+  const MockLink = ({
+    children,
+    href,
+  }: {
+    children: React.ReactNode;
+    href: string;
+  }) => <a href={href}>{children}</a>;
+  MockLink.displayName = 'MockLink';
+  return MockLink;
 });
 
 jest.mock('next/image', () => {
-  return ({ src, alt, ...props }: any) => (
+  const MockImage = ({ src, alt, ...props }: any) => (
     <img src={src} alt={alt} {...props} />
   );
+  MockImage.displayName = 'MockImage';
+  return MockImage;
 });
 
 const mockPetition: Petition = {
