@@ -1,43 +1,34 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function PetitionSuccessPage() {
+function PetitionSuccessPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const petitionId = searchParams?.get('id');
-  const needsPayment = searchParams?.get('payment') === 'true';
-  const [countdown, setCountdown] = useState(5);
+  const [petitionId, setPetitionId] = useState<string | null>(null);
+  const [needsPayment, setNeedsPayment] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setPetitionId(searchParams?.get('id'));
+    setNeedsPayment(searchParams?.get('payment') === 'true');
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     if (!petitionId) {
       router.push('/petitions');
       return;
     }
 
-    // Countdown timer
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          // Redirect after countdown
-          if (needsPayment) {
-            router.push(`/petitions/${petitionId}/payment`);
-          } else {
-            router.push(`/petitions/${petitionId}`);
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [petitionId, needsPayment, router]);
+    // No automatic redirect - user must click buttons manually
+  }, [petitionId, mounted, router]);
 
   const handleViewNow = () => {
     if (needsPayment) {
@@ -85,14 +76,6 @@ export default function PetitionSuccessPage() {
                   ? 'Your petition has been created successfully. Complete the payment to publish it and start collecting signatures.'
                   : 'Your petition has been published successfully and is now live! People can start signing it right away.'}
               </p>
-
-              {countdown > 0 && (
-                <p className="text-sm text-gray-500">
-                  {needsPayment
-                    ? `Redirecting to payment in ${countdown} seconds...`
-                    : `Redirecting to your petition in ${countdown} seconds...`}
-                </p>
-              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -131,5 +114,12 @@ export default function PetitionSuccessPage() {
         </Card>
       </div>
     </div>
+  );
+}
+export default function PetitionSuccessPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PetitionSuccessPageContent />
+    </Suspense>
   );
 }

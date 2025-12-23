@@ -1,0 +1,16 @@
+// BACKUP: Original petitions collection update rule (BEFORE fix)
+allow update: if isAuthenticated() 
+  && (resource.data.creatorId == request.auth.uid || isAdmin())
+  && request.resource.data.creatorId == resource.data.creatorId; // Can't change creator
+
+// NEW: Updated petitions collection update rule (AFTER fix)
+allow update: if isAuthenticated() 
+  && (
+    // Creator or admin can update anything (except creatorId)
+    (resource.data.creatorId == request.auth.uid || isAdmin())
+    ||
+    // Any authenticated user can increment signature count for signing
+    (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentSignatures', 'updatedAt'])
+     && request.resource.data.currentSignatures == resource.data.currentSignatures + 1)
+  )
+  && request.resource.data.creatorId == resource.data.creatorId; // Can't change creator

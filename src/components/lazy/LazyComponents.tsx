@@ -58,6 +58,14 @@ export const LazyPetitionComments = dynamic(
   }
 );
 
+export const LazyPetitionSupporters = dynamic(
+  () => import('../petitions/PetitionSupporters'),
+  {
+    loading: () => <LoadingSpinner />,
+    ssr: false, // Supporters discussion can be loaded after initial render
+  }
+);
+
 export const LazyNotificationCenter = dynamic(
   () => import('../notifications/NotificationCenter'),
   {

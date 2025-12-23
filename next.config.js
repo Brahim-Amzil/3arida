@@ -1,28 +1,71 @@
+// Next.js automatically loads .env.local - no need for manual dotenv loading
+
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development', // Disabled in dev, enabled in production
+});
+
+const createNextIntlPlugin = require('next-intl/plugin');
+const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Static export configuration for Firebase Hosting
-  output: 'export',
-  trailingSlash: true,
-  skipTrailingSlashRedirect: true,
-  distDir: 'out',
-
+  eslint: {
+    // ESLint enabled during builds
+    ignoreDuringBuilds: false,
+  },
+  typescript: {
+    // We already verified TypeScript is clean
+    ignoreBuildErrors: false,
+  },
   images: {
     domains: [
       'firebasestorage.googleapis.com',
       'storage.googleapis.com',
+      'images.unsplash.com',
     ],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    unoptimized: true, // Required for static export
   },
-  env: {
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://3arida.ma',
+  // Security headers and manifest configuration
+  async headers() {
+    return [
+      // Security headers for all routes
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+      // Manifest.json specific headers
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+    ];
   },
+  // Next.js automatically exposes NEXT_PUBLIC_* variables to the browser
+  // No need to explicitly define them in the env section
   // Performance optimizations
   experimental: {
-    optimizeCss: false,
+    optimizeCss: false, // Disabled due to critters module issue
     optimizePackageImports: ['@heroicons/react', 'lucide-react'],
   },
   // Bundle analyzer for production builds
@@ -41,7 +84,7 @@ const nextConfig = {
     },
   }),
   webpack: (config, { isServer }) => {
-    // Fix for undici compatibility issue
+    // Only apply fallbacks and externals on client side
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -60,19 +103,19 @@ const nextConfig = {
         util: false,
         buffer: false,
       };
-
-      // Exclude problematic modules from client bundle
+      
+      // Exclude server-only modules from client bundle
       config.externals = config.externals || [];
       config.externals.push({
-        'undici': 'undici',
         'firebase-admin': 'firebase-admin',
       });
     }
 
-    // Completely exclude undici from webpack processing
-    config.module.rules.push({
+    // Exclude undici from being processed by Next.js loaders
+    config.module.rules.unshift({
       test: /node_modules\/undici/,
-      use: 'null-loader',
+      type: 'javascript/auto',
+      use: 'ignore-loader',
     });
 
     // Handle module resolution issues
@@ -82,23 +125,10 @@ const nextConfig = {
         fullySpecified: false,
       },
     });
-
-    // Ignore undici and related warnings
-    config.ignoreWarnings = [
-      { module: /node_modules\/undici/ },
-      { file: /node_modules\/undici/ },
-      { message: /Module parse failed.*undici/ },
-    ];
-
-    // Add alias to prevent undici from being bundled
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'undici': false,
-    };
-
+    
     return config;
   },
-  transpilePackages: ['firebase'],
+  transpilePackages: ['firebase', '@firebase/storage'],
 }
 
-module.exports = nextConfig
+module.exports = withNextIntl(withPWA(nextConfig))

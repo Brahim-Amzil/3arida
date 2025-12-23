@@ -5,53 +5,15 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/auth/AuthProvider';
-
-// Mock notification types and functions
-type NotificationType =
-  | 'petition_approved'
-  | 'petition_rejected'
-  | 'petition_paused'
-  | 'signature_milestone'
-  | 'petition_status_change'
-  | 'new_comment'
-  | 'petition_update';
-
-interface Notification {
-  id: string;
-  userId: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  data?: {
-    petitionId?: string;
-    petitionTitle?: string;
-    milestone?: number;
-    commentId?: string;
-    [key: string]: any;
-  };
-  read: boolean;
-  createdAt: Date;
-}
-
-const subscribeToUserNotifications = (
-  userId: string,
-  callback: (notifications: Notification[]) => void
-) => {
-  // Mock implementation - return empty notifications
-  callback([]);
-  return () => {}; // Unsubscribe function
-};
-
-const markNotificationAsRead = async (notificationId: string) => {
-  // Mock implementation
-};
-
-const markAllNotificationsAsRead = async (userId: string) => {
-  // Mock implementation
-};
-
-const getNotificationIcon = (type: NotificationType): string => '🔔';
-const getNotificationColor = (type: NotificationType): string => '#3B82F6';
+import {
+  subscribeToUserNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  getNotificationIcon,
+  getNotificationColor,
+  type Notification,
+  type NotificationType,
+} from '@/lib/notifications';
 
 interface NotificationCenterProps {
   className?: string;
@@ -138,7 +100,42 @@ export default function NotificationCenter({
 
   const getNotificationLink = (notification: Notification): string => {
     if (notification.data?.petitionId) {
-      return `/petitions/${notification.data.petitionId}`;
+      const baseUrl = `/petitions/${notification.data.petitionId}`;
+
+      // Add notification type and reason as URL parameters for NotificationAlert
+      const params = new URLSearchParams();
+
+      // Map notification type to alert type
+      if (
+        notification.type === 'petition_status_change' &&
+        notification.data?.newStatus
+      ) {
+        const status = notification.data.newStatus;
+        params.append('notif', status);
+
+        // Add moderator notes/reason if available
+        if (notification.data?.moderatorNotes) {
+          params.append('reason', notification.data.moderatorNotes);
+        }
+      } else if (notification.type === 'petition_approved') {
+        params.append('notif', 'approved');
+        if (notification.data?.moderatorNotes) {
+          params.append('reason', notification.data.moderatorNotes);
+        }
+      } else if (notification.type === 'petition_rejected') {
+        params.append('notif', 'rejected');
+        if (notification.data?.moderatorNotes) {
+          params.append('reason', notification.data.moderatorNotes);
+        }
+      } else if (notification.type === 'petition_paused') {
+        params.append('notif', 'paused');
+        if (notification.data?.moderatorNotes) {
+          params.append('reason', notification.data.moderatorNotes);
+        }
+      }
+
+      const queryString = params.toString();
+      return queryString ? `${baseUrl}?${queryString}` : baseUrl;
     }
     return '/dashboard';
   };

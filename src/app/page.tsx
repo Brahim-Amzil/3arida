@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import PetitionCard from '@/components/petitions/PetitionCard';
 import { Button } from '@/components/ui/button';
 import { getPetitions, getCategories } from '@/lib/petitions';
 import { Petition, Category } from '@/types/petition';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function HomePage() {
   const [featuredPetitions, setFeaturedPetitions] = useState<Petition[]>([]);
@@ -14,6 +15,7 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const { t } = useTranslation();
 
   useEffect(() => {
     const loadData = async () => {
@@ -73,12 +75,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              ######### ##### #######
+              {t('home.hero.title')}
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-green-100 max-w-3xl mx-auto">
-              Join thousands of citizens creating petitions and making their
-              voices heard. Start a petition today and drive the change you want
-              to see.
+            <p className="text-xl md:text-2xl mb-8 text-green-100 max-w-3xl mx-auto whitespace-pre-line">
+              {t('home.hero.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/petitions/create">
@@ -86,7 +86,7 @@ export default function HomePage() {
                   size="lg"
                   className="bg-white text-green-600 hover:bg-gray-100 font-semibold px-8 py-3"
                 >
-                  Start a Petition
+                  {t('petitions.startPetition')}
                 </Button>
               </Link>
               <Link href="/petitions">
@@ -95,7 +95,7 @@ export default function HomePage() {
                   variant="outline"
                   className="border-green-600 text-green-600 bg-white hover:bg-green-600 hover:text-white font-semibold px-8 py-3"
                 >
-                  Discover Petitions
+                  {t('petitions.discoverPetitions')}
                 </Button>
               </Link>
             </div>
@@ -103,7 +103,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Stats Section - Commented out until we have enough real data */}
+      {/*
       <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
@@ -111,19 +112,20 @@ export default function HomePage() {
               <div className="text-4xl font-bold text-green-600 mb-2">
                 10,000+
               </div>
-              <div className="text-gray-600">Signatures Collected</div>
+              <div className="text-gray-600">{t('home.stats.signatures')}</div>
             </div>
             <div>
               <div className="text-4xl font-bold text-green-600 mb-2">500+</div>
-              <div className="text-gray-600">Active Petitions</div>
+              <div className="text-gray-600">{t('home.stats.petitions')}</div>
             </div>
             <div>
               <div className="text-4xl font-bold text-green-600 mb-2">50+</div>
-              <div className="text-gray-600">Changes Made</div>
+              <div className="text-gray-600">{t('home.stats.changes')}</div>
             </div>
           </div>
         </div>
       </section>
+      */}
 
       {/* Featured Petitions */}
       {!loading && featuredPetitions.length > 0 && (
@@ -131,10 +133,10 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Featured Petitions
+                {t('home.featured.title')}
               </h2>
               <p className="text-lg text-gray-600">
-                The most impactful petitions making change happen right now
+                {t('home.featured.subtitle')}
               </p>
             </div>
 
@@ -159,10 +161,10 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Explore by Category
+                {t('home.categories.title')}
               </h2>
               <p className="text-lg text-gray-600">
-                Find petitions that matter to you
+                {t('home.categories.subtitle')}
               </p>
             </div>
 
@@ -181,7 +183,7 @@ export default function HomePage() {
                       {category.name}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {category.petitionCount} petitions
+                      {category.petitionCount} {t('categories.petitions')}
                     </p>
                   </div>
                 </Link>
@@ -198,14 +200,16 @@ export default function HomePage() {
             <div className="flex justify-between items-center mb-12">
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  Recent Petitions
+                  {t('home.recent.title')}
                 </h2>
                 <p className="text-lg text-gray-600">
-                  Latest petitions from the community
+                  {t('home.recent.subtitle')}
                 </p>
               </div>
               <Link href="/petitions">
-                <Button variant="outline">View All Petitions</Button>
+                <Button variant="outline">
+                  {t('petitions.viewAllPetitions')}
+                </Button>
               </Link>
             </div>
 
@@ -230,7 +234,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading petitions...</p>
+              <p className="text-gray-600">{t('common.loading')}</p>
             </div>
           </div>
         </section>
@@ -248,7 +252,7 @@ export default function HomePage() {
                   className="mt-4"
                   variant="outline"
                 >
-                  Try Again
+                  {t('common.tryAgain')}
                 </Button>
               </div>
             </div>
@@ -259,19 +263,16 @@ export default function HomePage() {
       {/* Call to Action */}
       <section className="bg-green-600 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to Make a Difference?
-          </h2>
+          <h2 className="text-3xl font-bold mb-4">{t('home.cta.title')}</h2>
           <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
-            Every great change starts with a single voice. Start your petition
-            today and rally support for the causes that matter to you.
+            {t('home.cta.subtitle')}
           </p>
           <Link href="/petitions/create">
             <Button
               size="lg"
               className="bg-white text-green-600 hover:bg-gray-100 font-semibold px-8 py-3"
             >
-              Start Your Petition Now
+              {t('home.cta.button')}
             </Button>
           </Link>
         </div>
@@ -284,73 +285,71 @@ export default function HomePage() {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">3</span>
+                  <span className="text-white font-bold text-lg">#</span>
                 </div>
                 <span className="text-xl font-bold">3arida</span>
               </div>
-              <p className="text-gray-400">
-                Empowering Moroccan citizens to create change through petitions.
-              </p>
+              <p className="text-gray-400">{t('footer.description')}</p>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-4">Platform</h3>
+              <h3 className="font-semibold mb-4">{t('footer.platform')}</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
                   <Link href="/petitions" className="hover:text-white">
-                    Discover Petitions
+                    {t('petitions.discoverPetitions')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/petitions/create" className="hover:text-white">
-                    Start a Petition
+                    {t('petitions.startPetition')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/about" className="hover:text-white">
-                    About Us
+                    {t('nav.about')}
                   </Link>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-4">Support</h3>
+              <h3 className="font-semibold mb-4">{t('footer.support')}</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
                   <Link href="/help" className="hover:text-white">
-                    Help Center
+                    {t('footer.helpCenter')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/contact" className="hover:text-white">
-                    Contact Us
+                    {t('footer.contactUs')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/guidelines" className="hover:text-white">
-                    Community Guidelines
+                    {t('footer.communityGuidelines')}
                   </Link>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
+              <h3 className="font-semibold mb-4">{t('footer.legal')}</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
                   <Link href="/privacy" className="hover:text-white">
-                    Privacy Policy
+                    {t('footer.privacyPolicy')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/terms" className="hover:text-white">
-                    Terms of Service
+                    {t('footer.termsOfService')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/cookies" className="hover:text-white">
-                    Cookie Policy
+                    {t('footer.cookiePolicy')}
                   </Link>
                 </li>
               </ul>

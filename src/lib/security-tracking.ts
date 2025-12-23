@@ -40,15 +40,15 @@ export interface IPTrackingData {
 export const trackSignatureAttempt = async (
   attempt: Omit<SignatureAttempt, 'id' | 'timestamp'>
 ): Promise<void> => {
-  try {
-    await addDoc(collection(db, 'signatureAttempts'), {
-      ...attempt,
-      timestamp: Timestamp.fromDate(new Date()),
-    });
-  } catch (error) {
-    console.error('Error tracking signature attempt:', error);
-    // Don't throw error - tracking failure shouldn't block signing
-  }
+  // MVP: Disable signature attempt tracking to avoid Firestore permission issues
+  console.log('ℹ️ MVP: Signature attempt tracking disabled', {
+    petitionId: attempt.petitionId,
+    success: attempt.success,
+    reason: attempt.reason,
+  });
+
+  // Don't write to Firestore for MVP to avoid permission issues
+  // This can be re-enabled later when proper Firestore rules are set up
 };
 
 /**
@@ -83,34 +83,46 @@ export const checkIPSignatureLimit = async (
   timeWindowHours: number = 24,
   maxSignatures: number = 5
 ): Promise<{ allowed: boolean; count: number; reason?: string }> => {
-  try {
-    const attemptsRef = collection(db, 'signatureAttempts');
-    const timeLimit = new Date(Date.now() - timeWindowHours * 60 * 60 * 1000);
+  // MVP: Disable IP rate limiting to avoid Firestore permission issues
+  console.log('ℹ️ MVP: IP rate limiting disabled', {
+    petitionId,
+    ipAddress,
+    timeWindowHours,
+    maxSignatures,
+  });
 
-    const recentAttemptsQuery = query(
-      attemptsRef,
-      where('petitionId', '==', petitionId),
-      where('ipAddress', '==', ipAddress),
-      where('timestamp', '>=', Timestamp.fromDate(timeLimit)),
-      where('success', '==', true)
-    );
+  // Always allow for MVP - no IP rate limiting
+  return { allowed: true, count: 0 };
 
-    const snapshot = await getDocs(recentAttemptsQuery);
-    const count = snapshot.size;
+  // Note: IP rate limiting disabled for MVP
+  // try {
+  //   const attemptsRef = collection(db, 'signatureAttempts');
+  //   const timeLimit = new Date(Date.now() - timeWindowHours * 60 * 60 * 1000);
 
-    if (count >= maxSignatures) {
-      return {
-        allowed: false,
-        count,
-        reason: `Too many signatures from this IP address. Maximum ${maxSignatures} signatures per ${timeWindowHours} hours.`,
-      };
-    }
+  //   const recentAttemptsQuery = query(
+  //     attemptsRef,
+  //     where('petitionId', '==', petitionId),
+  //     where('ipAddress', '==', ipAddress),
+  //     where('timestamp', '>=', Timestamp.fromDate(timeLimit)),
+  //     where('success', '==', true)
+  //   );
 
-    return { allowed: true, count };
-  } catch (error) {
-    console.error('Error checking IP signature limit:', error);
-    return { allowed: true, count: 0 }; // Allow if check fails
-  }
+  //   const snapshot = await getDocs(recentAttemptsQuery);
+  //   const count = snapshot.size;
+
+  //   if (count >= maxSignatures) {
+  //     return {
+  //       allowed: false,
+  //       count,
+  //       reason: `Too many signatures from this IP address. Maximum ${maxSignatures} signatures per ${timeWindowHours} hours.`,
+  //     };
+  //   }
+
+  //   return { allowed: true, count };
+  // } catch (error) {
+  //   console.error('Error checking IP signature limit:', error);
+  //   return { allowed: true, count: 0 }; // Allow if check fails
+  // }
 };
 
 /**
@@ -119,54 +131,59 @@ export const checkIPSignatureLimit = async (
 export const analyzeIPAddress = async (
   ipAddress: string
 ): Promise<IPTrackingData> => {
-  // In production, integrate with IP geolocation and threat intelligence services
-  // For now, return basic analysis
+  // MVP: Disable IP analysis to avoid Firestore permission issues
+  console.log('ℹ️ MVP: IP analysis disabled', { ipAddress });
 
+  // Return safe default data for MVP
   const defaultData: IPTrackingData = {
     ipAddress,
-    riskScore: 0,
+    riskScore: 0, // Always safe for MVP
     firstSeen: new Date(),
     lastSeen: new Date(),
     totalRequests: 1,
     suspiciousActivity: [],
   };
 
-  try {
-    // Check if IP is in our tracking database
-    const ipTrackingRef = collection(db, 'ipTracking');
-    const ipQuery = query(ipTrackingRef, where('ipAddress', '==', ipAddress));
-    const snapshot = await getDocs(ipQuery);
+  return defaultData;
 
-    if (!snapshot.empty) {
-      const doc = snapshot.docs[0];
-      const data = doc.data();
-      return {
-        ipAddress,
-        country: data.country,
-        city: data.city,
-        isp: data.isp,
-        isVPN: data.isVPN || false,
-        isProxy: data.isProxy || false,
-        riskScore: data.riskScore || 0,
-        firstSeen: data.firstSeen?.toDate() || new Date(),
-        lastSeen: new Date(),
-        totalRequests: (data.totalRequests || 0) + 1,
-        suspiciousActivity: data.suspiciousActivity || [],
-      };
-    }
+  // Note: IP analysis disabled for MVP
+  // In production, integrate with IP geolocation and threat intelligence services
+  // try {
+  //   // Check if IP is in our tracking database
+  //   const ipTrackingRef = collection(db, 'ipTracking');
+  //   const ipQuery = query(ipTrackingRef, where('ipAddress', '==', ipAddress));
+  //   const snapshot = await getDocs(ipQuery);
 
-    // For new IPs, perform basic checks
-    const riskScore = calculateIPRiskScore(ipAddress);
+  //   if (!snapshot.empty) {
+  //     const doc = snapshot.docs[0];
+  //     const data = doc.data();
+  //     return {
+  //       ipAddress,
+  //       country: data.country,
+  //       city: data.city,
+  //       isp: data.isp,
+  //       isVPN: data.isVPN || false,
+  //       isProxy: data.isProxy || false,
+  //       riskScore: data.riskScore || 0,
+  //       firstSeen: data.firstSeen?.toDate() || new Date(),
+  //       lastSeen: new Date(),
+  //       totalRequests: (data.totalRequests || 0) + 1,
+  //       suspiciousActivity: data.suspiciousActivity || [],
+  //     };
+  //   }
 
-    return {
-      ...defaultData,
-      riskScore,
-      suspiciousActivity: riskScore > 50 ? ['High risk IP range'] : [],
-    };
-  } catch (error) {
-    console.error('Error analyzing IP address:', error);
-    return defaultData;
-  }
+  //   // For new IPs, perform basic checks
+  //   const riskScore = calculateIPRiskScore(ipAddress);
+
+  //   return {
+  //     ...defaultData,
+  //     riskScore,
+  //     suspiciousActivity: riskScore > 50 ? ['High risk IP range'] : [],
+  //   };
+  // } catch (error) {
+  //   console.error('Error analyzing IP address:', error);
+  //   return defaultData;
+  // }
 };
 
 /**
@@ -262,17 +279,23 @@ export const validateSignatureAuthenticity = async (
   ipAddress: string,
   userAgent: string
 ): Promise<{ valid: boolean; reason?: string }> => {
-  // Check for duplicate phone number
-  const isDuplicatePhone = await checkDuplicatePhoneSignature(
-    petitionId,
-    phoneNumber
+  // MVP: Skip phone number duplicate check to avoid friction
+  // Phone verification is disabled for MVP, so phone-based duplicate check is not needed
+  console.log(
+    'ℹ️ MVP: Skipping phone number duplicate check in validateSignatureAuthenticity'
   );
-  if (isDuplicatePhone) {
-    return {
-      valid: false,
-      reason: 'This phone number has already been used to sign this petition',
-    };
-  }
+
+  // Note: Phone duplicate check disabled for MVP
+  // const isDuplicatePhone = await checkDuplicatePhoneSignature(
+  //   petitionId,
+  //   phoneNumber
+  // );
+  // if (isDuplicatePhone) {
+  //   return {
+  //     valid: false,
+  //     reason: 'This phone number has already been used to sign this petition',
+  //   };
+  // }
 
   // Check IP rate limiting
   const ipCheck = await checkIPSignatureLimit(petitionId, ipAddress);

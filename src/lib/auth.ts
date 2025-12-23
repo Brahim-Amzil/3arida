@@ -66,8 +66,14 @@ export const registerWithEmail = async (
       email: userData.email,
     });
 
-    // Send email verification
-    await sendEmailVerification(userCredential.user);
+    // Send email verification (optional - won't block if it fails)
+    try {
+      await sendEmailVerification(userCredential.user);
+      console.log('✅ Verification email sent');
+    } catch (emailError) {
+      console.warn('⚠️ Could not send verification email:', emailError);
+      // Don't throw - allow registration to proceed
+    }
 
     return userCredential;
   } catch (error: any) {
@@ -87,6 +93,21 @@ export const loginWithEmail = async (
       loginData.password
     );
 
+    // Check if user is active
+    const userRef = doc(db, 'users', userCredential.user.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      if (userData.isActive === false) {
+        // Sign out immediately
+        await signOut(auth);
+        throw new Error(
+          'Your account has been deactivated. Please contact support.'
+        );
+      }
+    }
+
     // Update login tracking
     await updateUserLoginTracking(userCredential.user.uid);
 
@@ -101,27 +122,30 @@ export const loginWithEmail = async (
 export const loginWithGoogle = async (): Promise<UserCredential> => {
   try {
     const provider = new GoogleAuthProvider();
-    const userCredential = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
 
-    // Check if this is a new user and create profile if needed
-    const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-    if (!userDoc.exists()) {
-      await createUserProfile(userCredential.user, {
-        name: userCredential.user.displayName || '',
-        email: userCredential.user.email || '',
-      });
+    // Ensure user profile exists in Firestore
+    await ensureUserProfile(result.user);
 
-      // For Google users, mark email as verified
-      await updateDoc(doc(db, 'users', userCredential.user.uid), {
-        verifiedEmail: true,
-        updatedAt: new Date(),
-      });
+    // Check if user is active
+    const userRef = doc(db, 'users', result.user.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      if (userData.isActive === false) {
+        // Sign out immediately
+        await signOut(auth);
+        throw new Error(
+          'Your account has been deactivated. Please contact support.'
+        );
+      }
     }
 
     // Update login tracking
-    await updateUserLoginTracking(userCredential.user.uid);
+    await updateUserLoginTracking(result.user.uid);
 
-    return userCredential;
+    return result;
   } catch (error: any) {
     console.error('Google login error:', error);
     throw new Error(getAuthErrorMessage(error.code));
@@ -271,6 +295,50 @@ const createUserProfile = async (
   }
 };
 
+// Ensure user profile exists (for social logins)
+const ensureUserProfile = async (user: FirebaseUser): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (!userDoc.exists()) {
+      const createdAt = new Date();
+
+      await setDoc(userRef, {
+        // Basic fields
+        id: user.uid,
+        name: user.displayName || '',
+        email: user.email || '',
+        phone: user.phoneNumber || null,
+        photoURL: user.photoURL || null,
+
+        // Verification status
+        verifiedEmail: user.emailVerified,
+        verifiedPhone: false,
+
+        // Role and permissions
+        role: 'user',
+
+        // Creator page
+        creatorPageId: null,
+
+        // Activity tracking
+        lastLoginAt: createdAt,
+
+        // Timestamps
+        createdAt,
+        updatedAt: createdAt,
+
+        // Status
+        isActive: true,
+      });
+    }
+  } catch (error) {
+    console.error('Error ensuring user profile:', error);
+    // Don't throw - allow login to proceed
+  }
+};
+
 // Update user login tracking
 const updateUserLoginTracking = async (userId: string): Promise<void> => {
   try {
@@ -335,6 +403,8 @@ const getAuthErrorMessage = (errorCode: string): string => {
       return 'Invalid verification code. Please try again.';
     case 'auth/code-expired':
       return 'Verification code has expired. Please request a new one.';
+    case 'auth/account-inactive':
+      return 'Your account has been deactivated. Please contact support.';
     default:
       return 'An error occurred. Please try again.';
   }

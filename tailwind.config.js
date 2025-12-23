@@ -16,6 +16,12 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['var(--font-inter)', 'var(--font-cairo)', 'system-ui', 'sans-serif'],
+        arabic: ['var(--font-cairo)', 'var(--font-almarai)', 'system-ui', 'sans-serif'],
+        cairo: ['var(--font-cairo)', 'system-ui', 'sans-serif'],
+        almarai: ['var(--font-almarai)', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -23,8 +29,16 @@ module.exports = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#10B981",
+          dark: "#059669",
+          light: "#D1FAE5",
+          foreground: "#FFFFFF",
+        },
+        neutral: {
+          dark: "#111827",
+          mid: "#6B7280",
+          light: "#9CA3AF",
+          surface: "#F3F4F6",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -72,5 +86,5 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("tailwindcss-rtl")],
 }

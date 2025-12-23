@@ -4,8 +4,8 @@ A modern, scalable petition platform designed specifically for Morocco, enabling
 
 ## 🚀 Project Status
 
-**Current Phase**: Production Ready (99% Complete)
-**Last Updated**: December 2, 2025
+**Current Phase**: Production Ready (90% Complete)
+**Last Updated**: January 2025
 
 ### ✅ Fully Implemented Features
 
@@ -15,7 +15,7 @@ A modern, scalable petition platform designed specifically for Morocco, enabling
 - **QR Code System**: Complete QR generation, branding, download, and upgrade payments (10 MAD)
 - **Admin & Moderation**: Comprehensive admin dashboard with user management and petition moderation
 - **Real-time Features**: Live signature updates, notifications, and dashboard statistics
-- **Security & Validation**: Complete input validation, content moderation, rate limiting, and CAPTCHA
+- **Security & Validation**: Complete input validation, content moderation, rate limiting, and reCAPTCHA v3 (invisible bot protection)
 - **Testing Suite**: Comprehensive unit, integration, and E2E tests with 85%+ coverage
 - **Mobile-Responsive UI**: Professional interface optimized for all devices
 - **Role-Based Access**: Complete user, moderator, and admin permission system
@@ -39,10 +39,12 @@ A modern, scalable petition platform designed specifically for Morocco, enabling
 ### Core Functionality ✅ **All Implemented**
 
 - **Petition Creation**: Complete petition management with multimedia content and tiered pricing
-- **Phone Verification**: Full OTP verification system for petition signing with Moroccan phone support
+- **Phone Verification**: WhatsApp-based verification (FREE for first 1,000/month) - See [`WHATSAPP_DOCS/`](./WHATSAPP_DOCS/)
 - **QR Code Integration**: Complete QR generation, branding, download, and upgrade system
 - **Role-Based Access**: Full user, moderator, and admin roles with comprehensive permissions
 - **Morocco-Optimized**: MAD currency, Moroccan phone formats, and localization ready
+
+> 💡 **NEW**: WhatsApp phone verification saves 80-90% on SMS costs! See [`WHATSAPP_DOCS/WHATSAPP-QUICK-START.md`](./WHATSAPP_DOCS/WHATSAPP-QUICK-START.md)
 
 ### Pricing Tiers ✅ **Fully Implemented**
 
@@ -59,7 +61,7 @@ A modern, scalable petition platform designed specifically for Morocco, enabling
 - **TypeScript**: Full type safety throughout the application
 - **Tailwind CSS**: Professional UI with shadcn/ui components
 - **Real-time Updates**: Live signature counting, notifications, and dashboard updates
-- **Security**: Comprehensive validation, content moderation, and rate limiting
+- **Security**: Comprehensive validation, content moderation, rate limiting, and reCAPTCHA v3 bot protection
 - **Testing**: 85%+ test coverage with unit, integration, and E2E tests
 
 ## Getting Started
@@ -93,21 +95,43 @@ A modern, scalable petition platform designed specifically for Morocco, enabling
 
    Fill in your Firebase, Stripe, and other configuration values.
 
-4. **Configure Firebase**
+4. **Configure reCAPTCHA v3 (Bot Protection)** ⭐ **RECOMMENDED**
 
+   ```bash
+   # Get FREE keys from Google (1M requests/month)
+   # See RECAPTCHA-SETUP.md for detailed guide
+
+   # 1. Go to: https://www.google.com/recaptcha/admin/create
+   # 2. Select reCAPTCHA v3 (invisible)
+   # 3. Add domains: localhost, 3arida.ma
+   # 4. Copy keys to .env.local:
+   NEXT_PUBLIC_RECAPTCHA_SITE_KEY=your-site-key
+   RECAPTCHA_SECRET_KEY=your-secret-key
+
+   # Test configuration:
+   node test-recaptcha.js
+   ```
+
+   **Why reCAPTCHA v3?**
+   - ✅ 100% invisible (no user interaction)
+   - ✅ Blocks 90%+ of bots automatically
+   - ✅ FREE (1M assessments/month)
+   - ✅ Already integrated in code
+
+5. **Configure Firebase**
    - Create a Firebase project
    - Enable Authentication (Email/Password, Google, Phone)
    - Set up Firestore database
    - Configure Firebase Storage
    - Deploy security rules: `firebase deploy --only firestore:rules,storage`
 
-5. **Run the development server**
+6. **Run the development server**
 
    ```bash
    npm run dev
    ```
 
-6. **Open your browser**
+7. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## Project Structure

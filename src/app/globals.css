@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  @keyframes slide-down {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.3s ease-out;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -10,8 +27,8 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142 76% 36%;
-    --primary-foreground: 355 100% 97%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 84% 4.9%;
     --muted: 210 40% 96%;
@@ -22,7 +39,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 142 76% 36%;
+    --ring: 160 84% 39%;
     --radius: 0.5rem;
   }
 
@@ -89,13 +106,147 @@
   color: #006233;
 }
 
-/* Arabic text support */
+/* New Theme 02 - Category Colors */
+.category-culture {
+  background-color: #3B82F6;
+  color: #FFFFFF;
+}
+
+.category-environment {
+  background-color: #10B981;
+  color: #FFFFFF;
+}
+
+.category-education {
+  background-color: #F59E0B;
+  color: #FFFFFF;
+}
+
+.category-default {
+  background-color: #6B7280;
+  color: #FFFFFF;
+}
+
+/* Arabic text support and RTL layout */
 .rtl {
   direction: rtl;
   text-align: right;
+  font-family: var(--font-cairo), var(--font-almarai), 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
 }
 
 .ltr {
   direction: ltr;
   text-align: left;
+  font-family: var(--font-inter), 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+}
+
+/* RTL-specific adjustments - simplified */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+/* Arabic font support */
+[dir="rtl"] {
+  font-family: var(--font-cairo), var(--font-almarai), 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+}
+
+[dir="ltr"] {
+  font-family: var(--font-inter), 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+}
+
+/* Ensure proper Arabic text rendering */
+[dir="rtl"] * {
+  font-feature-settings: "liga" 1, "kern" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Arabic typography utilities */
+.font-arabic {
+  font-family: var(--font-cairo), var(--font-almarai), 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+}
+
+.font-cairo {
+  font-family: var(--font-cairo), 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+}
+
+.font-almarai {
+  font-family: var(--font-almarai), 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+}
+
+/* Better Arabic text spacing */
+[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, [dir="rtl"] h4, [dir="rtl"] h5, [dir="rtl"] h6 {
+  font-family: var(--font-cairo), var(--font-almarai), 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+[dir="rtl"] p, [dir="rtl"] span, [dir="rtl"] div {
+  font-family: var(--font-cairo), var(--font-almarai), 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+  line-height: 1.6;
+}
+
+/* Button and interactive elements in Arabic */
+[dir="rtl"] button, [dir="rtl"] .btn {
+  font-family: var(--font-cairo), var(--font-almarai), 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+  font-weight: 600;
+}
+
+/* Mobile-First Optimizations */
+@media (max-width: 768px) {
+  /* Improve tap targets on mobile */
+  button, a, input[type="checkbox"], input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent text size adjustment on iOS */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* Smooth scrolling on mobile */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+}
+
+/* iOS Safe Area Support */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Touch-friendly focus states */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  button:hover, a:hover {
+    opacity: 1;
+  }
+  
+  /* Add active states for touch feedback */
+  button:active, a:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+
+/* Prevent iOS zoom on input focus - inputs must be 16px+ */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Prevent double-tap zoom on interactive elements */
+button, a, input, select, textarea {
+  touch-action: manipulation;
 }

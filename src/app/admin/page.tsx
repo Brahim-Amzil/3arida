@@ -1,10 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Header from '@/components/layout/Header';
+import Link from 'next/link';
+import Header from '@/components/layout/HeaderWrapper';
+import AdminNav from '@/components/admin/AdminNav';
+import FixCreatorNames from '@/components/admin/FixCreatorNames';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAdminGuard } from '@/lib/auth-guards';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   collection,
   query,
@@ -27,6 +31,7 @@ interface AdminStats {
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const {
     user,
     userProfile,
@@ -84,9 +89,13 @@ export default function AdminDashboard() {
       });
 
       recentPetitions.forEach((doc) => {
-        const petition = { id: doc.id, ...doc.data() } as Petition;
-        petition.createdAt = petition.createdAt?.toDate?.() || new Date();
-        petition.updatedAt = petition.updatedAt?.toDate?.() || new Date();
+        const data = doc.data();
+        const petition = {
+          id: doc.id,
+          ...data,
+          createdAt: (data.createdAt as any)?.toDate?.() || new Date(),
+          updatedAt: (data.updatedAt as any)?.toDate?.() || new Date(),
+        } as Petition;
         recentPetitionsList.push(petition);
       });
 
@@ -101,7 +110,7 @@ export default function AdminDashboard() {
       });
     } catch (err: any) {
       console.error('Error loading admin stats:', err);
-      setError('Failed to load admin statistics');
+      setError(t('admin.error.loadStats'));
     } finally {
       setLoading(false);
     }
@@ -125,33 +134,16 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      <AdminNav />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Admin Dashboard
+            {t('admin.dashboard.title')}
           </h1>
           <p className="text-lg text-gray-600">
-            Manage petitions, users, and platform statistics
+            {t('admin.dashboard.subtitle')}
           </p>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-4">
-            <Button asChild>
-              <a href="/admin/petitions">Manage Petitions</a>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="/admin/users">Manage Users</a>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="/admin/moderators">Manage Moderators</a>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="/admin/analytics">View Analytics</a>
-            </Button>
-          </div>
         </div>
 
         {loading ? (
@@ -171,7 +163,7 @@ export default function AdminDashboard() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
             <p className="text-red-600">{error}</p>
             <Button onClick={loadAdminStats} className="mt-4" variant="outline">
-              Try Again
+              {t('admin.tryAgain')}
             </Button>
           </div>
         ) : (
@@ -200,7 +192,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
-                        Total Petitions
+                        {t('admin.stats.totalPetitions')}
                       </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {stats.totalPetitions}
@@ -232,7 +224,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
-                        Pending Review
+                        {t('admin.stats.pendingReview')}
                       </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {stats.pendingPetitions}
@@ -264,7 +256,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
-                        Total Users
+                        {t('admin.stats.totalUsers')}
                       </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {stats.totalUsers}
@@ -302,7 +294,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
-                        Total Signatures
+                        {t('admin.stats.totalSignatures')}
                       </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {stats.totalSignatures.toLocaleString()}
@@ -313,17 +305,25 @@ export default function AdminDashboard() {
               </Card>
             </div>
 
+            {/* Admin Tools */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                {t('admin.tools.title')}
+              </h2>
+              <FixCreatorNames />
+            </div>
+
             {/* Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Recent Petitions */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Petitions</CardTitle>
+                  <CardTitle>{t('admin.recentPetitions.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {stats.recentPetitions.length === 0 ? (
                     <p className="text-gray-500 text-center py-4">
-                      No recent petitions
+                      {t('admin.recentPetitions.noRecent')}
                     </p>
                   ) : (
                     <div className="space-y-4">
@@ -342,23 +342,24 @@ export default function AdminDashboard() {
                                   petition.status === 'pending'
                                     ? 'bg-yellow-100 text-yellow-800'
                                     : petition.status === 'approved'
-                                    ? 'bg-green-100 text-green-800'
-                                    : petition.status === 'paused'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-gray-100 text-gray-800'
+                                      ? 'bg-green-100 text-green-800'
+                                      : petition.status === 'paused'
+                                        ? 'bg-red-100 text-red-800'
+                                        : 'bg-gray-100 text-gray-800'
                                 }`}
                               >
-                                {petition.status}
+                                {t(`admin.status.${petition.status}`)}
                               </span>
                               <span className="text-sm text-gray-500">
-                                {petition.currentSignatures} signatures
+                                {petition.currentSignatures}{' '}
+                                {t('admin.recentPetitions.signatures')}
                               </span>
                             </div>
                           </div>
                           <Button size="sm" variant="outline" asChild>
-                            <a href={`/admin/petitions/${petition.id}`}>
-                              Review
-                            </a>
+                            <Link href={`/admin/petitions/${petition.id}`}>
+                              {t('admin.recentPetitions.review')}
+                            </Link>
                           </Button>
                         </div>
                       ))}
@@ -370,40 +371,40 @@ export default function AdminDashboard() {
               {/* System Status */}
               <Card>
                 <CardHeader>
-                  <CardTitle>System Status</CardTitle>
+                  <CardTitle>{t('admin.systemStatus.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-600">
-                        Platform Status
+                        {t('admin.systemStatus.platformStatus')}
                       </span>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Operational
+                        {t('admin.status.operational')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-600">
-                        Database
+                        {t('admin.systemStatus.database')}
                       </span>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Connected
+                        {t('admin.status.connected')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-600">
-                        Storage
+                        {t('admin.systemStatus.storage')}
                       </span>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Available
+                        {t('admin.status.available')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-600">
-                        Payments
+                        {t('admin.systemStatus.payments')}
                       </span>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Active
+                        {t('admin.status.active')}
                       </span>
                     </div>
                   </div>
