@@ -1,32 +1,84 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { loginWithEmail, loginWithGoogle } from '@/lib/auth';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { db } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
+  const [redirectUrl, setRedirectUrl] = useState('/dashboard');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
 
-  const redirectUrl = searchParams?.get('redirect') || '/dashboard';
+  useEffect(() => {
+    setMounted(true);
+    setRedirectUrl(searchParams?.get('redirect') || '/dashboard');
+
+    // Check for error parameter
+    const errorParam = searchParams?.get('error');
+    if (errorParam === 'account-inactive') {
+      setError('Your account has been deactivated. Please contact support.');
+    }
+  }, [searchParams]);
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+    if (mounted && !authLoading && isAuthenticated) {
       router.push(redirectUrl);
     }
-  }, [authLoading, isAuthenticated, router, redirectUrl]);
+  }, [mounted, authLoading, isAuthenticated, router, redirectUrl]);
+
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const result = await loginWithGoogle();
+
+      // Check if user profile exists
+      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      if (!userDoc.exists()) {
+        // Create user profile for Google sign-in
+        const createdAt = new Date();
+        await setDoc(doc(db, 'users', result.user.uid), {
+          id: result.user.uid,
+          name: result.user.displayName || '',
+          email: result.user.email || '',
+          phone: result.user.phoneNumber || null,
+          verifiedEmail: true, // Google accounts are pre-verified
+          verifiedPhone: false,
+          role: 'user',
+          creatorPageId: null,
+          lastLoginAt: createdAt,
+          createdAt,
+          updatedAt: createdAt,
+          isActive: true,
+        });
+      }
+
+      // Redirect will happen automatically via useEffect
+    } catch (err: any) {
+      console.error('Google login error:', err);
+      setError(
+        err.message || 'Failed to sign in with Google. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -56,24 +108,6 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to sign in. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      await loginWithGoogle();
-
-      // Redirect will happen automatically via useEffect
-    } catch (err: any) {
-      console.error('Google login error:', err);
-      setError(
-        err.message || 'Failed to sign in with Google. Please try again.'
-      );
     } finally {
       setLoading(false);
     }
@@ -249,5 +283,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

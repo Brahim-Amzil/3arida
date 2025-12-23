@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Petition } from '@/types/petition';
 import { generateQRCodeDataURL, downloadQRCode } from '@/lib/qr-service';
 import { incrementPetitionShares } from '@/lib/petitions';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface QRCodeDisplayProps {
   petition: Petition;
@@ -29,6 +30,7 @@ export default function QRCodeDisplay({
   onShare,
   onDownload,
 }: QRCodeDisplayProps) {
+  const { t } = useTranslation();
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -185,7 +187,7 @@ export default function QRCodeDisplay({
                       d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  Download
+                  {t('actions.download')}
                 </button>
               )}
 
@@ -207,7 +209,7 @@ export default function QRCodeDisplay({
                       d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
                     />
                   </svg>
-                  Share
+                  {t('common.share')}
                 </button>
               )}
             </div>
@@ -300,7 +302,7 @@ export default function QRCodeDisplay({
                             d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                           />
                         </svg>
-                        Download
+                        {t('actions.download')}
                       </button>
                     )}
 
@@ -322,7 +324,7 @@ export default function QRCodeDisplay({
                             d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
                           />
                         </svg>
-                        Share
+                        {t('common.share')}
                       </button>
                     )}
                   </div>
@@ -341,11 +343,9 @@ export default function QRCodeDisplay({
       <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
         <div className="text-center">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Share this Petition
+            {t('qr.shareThisPetition')}
           </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Scan the QR code to view and support this petition
-          </p>
+          <p className="text-sm text-gray-600 mb-4">{t('qr.scanToView')}</p>
 
           {isLoading ? (
             <div
@@ -378,7 +378,7 @@ export default function QRCodeDisplay({
 
           <div className="text-sm text-gray-600 mb-4">
             <p className="font-medium">{petition.title}</p>
-            <p>Created by User</p>
+            <p>{t('qr.createdBy')} User</p>
           </div>
 
           {!isLoading && !error && (

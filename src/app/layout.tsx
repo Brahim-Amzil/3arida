@@ -1,10 +1,33 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Cairo, Almarai } from 'next/font/google';
 import './globals.css';
 import AuthProvider from '@/components/auth/AuthProvider';
 import { ProductionMonitoringProvider } from '@/components/monitoring/ProductionMonitoringProvider';
+import { BannerProvider } from '@/contexts/BannerContext';
+import InstallPWAPrompt from '@/components/pwa/InstallPWAPrompt';
+import PushNotificationPrompt from '@/components/pwa/PushNotificationPrompt';
+import CookieConsent from '@/components/legal/CookieConsent';
 
-const inter = Inter({ subsets: ['latin'] });
+// Latin fonts for English and French
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+// Arabic fonts
+const cairo = Cairo({
+  subsets: ['arabic', 'latin'],
+  variable: '--font-cairo',
+  display: 'swap',
+});
+
+const almarai = Almarai({
+  subsets: ['arabic'],
+  weight: ['300', '400', '700', '800'],
+  variable: '--font-almarai',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: '3arida - Petition Platform for Morocco',
@@ -28,6 +51,12 @@ export const metadata: Metadata = {
     telephone: false,
   },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://3arida.ma'),
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: '3arida',
+  },
   openGraph: {
     title: '3arida - Petition Platform for Morocco',
     description: 'Create and sign petitions to make change happen in Morocco',
@@ -63,15 +92,40 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Mobile-First Viewport */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes"
+        />
+
+        {/* Icons */}
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#22c55e" />
+
+        {/* Theme Colors */}
+        <meta name="theme-color" content="#10B981" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+        {/* Prevent auto-zoom on iOS */}
+        <meta name="format-detection" content="telephone=no" />
       </head>
-      <body className={inter.className}>
+      <body
+        className={`${inter.variable} ${cairo.variable} ${almarai.variable} font-sans`}
+        suppressHydrationWarning
+      >
         <ProductionMonitoringProvider>
-          <AuthProvider>
-            <div className="min-h-screen bg-gray-50">{children}</div>
-          </AuthProvider>
+          <BannerProvider>
+            <AuthProvider>
+              <div className="min-h-screen bg-gray-50" suppressHydrationWarning>
+                {children}
+              </div>
+              {/* PWA Components */}
+              <InstallPWAPrompt />
+              <PushNotificationPrompt />
+              {/* Cookie Consent Banner */}
+              <CookieConsent />
+            </AuthProvider>
+          </BannerProvider>
         </ProductionMonitoringProvider>
       </body>
     </html>

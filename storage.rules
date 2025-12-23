@@ -1,34 +1,84 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Petition media uploads
+    // Helper function to check if file is an image
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // Helper function to check allowed image types
+    function isAllowedImageType() {
+      return request.resource.contentType in [
+        'image/jpeg',
+        'image/jpg', 
+        'image/png',
+        'image/webp'
+      ];
+    }
+    
+    // Profile images - 2MB limit
+    match /profile-images/{imageId} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        isImage() &&
+        isAllowedImageType() &&
+        request.resource.size < 2 * 1024 * 1024; // 2MB
+      allow delete: if request.auth != null;
+    }
+    
+    // Petition main images - 5MB limit
+    match /petition-images/{imageId} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        request.auth.token.email_verified == true &&
+        isImage() &&
+        isAllowedImageType() &&
+        request.resource.size < 5 * 1024 * 1024; // 5MB
+      allow delete: if request.auth != null;
+    }
+    
+    // Petition gallery images - 3MB limit per image
+    match /petition-gallery/{imageId} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        request.auth.token.email_verified == true &&
+        isImage() &&
+        isAllowedImageType() &&
+        request.resource.size < 3 * 1024 * 1024; // 3MB
+      allow delete: if request.auth != null;
+    }
+    
+    // QR codes - 1MB limit
+    match /qr-codes/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        request.resource.size < 1 * 1024 * 1024; // 1MB
+      allow delete: if request.auth != null;
+    }
+    
+    // Legacy paths (for backward compatibility)
     match /petitions/{petitionId}/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null &&
         request.auth.token.email_verified == true &&
-        resource.size < 10 * 1024 * 1024; // 10MB limit
+        isImage() &&
+        request.resource.size < 5 * 1024 * 1024; // 5MB
     }
-
-    // User profile images
+    
     match /users/{userId}/profile/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null &&
         request.auth.uid == userId &&
-        resource.size < 5 * 1024 * 1024; // 5MB limit
+        isImage() &&
+        request.resource.size < 2 * 1024 * 1024; // 2MB
     }
     
-    // QR codes
-    match /qr-codes/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        resource.size < 1 * 1024 * 1024; // 1MB limit
-    }
-    
-    // Creator page images
+    // Creator page images - 5MB limit
     match /creator-pages/{pageId}/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null &&
-        resource.size < 5 * 1024 * 1024; // 5MB limit
+        isImage() &&
+        request.resource.size < 5 * 1024 * 1024; // 5MB
     }
   }
 }

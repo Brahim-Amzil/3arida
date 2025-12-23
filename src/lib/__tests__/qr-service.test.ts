@@ -1,3 +1,4 @@
+// @ts-nocheck - Mock type issues with Jest
 import {
   generateQRCodeDataURL,
   generateAndStorePetitionQR,

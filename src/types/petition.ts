@@ -3,7 +3,9 @@ export type PetitionStatus =
   | 'draft'
   | 'pending'
   | 'approved'
+  | 'rejected'
   | 'paused'
+  | 'archived'
   | 'deleted';
 
 // Petition Pricing Tiers
@@ -20,6 +22,7 @@ export interface Petition {
   currentSignatures: number;
   status: PetitionStatus;
   creatorId: string;
+  creatorName?: string;
   creatorPageId?: string;
   mediaUrls: string[];
   qrCodeUrl?: string;
@@ -29,6 +32,20 @@ export interface Petition {
   pricingTier: PricingTier;
   amountPaid: number;
   paymentStatus: 'unpaid' | 'paid' | 'refunded';
+
+  // Publisher information (from creation form)
+  publisherType?: string;
+  publisherName?: string;
+
+  // Petition details (from creation form)
+  petitionType?: string;
+  addressedToType?: string;
+  addressedToSpecific?: string;
+  referenceCode?: string;
+
+  // Additional content
+  youtubeVideoUrl?: string;
+  tags?: string;
 
   // Location targeting
   location?: {
@@ -41,6 +58,7 @@ export interface Petition {
   createdAt: Date;
   updatedAt: Date;
   approvedAt?: Date;
+  rejectedAt?: Date;
   pausedAt?: Date;
   deletedAt?: Date;
 
@@ -51,6 +69,12 @@ export interface Petition {
   // Moderation
   moderatedBy?: string;
   moderationNotes?: string;
+  resubmissionCount?: number;
+  resubmissionHistory?: Array<{
+    rejectedAt: Date;
+    reason: string;
+    resubmittedAt?: Date;
+  }>;
 
   // Public visibility
   isPublic: boolean;
@@ -59,6 +83,21 @@ export interface Petition {
 
 // Petition Form Data (for creation/editing)
 export interface PetitionFormData {
+  // Publisher information
+  publisherType?: string;
+  publisherName?: string;
+  officialDocument?: File;
+
+  // Petition details
+  petitionType?: string;
+  addressedToType?: string;
+  addressedToSpecific?: string;
+
+  // Additional content
+  youtubeVideoUrl?: string;
+  tags?: string;
+
+  // Basic information
   title: string;
   description: string;
   category: string;
@@ -119,10 +158,14 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
+  photoURL?: string;
+  bio?: string;
   verifiedEmail: boolean;
   verifiedPhone: boolean;
   role: 'user' | 'moderator' | 'admin';
   creatorPageId?: string;
+  fcmToken?: string; // Firebase Cloud Messaging token for push notifications
+  fcmTokenUpdatedAt?: Date;
   createdAt: Date;
   updatedAt?: Date;
   lastLoginAt?: Date;

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Header from '@/components/layout/Header';
+import Header from '@/components/layout/HeaderWrapper';
 import PetitionAnalytics from '@/components/petitions/PetitionAnalytics';
 import { Button } from '@/components/ui/button';
 import { useAuthGuard } from '@/lib/auth-guards';

@@ -1,0 +1,82 @@
+# VERCEL ENVIRONMENT VARIABLES - READY TO COPY/PASTE
+# 24 unique variables with REAL values (delete all 72 keys and re-enter these)
+# For each variable: Check Production, Preview, AND Development
+
+# 1. NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+pk_test_xxxxx
+
+# 2. SMTP_HOST
+smtp.hostinger.com
+
+# 3. SMTP_PORT
+465
+
+# 4. SMTP_USER
+contact@3arida.ma
+
+# 5. SMTP_PASSWORD
+@AsDf0000
+
+# 6. CONTACT_EMAIL
+3aridapp@gmail.com
+
+# 7. RESEND_FROM_EMAIL
+contact@3arida.ma
+
+# 8. NEXT_PUBLIC_FIREBASE_API_KEY
+AIzaSyAhYUelLCS8ItJwaltcjtUl8HHJwp605T0
+
+# 9. NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+arida-c5faf.firebaseapp.com
+
+# 10. NEXT_PUBLIC_FIREBASE_PROJECT_ID
+arida-c5faf
+
+# 11. NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+arida-c5faf.firebasestorage.app
+
+# 12. NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+446881275370
+
+# 13. NEXT_PUBLIC_FIREBASE_APP_ID
+1:446881275370:web:283f0360cfab3556a32693
+
+# 14. NEXT_PUBLIC_APP_URL
+http://localhost:3000
+
+# 15. NEXT_PUBLIC_APP_NAME
+3arida
+
+# 16. RESEND_API_KEY
+re_MctoV8fB_FJoiZyaVt7sD4RmnrAx8mJ46
+
+# 17. FROM_EMAIL
+contact@3arida.ma
+
+# 18. WHATSAPP_PHONE_NUMBER_ID
+955517827633887
+
+# 19. WHATSAPP_ACCESS_TOKEN
+EAAQUvnimSnkBQNiM9JxGU1KLx6agA4lLg0ycpZBYo53BGD9ie1ZCG8u1RrIpb6sfDV1arhxUz1gg6uS95s5EKhrwDI2xkHfRa7q5K8uqLU0h5aYdGAYAsVvuNBSTz8dzg2sF9U3VZAXQM4pgPowZBY8T16mG7Jew7tJ6Re55OZC3KFwz3h4uSHsTkHJPhAfavPXclJjfKfCbqTPBOWIjwnfH5k12I5TcOmCRlqfNStOVYHY5rj3dt9glo9eaOirwGZBZCsyz3AX0f6hqZBZCsRfOR8LgZD
+
+# 20. WHATSAPP_VERIFY_TOKEN
+3arida_webhook_verify_token_2024_secure
+
+# 21. WHATSAPP_BUSINESS_ACCOUNT_ID
+186877493784901
+
+# 22. FIREBASE_PROJECT_ID (CRITICAL FOR BUILD)
+arida-c5faf
+
+# 23. FIREBASE_CLIENT_EMAIL (CRITICAL FOR BUILD)
+firebase-adminsdk-fbsvc@arida-c5faf.iam.gserviceaccount.com
+
+# 24. FIREBASE_PRIVATE_KEY (CRITICAL FOR BUILD - COPY ENTIRE VALUE INCLUDING QUOTES)
+"-----BEGIN PRIVATE KEY-----\nMIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQCIoiVFsoDJ1Yy7\nkRUp6IfjZwB9OqiTYBSGXXcSPiyNmCa+gSW2NfxfJas5xiv/C/wMqnqDNdQygBBN\nvHhRc/q1+tKpSNu8uP1XI0eFRiHe4zcnL+8Q88f2KsuyJAkYQef9NnCejPO3avK+\ntSG+1/2piA0YYuXVKoiOEJNSyw0iwPfT8zuedbBzIV4THCjqf4WhYP1HGPfuUmSi\nAHs3LwGF0BAqNV384KjA0QucvBsuqYcGSZevX61wJrQIlNXCqMnswi8xzVVaiFMM\nkamSxC/9mdZWkspHgwGRsuCUg4XId5y/FhwIAOaEi5/77e0fKOl5UWdMbDhl9kuP\n2Eyp08ILAgMBAAECgf9LBh630rGv/p+2XllFBm4BLYBz823AZCk5RhAxus6zJgkp\nBJ3GjlDvPT/VAj4C9WEl65CO3KMe4q57CaVN+fuaHT6ygH+sJUjBi7O1dg8r7mKK\n+j40+q/nxpf4PYHJwtCJlf5Jnj8r5gTf+U7q8vVI1oqg3b6/hy0Bc8kZCb3zWva+\nUatuo20aQo1utOPtEPxMewB85zz2slW4ozMmdX0jEI24i4zcFaIEntTlwrLQcEHq\nFMZqlclakNUE9Lh6lrHvKpjsDOTwhSkzOZ3dKc9+RE+g2BDhOg4esemwXqOXtkMT\n2/myaPDbR97m8fkRsDZEsH3bGx1si833jtloKcECgYEAvtcR18QpprV3jjYkXPRL\nXYL66PPfuQLRjlwW5tIymDBHDHpXn1iH3/i2g/2n7Q+/ohIleI4Zm72pfJCV1MG5\nmJHl2/l5s6piAJFTE0pM1HTQyGWdNq0qicaXkl4j6qcrd11eN9pwQxfkNIEUDERG\x3Endqrkw47JyeuJteBKBssCgYEAt0j640ECSZOoPgHsoJPITbLKs3PU+9d+uTCU\naTrfbX4Zo4YtIZkcktbG32nAa38Hd7tJtQkhhwXXVw8BZJCGsUwqtBVUb+AgfMCP\n9nxsxbGG0AYndkbCx4txqEH6p+peVv/YUyK4pEIEo6JviTlyj6Ha/88Bn0T/oORM\nWU7micECgYBakrhlLzSVaorTc97OPyOFviRXa2dC55ONfSdhZWGd2UvfIDF17w6N\nvfzhqAGLAW5x/SrLjKWaxOkrtXNnBoqPXq85N64LF1Jr8oz7GshcDRUKBzAWQxlt\nSlOlpAhn1e9LN4T//SxKq4wjXx+kssLk5U9VgsYQCjS7II67QzffAQKBgQCQNzVq\nASn6mNuFxt/Yzc+LC4ahQyAv9TT6JHZygmdxcQpdd+MlD6PDCoo7GqvUKYTHui9Z\n6lBePMNe9iijZ3EEKqljP3FMAi+t2ZqtWOQBfhlUr7L3RuBWQKtyuE+xNiF7FR6y\n85wTavrZgqN+dxxkVffK1qgxGQqHH3vPvdx6QQKBgBl6+7T47E2bN6sbj98rCkLp\nU0Zx8sxpqUZL7bUIONGi8d7XX51jwAifDM+pV2bd8PvVV3lYf4bXSH4wVp3hdR0B\neyAsiZSAjVYLIpeHj3cVvKb21uSF+v8bUFHvd3VKNMGDUC0eawTtQds+YtZb8XPl\nL3zFvrCE0gMlW3feHlTJ\n-----END PRIVATE KEY-----\n"
+
+# INSTRUCTIONS:
+# 1. Delete ALL 72 environment variables on Vercel
+# 2. Add each of the 24 variables above
+# 3. For EACH variable: Check Production, Preview, AND Development boxes
+# 4. Copy values exactly as shown (especially FIREBASE_PRIVATE_KEY with quotes and \n)
+# 5. Fix SMTP_PASSWORD with your real email password

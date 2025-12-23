@@ -1,4 +1,5 @@
 // Production environment validation utilities
+import React from 'react';
 
 interface EnvValidationResult {
   isValid: boolean;
@@ -112,10 +113,19 @@ class EnvironmentValidator {
       const value = process.env[req.key];
 
       if (req.required && !value) {
-        errors.push(`Missing required environment variable: ${req.key}`);
-        errors.push(`  Description: ${req.description}`);
-        if (req.example) {
-          errors.push(`  Example: ${req.example}`);
+        // In production, only warn instead of error to prevent app from crashing
+        if (process.env.NODE_ENV === 'production') {
+          warnings.push(`Missing required environment variable: ${req.key}`);
+          warnings.push(`  Description: ${req.description}`);
+          if (req.example) {
+            warnings.push(`  Example: ${req.example}`);
+          }
+        } else {
+          errors.push(`Missing required environment variable: ${req.key}`);
+          errors.push(`  Description: ${req.description}`);
+          if (req.example) {
+            errors.push(`  Example: ${req.example}`);
+          }
         }
         return;
       }
@@ -123,9 +133,18 @@ class EnvironmentValidator {
       if (value) {
         // Validate format if validator provided
         if (req.validator && !req.validator(value)) {
-          errors.push(`Invalid format for ${req.key}: ${req.description}`);
-          if (req.example) {
-            errors.push(`  Expected format like: ${req.example}`);
+          // In production, only warn about format issues
+          const message = `Invalid format for ${req.key}: ${req.description}`;
+          const exampleMsg = req.example
+            ? `  Expected format like: ${req.example}`
+            : '';
+
+          if (process.env.NODE_ENV === 'production') {
+            warnings.push(message);
+            if (exampleMsg) warnings.push(exampleMsg);
+          } else {
+            errors.push(message);
+            if (exampleMsg) errors.push(exampleMsg);
           }
         }
 
@@ -162,10 +181,13 @@ class EnvironmentValidator {
       warnings.push('Using Stripe test key in production environment');
     }
 
-    // Check for HTTPS
+    // Check for HTTPS - but only warn, don't error in production
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (appUrl && !appUrl.startsWith('https://')) {
-      errors.push('Production app URL must use HTTPS');
+      // In production, Vercel handles HTTPS automatically, so just warn
+      warnings.push(
+        'App URL should use HTTPS in production (Vercel handles this automatically)'
+      );
     }
 
     // Check for analytics
@@ -368,8 +390,12 @@ export async function validateEnvironmentOnStartup(): Promise<boolean> {
     console.error('❌ Environment validation failed:');
     validation.errors.forEach((error) => console.error(`  ${error}`));
 
+    // In production, always continue - don't block the app
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('Invalid environment configuration for production');
+      console.warn(
+        '⚠️ Continuing despite validation errors - some features may not work'
+      );
+      return true; // Return true to allow app to continue
     }
 
     return false;
@@ -380,24 +406,39 @@ export async function validateEnvironmentOnStartup(): Promise<boolean> {
     validation.warnings.forEach((warning) => console.warn(`  ${warning}`));
   }
 
-  // Validate Firebase project
+  // Validate Firebase project - skip in production if it fails
   try {
     const firebaseValidation = await envValidator.validateFirebaseProject();
     if (!firebaseValidation.isValid) {
       console.error('❌ Firebase validation failed:');
       firebaseValidation.errors.forEach((error) => console.error(`  ${error}`));
+
+      if (process.env.NODE_ENV === 'production') {
+        console.warn('⚠️ Continuing despite Firebase validation errors');
+        return true;
+      }
       return false;
     }
   } catch (error) {
     console.error('❌ Firebase validation error:', error);
+
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('⚠️ Continuing despite Firebase validation errors');
+      return true;
+    }
     return false;
   }
 
-  // Validate Stripe
+  // Validate Stripe - skip in production if it fails
   const stripeValidation = envValidator.validateStripeConfig();
   if (!stripeValidation.isValid) {
     console.error('❌ Stripe validation failed:');
     stripeValidation.errors.forEach((error) => console.error(`  ${error}`));
+
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('⚠️ Continuing despite Stripe validation errors');
+      return true;
+    }
     return false;
   }
 

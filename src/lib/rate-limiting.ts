@@ -130,10 +130,39 @@ export const signPetitionLimiter = rateLimit({
   message: 'You can only sign 10 petitions per hour. Please try again later.',
 });
 
-export const commentLimiter = rateLimit({
-  maxRequests: 20,
+// Tiered comment rate limiting
+export const comment15MinLimiter = rateLimit({
+  maxRequests: 5,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  message: 'You can only post 5 comments per 15 minutes. Please slow down.',
+});
+
+export const commentHourLimiter = rateLimit({
+  maxRequests: 10,
   windowMs: 60 * 60 * 1000, // 1 hour
-  message: 'You can only post 20 comments per hour. Please try again later.',
+  message: 'You can only post 10 comments per hour. Please try again later.',
+});
+
+export const commentDayLimiter = rateLimit({
+  maxRequests: 30,
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  message:
+    'You have reached your daily comment limit (30). Please try again tomorrow.',
+});
+
+// Stricter limits for new users (accounts < 24 hours old)
+export const newUserCommentHourLimiter = rateLimit({
+  maxRequests: 3,
+  windowMs: 60 * 60 * 1000, // 1 hour
+  message:
+    'New users can only post 3 comments per hour. This limit will increase after 24 hours.',
+});
+
+export const newUserCommentDayLimiter = rateLimit({
+  maxRequests: 10,
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  message:
+    'New users can only post 10 comments per day. This limit will increase after 24 hours.',
 });
 
 export const authLimiter = rateLimit({
@@ -165,6 +194,66 @@ export const generalApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   message: 'Too many API requests. Please try again later.',
 });
+
+/**
+ * Check if user account is new (< 24 hours old)
+ */
+export const isNewUser = (userCreatedAt: Date | number): boolean => {
+  const createdTimestamp =
+    typeof userCreatedAt === 'number' ? userCreatedAt : userCreatedAt.getTime();
+  const hoursSinceCreation = (Date.now() - createdTimestamp) / (1000 * 60 * 60);
+  return hoursSinceCreation < 24;
+};
+
+/**
+ * Apply tiered comment rate limiting
+ * Returns the first limit that is exceeded, or null if all limits pass
+ */
+export const checkCommentRateLimit = (
+  userId: string,
+  userCreatedAt: Date | number
+): {
+  allowed: boolean;
+  remaining: number;
+  resetTime: number;
+  message?: string;
+  limitType?: '15min' | 'hour' | 'day';
+} => {
+  const isNew = isNewUser(userCreatedAt);
+
+  if (isNew) {
+    // Check new user limits
+    const hourLimit = newUserCommentHourLimiter(`comment:hour:${userId}`);
+    if (!hourLimit.allowed) {
+      return { ...hourLimit, limitType: 'hour' };
+    }
+
+    const dayLimit = newUserCommentDayLimiter(`comment:day:${userId}`);
+    if (!dayLimit.allowed) {
+      return { ...dayLimit, limitType: 'day' };
+    }
+
+    return { ...hourLimit, limitType: 'hour' };
+  } else {
+    // Check regular user limits (tiered)
+    const fifteenMinLimit = comment15MinLimiter(`comment:15min:${userId}`);
+    if (!fifteenMinLimit.allowed) {
+      return { ...fifteenMinLimit, limitType: '15min' };
+    }
+
+    const hourLimit = commentHourLimiter(`comment:hour:${userId}`);
+    if (!hourLimit.allowed) {
+      return { ...hourLimit, limitType: 'hour' };
+    }
+
+    const dayLimit = commentDayLimiter(`comment:day:${userId}`);
+    if (!dayLimit.allowed) {
+      return { ...dayLimit, limitType: 'day' };
+    }
+
+    return { ...fifteenMinLimit, limitType: '15min' };
+  }
+};
 
 /**
  * IP-based blocking for suspicious activity
