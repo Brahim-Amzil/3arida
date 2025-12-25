@@ -1,51 +1,87 @@
+#!/usr/bin/env node
+
 /**
- * Check Firebase authorized domains
- * Run this to see what domains are currently authorized
+ * Firebase Domain Authorization Checker
+ * 
+ * This script helps diagnose and fix Firebase auth/unauthorized-domain errors
+ * by checking which domains are authorized in your Firebase project.
  */
 
-console.log('🔍 Checking Firebase Configuration...');
+const admin = require('firebase-admin');
 
-// Check current domain
-console.log('Current domain:', window.location.hostname);
-console.log('Current origin:', window.location.origin);
-console.log('Current protocol:', window.location.protocol);
-
-// Check Firebase config
-const firebaseConfig = {
-  authDomain: 'arida-c5faf.firebaseapp.com',
-  projectId: 'arida-c5faf'
-};
-
-console.log('Firebase Auth Domain:', firebaseConfig.authDomain);
-console.log('Firebase Project ID:', firebaseConfig.projectId);
-
-// Check if we're on the right domain
-const isFirebaseDomain = window.location.hostname.includes('firebaseapp.com');
-const isVercelDomain = window.location.hostname.includes('vercel.app');
-const isCustomDomain = window.location.hostname === '3arida.ma';
-
-console.log('\nDomain Analysis:');
-console.log('Is Firebase domain:', isFirebaseDomain);
-console.log('Is Vercel domain:', isVercelDomain);
-console.log('Is custom domain:', isCustomDomain);
-
-if (isVercelDomain) {
-  console.log('\n🚨 ISSUE FOUND:');
-  console.log('You are on a Vercel domain that is not authorized in Firebase.');
-  console.log('Current domain:', window.location.hostname);
-  console.log('\n🔧 TO FIX:');
-  console.log('1. Go to Firebase Console → Authentication → Settings → Authorized domains');
-  console.log('2. Add this domain:', window.location.hostname);
-  console.log('3. Save and try login again');
-}
-
-// Test Google Auth availability
-try {
-  if (window.google && window.google.accounts) {
-    console.log('\n✅ Google Auth SDK loaded');
-  } else {
-    console.log('\n⚠️ Google Auth SDK not loaded');
+// Initialize Firebase Admin (if not already initialized)
+if (!admin.apps.length) {
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      }),
+    });
+    console.log('✅ Firebase Admin initialized successfully');
+  } catch (error) {
+    console.error('❌ Firebase Admin initialization failed:', error.message);
+    console.log('\n🔧 To fix this, you need to:');
+    console.log('1. Go to Firebase Console → Project Settings → Service Accounts');
+    console.log('2. Generate a new private key');
+    console.log('3. Add the credentials to your Vercel environment variables:');
+    console.log('   - FIREBASE_PROJECT_ID');
+    console.log('   - FIREBASE_CLIENT_EMAIL');
+    console.log('   - FIREBASE_PRIVATE_KEY');
+    process.exit(1);
   }
-} catch (error) {
-  console.log('\n❌ Google Auth SDK error:', error.message);
 }
+
+async function checkFirebaseDomains() {
+  console.log('🔍 Checking Firebase Authentication Configuration...\n');
+  
+  // Project information
+  console.log('📋 Project Information:');
+  console.log(`   Project ID: ${process.env.FIREBASE_PROJECT_ID || 'arida-c5faf'}`);
+  console.log(`   Auth Domain: ${process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'arida-c5faf.firebaseapp.com'}`);
+  
+  console.log('\n🌐 Common Production Domains to Authorize:');
+  console.log('   • your-app.vercel.app (Vercel auto-generated)');
+  console.log('   • your-custom-domain.com (if you have one)');
+  console.log('   • localhost:3000 (for development)');
+  console.log('   • localhost:3001, localhost:3002 (other dev ports)');
+  
+  console.log('\n🔧 How to Fix the auth/unauthorized-domain Error:');
+  console.log('1. Go to Firebase Console: https://console.firebase.google.com');
+  console.log('2. Select your project: arida-c5faf');
+  console.log('3. Navigate to: Authentication → Settings → Authorized domains');
+  console.log('4. Click "Add domain" and add your production domain');
+  console.log('5. Save the changes');
+  
+  console.log('\n📝 Domains you should add:');
+  
+  // Try to get the current Vercel URL from environment
+  const vercelUrl = process.env.VERCEL_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
+  if (vercelUrl) {
+    console.log(`   ✅ Add: ${vercelUrl}`);
+  } else {
+    console.log('   ⚠️  Add your Vercel production URL (check Vercel dashboard)');
+  }
+  
+  // Check if we're in Vercel environment
+  if (process.env.VERCEL) {
+    console.log('\n🚀 Running in Vercel environment');
+    console.log(`   VERCEL_URL: ${process.env.VERCEL_URL || 'Not set'}`);
+    console.log(`   VERCEL_ENV: ${process.env.VERCEL_ENV || 'Not set'}`);
+  }
+  
+  console.log('\n💡 Quick Fix Commands:');
+  console.log('   # Check your Vercel domains');
+  console.log('   vercel domains ls');
+  console.log('   ');
+  console.log('   # Get your current deployment URL');
+  console.log('   vercel ls');
+  
+  console.log('\n🔗 Useful Links:');
+  console.log('   Firebase Console: https://console.firebase.google.com/project/arida-c5faf/authentication/settings');
+  console.log('   Vercel Dashboard: https://vercel.com/dashboard');
+}
+
+// Run the check
+checkFirebaseDomains().catch(console.error);
