@@ -106,7 +106,10 @@ export async function POST(request: NextRequest) {
       .add(invitationData);
 
     // Create invitation link
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : 'http://localhost:3000';
     const invitationLink = `${baseUrl}/moderator/welcome?token=${invitationToken}`;
 
     // Send invitation email in Arabic
