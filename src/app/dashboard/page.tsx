@@ -120,19 +120,21 @@ export default function DashboardPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Welcome back,{' '}
-                {userProfile?.name ||
-                  user?.displayName ||
-                  user?.email?.split('@')[0]}
-                !
+                {t('dashboard.welcomeBack', {
+                  name:
+                    userProfile?.name ||
+                    user?.displayName ||
+                    user?.email?.split('@')[0] ||
+                    'User',
+                })}
               </h1>
               <p className="text-lg text-gray-600">
-                Manage your petitions and track their progress
+                {t('dashboard.manageSubtitle')}
               </p>
             </div>
             <div className="mt-4 md:mt-0">
               <Link href="/petitions/create">
-                <Button>+ New Petition</Button>
+                <Button>{t('dashboard.newPetition')}</Button>
               </Link>
             </div>
           </div>
@@ -162,7 +164,9 @@ export default function DashboardPage() {
                 <p className="text-2xl font-bold text-gray-900 leading-none">
                   {petitions.length}
                 </p>
-                <p className="text-xs text-gray-600 mt-0.5">Total Petitions</p>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {t('dashboard.stats.totalPetitions')}
+                </p>
               </div>
             </div>
           </div>
@@ -189,7 +193,9 @@ export default function DashboardPage() {
                 <p className="text-2xl font-bold text-gray-900 leading-none">
                   {activePetitions}
                 </p>
-                <p className="text-xs text-gray-600 mt-0.5">Active Petitions</p>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {t('dashboard.stats.activePetitions')}
+                </p>
               </div>
             </div>
           </div>
@@ -216,7 +222,9 @@ export default function DashboardPage() {
                 <p className="text-2xl font-bold text-gray-900 leading-none">
                   {pendingPetitions}
                 </p>
-                <p className="text-xs text-gray-600 mt-0.5">Pending Review</p>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {t('dashboard.stats.pendingReview')}
+                </p>
               </div>
             </div>
           </div>
@@ -249,7 +257,9 @@ export default function DashboardPage() {
                 <p className="text-2xl font-bold text-gray-900 leading-none">
                   {totalSignatures.toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-600 mt-0.5">Total Signatures</p>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {t('dashboard.stats.totalSignatures')}
+                </p>
               </div>
             </div>
           </div>
@@ -258,7 +268,7 @@ export default function DashboardPage() {
         {/* Tabs */}
         <div className="mb-6">
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-8" aria-label="Tabs">
+            <nav className="flex gap-8" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab('petitions')}
                 className={`
@@ -294,13 +304,7 @@ export default function DashboardPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                     />
                   </svg>
                   {t('dashboard.mySignatures')}
@@ -342,7 +346,7 @@ export default function DashboardPage() {
           <div>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
               <h2 className="text-2xl font-bold text-gray-900">
-                Your Petitions
+                {t('dashboard.yourPetitions')}
               </h2>
             </div>
 
@@ -367,7 +371,7 @@ export default function DashboardPage() {
                     d="M4 6h16M4 12h16M4 18h16"
                   />
                 </svg>
-                All
+                {t('dashboard.filter.all')}
                 <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
                   {statusCounts.all}
                 </span>
@@ -391,7 +395,7 @@ export default function DashboardPage() {
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                Active
+                {t('dashboard.filter.active')}
                 <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
                   {statusCounts.active}
                 </span>
@@ -415,7 +419,7 @@ export default function DashboardPage() {
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                Pending Review
+                {t('dashboard.filter.pending')}
                 <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
                   {statusCounts.pending}
                 </span>
@@ -439,7 +443,7 @@ export default function DashboardPage() {
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-                Rejected
+                {t('dashboard.filter.rejected')}
                 <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
                   {statusCounts.rejected}
                 </span>
@@ -463,7 +467,7 @@ export default function DashboardPage() {
                     d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                Paused
+                {t('dashboard.filter.paused')}
                 <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
                   {statusCounts.paused}
                 </span>
@@ -487,7 +491,7 @@ export default function DashboardPage() {
                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                   />
                 </svg>
-                Deleted
+                {t('dashboard.filter.deleted')}
                 <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
                   {statusCounts.deleted}
                 </span>
@@ -520,13 +524,15 @@ export default function DashboardPage() {
             {/* Error State */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                <p className="text-red-600">{error}</p>
+                <p className="text-red-600">
+                  {t('dashboard.error.loadPetitions')}
+                </p>
                 <Button
                   onClick={loadUserPetitions}
                   className="mt-4"
                   variant="outline"
                 >
-                  Try Again
+                  {t('dashboard.tryAgain')}
                 </Button>
               </div>
             )}
@@ -566,15 +572,14 @@ export default function DashboardPage() {
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No petitions yet
+                  {t('dashboard.noPetitions.title')}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  You haven't created any petitions yet. Start your first
-                  petition to make change happen!
+                  {t('dashboard.noPetitions.description')}
                 </p>
                 <Button asChild>
                   <Link href="/petitions/create">
-                    Create Your First Petition
+                    {t('dashboard.noPetitions.createFirst')}
                   </Link>
                 </Button>
               </div>
@@ -602,16 +607,20 @@ export default function DashboardPage() {
                     </svg>
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No {statusFilter} petitions
+                    {t('dashboard.noFilterResults.title', {
+                      status: statusFilter,
+                    })}
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    You don't have any {statusFilter} petitions at the moment.
+                    {t('dashboard.noFilterResults.description', {
+                      status: statusFilter,
+                    })}
                   </p>
                   <Button
                     onClick={() => setStatusFilter('all')}
                     variant="outline"
                   >
-                    Show All Petitions
+                    {t('dashboard.showAllPetitions')}
                   </Button>
                 </div>
               )}

@@ -15,7 +15,7 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   useEffect(() => {
     const loadData = async () => {
@@ -287,7 +287,9 @@ export default function HomePage() {
                 <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-lg">#</span>
                 </div>
-                <span className="text-xl font-bold">3arida</span>
+                <span className="text-xl font-bold">
+                  {locale === 'ar' ? 'عريضة' : '3arida'}
+                </span>
               </div>
               <p className="text-gray-400">{t('footer.description')}</p>
             </div>

@@ -13,7 +13,7 @@ Added extensive translation keys to `src/hooks/useTranslation.ts` for all help p
 #### Page Header:
 
 - `help.title`: 'مركز المساعدة' / 'Centre d\'aide'
-- `help.subtitle`: 'اعثر على إجابات للأسئلة الشائعة وتعلم كيفية استخدام عريضة' / 'Trouvez des réponses aux questions courantes et apprenez à utiliser 3arida'
+- `help.subtitle`: 'أعثر على إجابات للأسئلة الشائعة وتعلم كيفية استخدام عريضة' / 'Trouvez des réponses aux questions courantes et apprenez à utiliser 3arida'
 - `help.searchPlaceholder`: 'ابحث عن مواضيع المساعدة...' / 'Rechercher des sujets d\'aide...'
 - `help.showingResults`: 'عرض النتائج لـ "{query}"' / 'Affichage des résultats pour "{query}"'
 

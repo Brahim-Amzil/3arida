@@ -12,8 +12,10 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useTranslation } from '@/hooks/useTranslation';
 import Header from '@/components/layout/HeaderWrapper';
 import AdminNav from '@/components/admin/AdminNav';
+import ModeratorInvitations from '@/components/admin/ModeratorInvitations';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User } from '@/types/petition';
@@ -21,6 +23,7 @@ import { User } from '@/types/petition';
 export default function ModeratorsPage() {
   const router = useRouter();
   const { userProfile, loading: authLoading } = useAuth();
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -52,14 +55,14 @@ export default function ModeratorsPage() {
       setUsers(usersData);
     } catch (err) {
       console.error('Error loading users:', err);
-      setError('Failed to load users');
+      setError(t('admin.moderators.failedToLoad'));
     } finally {
       setLoading(false);
     }
   };
 
   const handlePromoteToModerator = async (userId: string) => {
-    if (!confirm('Are you sure you want to promote this user to moderator?')) {
+    if (!confirm(t('admin.users.confirmPromote'))) {
       return;
     }
 
@@ -71,12 +74,12 @@ export default function ModeratorsPage() {
       await loadUsers();
     } catch (err) {
       console.error('Error promoting user:', err);
-      alert('Failed to promote user to moderator');
+      alert(t('admin.moderators.failedToPromote'));
     }
   };
 
   const handleDemoteToUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to demote this moderator to user?')) {
+    if (!confirm(t('admin.users.confirmDemote'))) {
       return;
     }
 
@@ -88,7 +91,7 @@ export default function ModeratorsPage() {
       await loadUsers();
     } catch (err) {
       console.error('Error demoting moderator:', err);
-      alert('Failed to demote moderator');
+      alert(t('admin.moderators.failedToDemote'));
     }
   };
 
@@ -129,11 +132,9 @@ export default function ModeratorsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Moderator Management
+            {t('admin.moderators.title')}
           </h1>
-          <p className="text-gray-600">
-            Manage moderator accounts and permissions
-          </p>
+          <p className="text-gray-600">{t('admin.moderators.subtitle')}</p>
         </div>
 
         {/* Stats */}
@@ -160,7 +161,7 @@ export default function ModeratorsPage() {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Total Moderators
+                    {t('admin.moderators.totalModerators')}
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {moderators.length}
@@ -192,7 +193,7 @@ export default function ModeratorsPage() {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Active Moderators
+                    {t('admin.moderators.activeModerators')}
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {moderators.filter((m) => m.isActive).length}
@@ -224,7 +225,7 @@ export default function ModeratorsPage() {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Regular Users
+                    {t('admin.moderators.regularUsers')}
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {regularUsers.length}
@@ -239,22 +240,25 @@ export default function ModeratorsPage() {
         <div className="mb-6">
           <input
             type="text"
-            placeholder="Search by name or email..."
+            placeholder={t('admin.moderators.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
         </div>
 
+        {/* Moderator Invitations */}
+        <ModeratorInvitations currentUserEmail={userProfile?.email} />
+
         {/* Current Moderators */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Current Moderators</CardTitle>
+            <CardTitle>{t('admin.moderators.currentModerators')}</CardTitle>
           </CardHeader>
           <CardContent>
             {filteredModerators.length === 0 ? (
               <p className="text-gray-600 text-center py-8">
-                No moderators found
+                {t('admin.moderators.noModerators')}
               </p>
             ) : (
               <div className="space-y-4">
@@ -280,7 +284,7 @@ export default function ModeratorsPage() {
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Moderator
+                            {t('admin.roles.moderator')}
                           </span>
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -289,7 +293,9 @@ export default function ModeratorsPage() {
                                 : 'bg-red-100 text-red-800'
                             }`}
                           >
-                            {moderator.isActive ? 'Active' : 'Inactive'}
+                            {moderator.isActive
+                              ? t('admin.userStatus.active')
+                              : t('admin.userStatus.inactive')}
                           </span>
                         </div>
                       </div>
@@ -298,7 +304,7 @@ export default function ModeratorsPage() {
                       variant="outline"
                       onClick={() => handleDemoteToUser(moderator.id)}
                     >
-                      Demote to User
+                      {t('admin.users.demoteToUser')}
                     </Button>
                   </div>
                 ))}
@@ -310,14 +316,16 @@ export default function ModeratorsPage() {
         {/* Regular Users (Can be promoted) */}
         <Card>
           <CardHeader>
-            <CardTitle>Regular Users</CardTitle>
+            <CardTitle>{t('admin.moderators.regularUsers')}</CardTitle>
             <p className="text-sm text-gray-600 mt-1">
-              Promote users to moderator role
+              {t('admin.moderators.promoteUsersDesc')}
             </p>
           </CardHeader>
           <CardContent>
             {filteredUsers.length === 0 ? (
-              <p className="text-gray-600 text-center py-8">No users found</p>
+              <p className="text-gray-600 text-center py-8">
+                {t('admin.moderators.noUsersFound')}
+              </p>
             ) : (
               <div className="space-y-4">
                 {filteredUsers.slice(0, 10).map((user) => (
@@ -340,7 +348,7 @@ export default function ModeratorsPage() {
                         <p className="text-sm text-gray-600">{user.email}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            User
+                            {t('admin.roles.user')}
                           </span>
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -349,20 +357,23 @@ export default function ModeratorsPage() {
                                 : 'bg-red-100 text-red-800'
                             }`}
                           >
-                            {user.isActive ? 'Active' : 'Inactive'}
+                            {user.isActive
+                              ? t('admin.userStatus.active')
+                              : t('admin.userStatus.inactive')}
                           </span>
                         </div>
                       </div>
                     </div>
                     <Button onClick={() => handlePromoteToModerator(user.id)}>
-                      Promote to Moderator
+                      {t('admin.users.promoteToModerator')}
                     </Button>
                   </div>
                 ))}
                 {filteredUsers.length > 10 && (
                   <p className="text-sm text-gray-600 text-center pt-4">
-                    Showing 10 of {filteredUsers.length} users. Use search to
-                    find specific users.
+                    {t('admin.moderators.showingUsers', {
+                      total: filteredUsers.length,
+                    })}
                   </p>
                 )}
               </div>

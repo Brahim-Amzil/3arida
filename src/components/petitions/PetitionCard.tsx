@@ -170,8 +170,10 @@ export default function PetitionCard({
               <div className="flex items-center mb-3 h-5">
                 <div className="flex items-center text-sm text-gray-600">
                   <span>
-                    {t('petitionCard.createdBy')}{' '}
-                    {petition.creatorName || 'Anonymous'}
+                    {t('petitionCard.createdBy')}:{' '}
+                    <span className="font-semibold text-gray-900">
+                      {petition.creatorName || 'Anonymous'}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -398,8 +400,10 @@ export default function PetitionCard({
               {showCreator && (
                 <div className="flex items-center mb-1">
                   <span className="text-sm text-gray-600">
-                    {t('petitionCard.createdBy')}{' '}
-                    {petition.creatorName || 'Anonymous'}
+                    {t('petitionCard.createdBy')}:{' '}
+                    <span className="font-semibold text-gray-900">
+                      {petition.creatorName || 'Anonymous'}
+                    </span>
                   </span>
                 </div>
               )}
@@ -526,8 +530,10 @@ export default function PetitionCard({
               <div className="flex items-center mb-4">
                 <div className="flex items-center text-gray-600">
                   <span className="font-medium">
-                    {t('petitionCard.createdBy')}{' '}
-                    {petition.creatorName || 'Anonymous'}
+                    {t('petitionCard.createdBy')}:{' '}
+                    <span className="font-bold text-gray-900">
+                      {petition.creatorName || 'Anonymous'}
+                    </span>
                   </span>
                 </div>
               </div>

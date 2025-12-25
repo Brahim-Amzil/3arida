@@ -22,7 +22,7 @@ Added extensive translation keys to `src/hooks/useTranslation.ts` for all about 
 
 - `about.howItWorks.title`: 'كيف يعمل'
 - `about.howItWorks.step1.title`: 'أنشئ عريضة'
-- `about.howItWorks.step1.description`: 'ابدأ عريضة حول قضية تهمك. أضف التفاصيل والصور وحدد هدف التوقيعات.'
+- `about.howItWorks.step1.description`: 'إبدأ عريضة حول قضية تهمك. أضف التفاصيل والصور وحدد هدف التوقيعات.'
 - `about.howItWorks.step2.title`: 'شارك واحشد'
 - `about.howItWorks.step2.description`: 'شارك عريضتك على وسائل التواصل الاجتماعي، عبر رموز الاستجابة السريعة، أو مباشرة مع شبكتك لجمع الدعم.'
 - `about.howItWorks.step3.title`: 'أحدث تأثيراً'
@@ -60,7 +60,7 @@ Added extensive translation keys to `src/hooks/useTranslation.ts` for all about 
 
 - `about.cta.title`: 'مستعد لإحداث فرق؟'
 - `about.cta.subtitle`: 'انضم إلى آلاف المغاربة الذين يستخدمون عريضة لخلق تغيير إيجابي.'
-- `about.cta.startPetition`: 'ابدأ عريضة'
+- `about.cta.startPetition`: 'إبدأ عريضة'
 - `about.cta.browsePetitions`: 'تصفح العرائض'
 
 #### Contact Section:

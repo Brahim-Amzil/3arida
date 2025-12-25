@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { loginWithEmail, loginWithGoogle } from '@/lib/auth';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useTranslation } from '@/hooks/useTranslation';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -14,6 +15,7 @@ function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { locale } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [mounted, setMounted] = useState(false);
@@ -135,9 +137,11 @@ function LoginPageContent() {
             className="flex items-center justify-center space-x-2 mb-8"
           >
             <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">3</span>
+              <span className="text-white font-bold text-xl">#</span>
             </div>
-            <span className="text-2xl font-bold text-gray-900">3arida</span>
+            <span className="text-2xl font-bold text-gray-900">
+              {locale === 'ar' ? 'عريضة' : '3arida'}
+            </span>
           </Link>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Check, X, QrCode, MessageSquare } from 'lucide-react';
 import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Define the colors for subtle accents (Tailwind CSS classes)
 const planColors: {
@@ -55,152 +56,155 @@ interface PricingPlan {
   };
 }
 
-const pricingPlans: PricingPlan[] = [
-  {
-    id: 'free',
-    name: 'Free Plan',
-    signatureRange: 'Up to 2,500',
-    price: '0 MAD',
-    features: [
-      'Create and publish petitions',
-      'Basic sharing tools (email/social)',
-      'Basic analytics (views, signatures)',
-      'Public listing on platform',
-    ],
-    qrCode: {
-      included: false,
-      note: 'Optional add-on: 19 MAD',
-    },
-    messaging: {
-      available: false,
-    },
-  },
-  {
-    id: 'starter',
-    name: 'Starter Plan',
-    signatureRange: 'Up to 10,000',
-    price: '49 MAD',
-    features: [
-      'All Free features',
-      'Custom cover image',
-      'Enhanced social sharing',
-      'Basic analytics dashboard',
-      'Faster approval',
-    ],
-    qrCode: {
-      included: true,
-    },
-    messaging: {
-      available: true,
-      details: 'Messaging addon: 3 messages for 19 MAD',
-    },
-  },
-  {
-    id: 'pro',
-    name: 'Pro Plan',
-    signatureRange: 'Up to 25,000',
-    price: '99 MAD',
-    features: [
-      'All Starter features',
-      'Regional targeting',
-      'Petition branding (logo, colors)',
-      'Priority visibility on homepage',
-    ],
-    qrCode: {
-      included: true,
-    },
-    messaging: {
-      available: true,
-      details: '3 free messages + addon: 3 messages for 19 MAD',
-    },
-  },
-  {
-    id: 'advanced',
-    name: 'Advanced Plan',
-    signatureRange: 'Up to 70,000',
-    price: '199 MAD',
-    features: [
-      'All Pro features',
-      'Advanced analytics (demographics, locations)',
-      'Export signees data (CSV)',
-      'Featured listing in category pages',
-      'Email support',
-    ],
-    qrCode: {
-      included: true,
-    },
-    messaging: {
-      available: true,
-      details: '5 free messages + addon: 5 messages for 29 MAD',
-    },
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise Plan',
-    signatureRange: 'Up to 100,000',
-    price: '499 MAD',
-    features: [
-      'All Advanced features',
-      'API access',
-      'Custom domain option',
-      'Dedicated support team',
-      'Organization verification badge',
-      'Highest visibility on platform',
-    ],
-    qrCode: {
-      included: true,
-    },
-    messaging: {
-      available: true,
-      details: '50 free messages + addon: 10 messages for 29 MAD',
-    },
-  },
-];
-
-// Helper component for feature list items
-const FeatureItem: React.FC<{ text: string; isIncluded?: boolean }> = ({
-  text,
-  isIncluded = true,
-}) => (
-  <li className="flex items-start text-gray-700">
-    {isIncluded ? (
-      <Check className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-    ) : (
-      <X className="w-5 h-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
-    )}
-    <span>{text}</span>
-  </li>
-);
-
-// Helper component for the secondary feature columns (QR Code and Messaging)
-const SecondaryFeatureColumn: React.FC<{
+// Helper component for feature list items in organized rows
+const FeatureRow: React.FC<{
+  icon?: React.ElementType;
   title: string;
-  icon: React.ElementType;
-  included: boolean;
-  details?: string;
-  accentClass: string;
-}> = ({ title, icon: Icon, included, details, accentClass }) => (
-  <div className="flex flex-col p-4 border border-gray-200 rounded-lg bg-white">
-    <div className={`flex items-center mb-3 ${accentClass}`}>
-      <Icon className="w-5 h-5 mr-2" />
-      <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-    </div>
-    <div className="flex items-center mb-1">
-      {included ? (
-        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+  description?: string;
+  isIncluded?: boolean;
+  accentClass?: string;
+}> = ({
+  icon: Icon,
+  title,
+  description,
+  isIncluded = true,
+  accentClass = 'text-gray-700',
+}) => (
+  <div className="flex items-start p-4 border-b border-gray-100 hover:bg-gray-50">
+    <div className="flex-shrink-0 mr-4">
+      {isIncluded ? (
+        <Check className="w-5 h-5 text-green-500 mt-0.5" />
       ) : (
-        <X className="w-5 h-5 text-red-500 mr-2 flex-shrink-0" />
+        <X className="w-5 h-5 text-red-500 mt-0.5" />
       )}
-      <span className="text-sm text-gray-700 font-medium">
-        {included ? 'Available' : 'Not Available'}
-      </span>
     </div>
-    {details && <p className="text-xs text-gray-500 mt-2">{details}</p>}
+    <div className="flex-1">
+      <div className="flex items-center mb-1">
+        {Icon && <Icon className={`w-4 h-4 mr-2 ${accentClass}`} />}
+        <h4 className="font-medium text-gray-900">{title}</h4>
+      </div>
+      {description && <p className="text-sm text-gray-600">{description}</p>}
+    </div>
   </div>
 );
 
 export default function PricingPage() {
+  const { t } = useTranslation();
   const [selectedPlan, setSelectedPlan] = useState('advanced'); // Default to a paid plan for better visibility
+
+  const pricingPlans: PricingPlan[] = [
+    {
+      id: 'free',
+      name: t('pricing.page.freePlan'),
+      signatureRange: t('pricing.page.upTo', { count: '2,500' }),
+      price: '0 MAD',
+      features: [
+        t('pricing.features.createPublish'),
+        t('pricing.features.basicSharing'),
+        t('pricing.features.basicAnalytics'),
+        t('pricing.features.publicListing'),
+      ],
+      qrCode: {
+        included: false,
+        note: t('pricing.page.optionalAddon', { price: '19' }),
+      },
+      messaging: {
+        available: false,
+      },
+    },
+    {
+      id: 'starter',
+      name: t('pricing.page.starterPlan'),
+      signatureRange: t('pricing.page.upTo', { count: '10,000' }),
+      price: '49 MAD',
+      features: [
+        t('pricing.features.allFreeFeatures'),
+        t('pricing.features.customCoverImage'),
+        t('pricing.features.enhancedSocialSharing'),
+        t('pricing.features.basicAnalyticsDashboard'),
+        t('pricing.features.fasterApproval'),
+      ],
+      qrCode: {
+        included: true,
+      },
+      messaging: {
+        available: true,
+        details: t('pricing.page.messagingAddon', { count: '3', price: '19' }),
+      },
+    },
+    {
+      id: 'pro',
+      name: t('pricing.page.proPlan'),
+      signatureRange: t('pricing.page.upTo', { count: '25,000' }),
+      price: '99 MAD',
+      features: [
+        t('pricing.features.allStarterFeatures'),
+        t('pricing.features.regionalTargeting'),
+        t('pricing.features.petitionBranding'),
+        t('pricing.features.priorityVisibility'),
+      ],
+      qrCode: {
+        included: true,
+      },
+      messaging: {
+        available: true,
+        details: t('pricing.page.freeMessages', {
+          count: '3',
+          extraCount: '3',
+          price: '19',
+        }),
+      },
+    },
+    {
+      id: 'advanced',
+      name: t('pricing.page.advancedPlan'),
+      signatureRange: t('pricing.page.upTo', { count: '70,000' }),
+      price: '199 MAD',
+      features: [
+        t('pricing.features.allProFeatures'),
+        t('pricing.features.advancedAnalytics'),
+        t('pricing.features.exportSigneesData'),
+        t('pricing.features.featuredListing'),
+        t('pricing.features.emailSupport'),
+      ],
+      qrCode: {
+        included: true,
+      },
+      messaging: {
+        available: true,
+        details: t('pricing.page.freeMessages', {
+          count: '5',
+          extraCount: '5',
+          price: '29',
+        }),
+      },
+    },
+    {
+      id: 'enterprise',
+      name: t('pricing.page.enterprisePlan'),
+      signatureRange: t('pricing.page.upTo', { count: '100,000' }),
+      price: '499 MAD',
+      features: [
+        t('pricing.features.allAdvancedFeatures'),
+        t('pricing.features.apiAccess'),
+        t('pricing.features.customDomain'),
+        t('pricing.features.dedicatedSupport'),
+        t('pricing.features.organizationBadge'),
+        t('pricing.features.highestVisibility'),
+      ],
+      qrCode: {
+        included: true,
+      },
+      messaging: {
+        available: true,
+        details: t('pricing.page.freeMessages', {
+          count: '50',
+          extraCount: '10',
+          price: '29',
+        }),
+      },
+    },
+  ];
 
   const currentPlan =
     pricingPlans.find((plan) => plan.id === selectedPlan) || pricingPlans[0];
@@ -214,11 +218,10 @@ export default function PricingPage() {
         <div className="text-center mb-12">
           <br />
           <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
-            Simple, Transparent Pricing
+            {t('pricing.page.title')}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Select the perfect plan for your petition. Start with our free plan
-            and upgrade as your movement grows.
+            {t('pricing.page.subtitle')}
           </p>
         </div>
 
@@ -246,7 +249,7 @@ export default function PricingPage() {
         </div>
 
         {/* Selected Plan Details Card */}
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <Card className="shadow-2xl border-none overflow-hidden">
             {/* Header Section with Subtle Gradient Accent */}
             <CardHeader className="p-8 bg-white border-b border-gray-100">
@@ -260,7 +263,7 @@ export default function PricingPage() {
                   {currentPlan.price}
                 </CardTitle>
                 <div className="text-lg text-gray-500 mb-6">
-                  {currentPlan.signatureRange} signatures
+                  {currentPlan.signatureRange} {t('pricing.page.signatures')}
                 </div>
 
                 <Button
@@ -270,68 +273,77 @@ export default function PricingPage() {
                 >
                   <Link href="/petitions/create">
                     {currentPlan.price === '0 MAD'
-                      ? 'Get Started Free'
-                      : 'Choose This Plan'}
+                      ? t('pricing.page.getStartedFree')
+                      : t('pricing.page.chooseThisPlan')}
                   </Link>
                 </Button>
               </div>
             </CardHeader>
 
-            {/* Content Section */}
-            <CardContent className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Main Features Column */}
-                <div className="md:col-span-1">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">
-                    Features
+            {/* Content Section - Organized Feature Rows */}
+            <CardContent className="p-0">
+              <div className="bg-white">
+                {/* Section Header */}
+                <div className="p-6 border-b border-gray-200 bg-gray-50">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {t('pricing.page.features')}
                   </h3>
-                  <ul className="space-y-3">
-                    {currentPlan.features.map((feature, index) => (
-                      <FeatureItem key={index} text={feature} />
-                    ))}
-                  </ul>
                 </div>
 
-                {/* Secondary Features Columns */}
-                <div className="md:col-span-2">
-                  <div className="space-y-4">
-                    {/* QR Code */}
-                    <SecondaryFeatureColumn
-                      title="QR Code"
-                      icon={QrCode}
-                      included={currentPlan.qrCode.included}
-                      details={
-                        currentPlan.qrCode.note ||
-                        (currentPlan.qrCode.included
-                          ? 'Included with plan'
-                          : 'Not included')
-                      }
+                {/* Main Features */}
+                <div className="divide-y divide-gray-100">
+                  {currentPlan.features.map((feature, index) => (
+                    <FeatureRow
+                      key={index}
+                      title={feature}
+                      isIncluded={true}
                       accentClass={colors.accent}
                     />
-
-                    {/* Messaging */}
-                    <SecondaryFeatureColumn
-                      title="Messaging (to signees)"
-                      icon={MessageSquare}
-                      included={currentPlan.messaging.available}
-                      details={
-                        currentPlan.messaging.details ||
-                        (currentPlan.messaging.available
-                          ? 'Available'
-                          : 'Not available')
-                      }
-                      accentClass={colors.accent}
-                    />
-                  </div>
+                  ))}
                 </div>
+
+                {/* Special Features Section */}
+                <div className="p-6 border-t border-gray-200 bg-gray-50">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                    {t('pricing.page.qrCode')} & {t('pricing.page.messaging')}
+                  </h3>
+                </div>
+
+                {/* QR Code Feature */}
+                <FeatureRow
+                  icon={QrCode}
+                  title={t('pricing.page.qrCode')}
+                  description={
+                    currentPlan.qrCode.note ||
+                    (currentPlan.qrCode.included
+                      ? t('pricing.page.includedWithPlan')
+                      : t('pricing.page.notIncluded'))
+                  }
+                  isIncluded={currentPlan.qrCode.included}
+                  accentClass={colors.accent}
+                />
+
+                {/* Messaging Feature */}
+                <FeatureRow
+                  icon={MessageSquare}
+                  title={t('pricing.page.messaging')}
+                  description={
+                    currentPlan.messaging.details ||
+                    (currentPlan.messaging.available
+                      ? t('pricing.page.available')
+                      : t('pricing.page.notAvailable'))
+                  }
+                  isIncluded={currentPlan.messaging.available}
+                  accentClass={colors.accent}
+                />
               </div>
             </CardContent>
 
             {/* Footer */}
             <div className="p-6 bg-gray-50 text-center border-t">
               <p className="text-gray-600 font-medium">
-                Ready to start your petition with the{' '}
-                <span className={colors.accent}>{currentPlan.name}</span>?
+                {t('pricing.page.readyToStart')}{' '}
+                <span className={colors.accent}>{currentPlan.name} </span> ؟
               </p>
             </div>
           </Card>

@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useTranslation } from '@/hooks/useTranslation';
 import PetitionCard from '@/components/petitions/PetitionCard';
 import { Button } from '@/components/ui/button';
 import { Petition } from '@/types/petition';
 
 export default function MySignaturesSection() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [signedPetitions, setSignedPetitions] = useState<Petition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -111,7 +113,7 @@ export default function MySignaturesSection() {
       setSignedPetitions(validPetitions);
     } catch (err) {
       console.error('Error loading signed petitions:', err);
-      setError('Failed to load your signed petitions. Please try again.');
+      setError(t('dashboard.mySignatures.error'));
     } finally {
       setLoading(false);
     }
@@ -122,7 +124,9 @@ export default function MySignaturesSection() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">My Signatures</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {t('dashboard.mySignatures.title')}
+          </h2>
           <div className="animate-pulse h-4 w-20 bg-gray-200 rounded"></div>
         </div>
 
@@ -153,7 +157,9 @@ export default function MySignaturesSection() {
   if (error) {
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900">My Signatures</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          {t('dashboard.mySignatures.title')}
+        </h2>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <p className="text-red-600">{error}</p>
           <Button
@@ -161,7 +167,7 @@ export default function MySignaturesSection() {
             className="mt-4"
             variant="outline"
           >
-            Try Again
+            {t('dashboard.tryAgain')}
           </Button>
         </div>
       </div>
@@ -172,7 +178,9 @@ export default function MySignaturesSection() {
   if (signedPetitions.length === 0) {
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900">My Signatures</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          {t('dashboard.mySignatures.title')}
+        </h2>
         <div className="text-center py-12">
           <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
             <svg
@@ -196,14 +204,15 @@ export default function MySignaturesSection() {
             </svg>
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No signatures yet
+            {t('dashboard.mySignatures.noSignatures')}
           </h3>
           <p className="text-gray-600 mb-6">
-            You haven't signed any petitions yet. Explore petitions and support
-            causes you care about!
+            {t('dashboard.mySignatures.noSignaturesDesc')}
           </p>
           <Button asChild>
-            <Link href="/petitions">Discover Petitions</Link>
+            <Link href="/petitions">
+              {t('dashboard.mySignatures.discoverPetitions')}
+            </Link>
           </Button>
         </div>
       </div>
@@ -214,10 +223,15 @@ export default function MySignaturesSection() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">My Signatures</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          {t('dashboard.mySignatures.title')}
+        </h2>
         <div className="text-sm text-gray-600">
-          {signedPetitions.length} petition
-          {signedPetitions.length !== 1 ? 's' : ''} signed
+          {signedPetitions.length === 1
+            ? t('dashboard.mySignatures.countSingle')
+            : t('dashboard.mySignatures.count', {
+                count: signedPetitions.length,
+              })}
         </div>
       </div>
 

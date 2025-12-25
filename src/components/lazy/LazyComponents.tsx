@@ -45,10 +45,13 @@ export const LazyQRCodeDisplay = dynamic(
   }
 );
 
-export const LazyQRUpgrade = dynamic(() => import('../petitions/QRUpgrade'), {
-  loading: () => <LoadingSpinner />,
-  ssr: false, // Payment modals don't need SSR
-});
+export const LazyQRUpgrade = dynamic(
+  () => import('../petitions/QRUpgradeWithStripe'),
+  {
+    loading: () => <LoadingSpinner />,
+    ssr: false, // Payment modals don't need SSR
+  }
+);
 
 export const LazyPetitionComments = dynamic(
   () => import('../petitions/PetitionComments'),

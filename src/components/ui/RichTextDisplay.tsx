@@ -21,18 +21,9 @@ export default function RichTextDisplay({
 
   return (
     <div
-      className={`text-gray-700 leading-relaxed ${className}`}
+      className={`text-gray-700 leading-relaxed rich-text-content ${className}`}
       dangerouslySetInnerHTML={{
         __html: formatContent(content),
-      }}
-      style={{
-        // Ensure proper paragraph spacing
-        '& p': {
-          marginBottom: '1rem',
-        },
-        '& p:last-child': {
-          marginBottom: '0',
-        },
       }}
     />
   );

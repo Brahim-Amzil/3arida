@@ -9,6 +9,7 @@ import { Petition } from '@/types/petition';
 import { notifyPetitionStatusChange } from '@/lib/notifications';
 import { logAuditAction, AuditAction } from '@/lib/audit-log';
 import { getUserById } from '@/lib/petitions';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface PetitionAdminActionsProps {
   petition: Petition;
@@ -26,6 +27,7 @@ export default function PetitionAdminActions({
   moderatorId,
 }: PetitionAdminActionsProps) {
   const [updating, setUpdating] = useState<string>('');
+  const { t } = useTranslation();
 
   const updatePetitionStatus = async (
     action: 'approve' | 'reject' | 'pause' | 'delete',
@@ -33,21 +35,18 @@ export default function PetitionAdminActions({
     requiresReason = false
   ) => {
     if (requiresConfirmation) {
-      if (!confirm(`Are you sure you want to ${action} this petition?`)) {
+      if (!confirm(t(`admin.confirm.${action}`))) {
         return;
       }
     }
 
     let notes = '';
     if (requiresReason) {
-      const reasonPrompt =
-        action === 'delete'
-          ? 'Reason for deletion (required):'
-          : `Reason for ${action} (optional):`;
+      const reasonPrompt = t(`admin.reason.${action}`);
       notes = prompt(reasonPrompt) || '';
 
       if (action === 'delete' && !notes.trim()) {
-        alert('A reason is required for deletion.');
+        alert(t('admin.reason.required'));
         return;
       }
     }
@@ -194,11 +193,11 @@ export default function PetitionAdminActions({
       }
 
       // Show success message
-      const actionPastTense = action === 'delete' ? 'deleted' : `${action}d`;
-      alert(`Petition ${actionPastTense} successfully!`);
+      const successKey = action === 'delete' ? 'deleted' : `${action}d`;
+      alert(t(`admin.success.${successKey}`));
     } catch (error) {
       console.error(`Error ${action}ing petition:`, error);
-      alert(`Error ${action}ing petition. Please try again.`);
+      alert(t(`admin.error.${action}ing`));
     } finally {
       setUpdating('');
     }
@@ -219,7 +218,9 @@ export default function PetitionAdminActions({
         className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-300 disabled:text-gray-500"
       >
         <Check className="w-4 h-4 mr-2" />
-        {updating === 'approve' ? 'Approving...' : 'Approve'}
+        {updating === 'approve'
+          ? t('admin.actions.approving')
+          : t('admin.actions.approve')}
       </Button>
 
       {/* Pause Button - Always show */}
@@ -235,7 +236,9 @@ export default function PetitionAdminActions({
         className="text-orange-600 border-orange-300 hover:bg-orange-50 disabled:text-gray-500 disabled:border-gray-300"
       >
         <Pause className="w-4 h-4 mr-2" />
-        {updating === 'pause' ? 'Pausing...' : 'Pause'}
+        {updating === 'pause'
+          ? t('admin.actions.pausing')
+          : t('admin.actions.pause')}
       </Button>
 
       {/* Reject Button - Always show */}
@@ -251,7 +254,9 @@ export default function PetitionAdminActions({
         className="disabled:bg-gray-300 disabled:text-gray-500"
       >
         <X className="w-4 h-4 mr-2" />
-        {updating === 'reject' ? 'Rejecting...' : 'Reject'}
+        {updating === 'reject'
+          ? t('admin.actions.rejecting')
+          : t('admin.actions.reject')}
       </Button>
 
       {/* Delete Button - Always show */}
@@ -263,14 +268,16 @@ export default function PetitionAdminActions({
         className="text-red-600 border-red-300 hover:bg-red-50 disabled:text-gray-500 disabled:border-gray-300"
       >
         <Trash2 className="w-4 h-4 mr-2" />
-        {updating === 'delete' ? 'Deleting...' : 'Delete'}
+        {updating === 'delete'
+          ? t('admin.actions.deleting')
+          : t('admin.actions.delete')}
       </Button>
 
       {/* Loading indicator */}
       {updating && (
         <div className="flex items-center text-sm text-gray-600 mt-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2"></div>
-          Processing...
+          {t('admin.actions.processing')}
         </div>
       )}
     </div>

@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/HeaderWrapper';
 import AdminNav from '@/components/admin/AdminNav';
-import FixCreatorNames from '@/components/admin/FixCreatorNames';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAdminGuard } from '@/lib/auth-guards';
@@ -303,14 +302,6 @@ export default function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-
-            {/* Admin Tools */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                {t('admin.tools.title')}
-              </h2>
-              <FixCreatorNames />
             </div>
 
             {/* Recent Activity */}

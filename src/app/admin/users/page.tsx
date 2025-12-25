@@ -7,6 +7,7 @@ import AdminNav from '@/components/admin/AdminNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAdminGuard } from '@/lib/auth-guards';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   collection,
   query,
@@ -26,6 +27,7 @@ export default function AdminUsersPage() {
     loading: authLoading,
     hasRequiredRole,
   } = useAdminGuard();
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -92,7 +94,7 @@ export default function AdminUsersPage() {
       setUsers(usersList);
     } catch (err: any) {
       console.error('Error loading users:', err);
-      setError('Failed to load users');
+      setError(t('admin.users.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -140,7 +142,7 @@ export default function AdminUsersPage() {
       }
     } catch (err: any) {
       console.error(`Error ${action}ing user:`, err);
-      alert(`Failed to ${action} user. Please try again.`);
+      alert(t('admin.users.failedAction', { action }));
     } finally {
       setActionLoading('');
     }
@@ -169,11 +171,9 @@ export default function AdminUsersPage() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            User Management
+            {t('admin.users.title')}
           </h1>
-          <p className="text-lg text-gray-600">
-            Manage user accounts and permissions
-          </p>
+          <p className="text-lg text-gray-600">{t('admin.users.subtitle')}</p>
         </div>
 
         {/* Filter Tabs */}
@@ -181,20 +181,24 @@ export default function AdminUsersPage() {
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
               {[
-                { key: 'all', label: 'All Users', count: users.length },
+                {
+                  key: 'all',
+                  label: t('admin.users.allUsers'),
+                  count: users.length,
+                },
                 {
                   key: 'active',
-                  label: 'Active',
+                  label: t('admin.users.active'),
                   count: users.filter((u) => u.isActive).length,
                 },
                 {
                   key: 'inactive',
-                  label: 'Inactive',
+                  label: t('admin.users.inactive'),
                   count: users.filter((u) => !u.isActive).length,
                 },
                 {
                   key: 'moderators',
-                  label: 'Staff',
+                  label: t('admin.users.staff'),
                   count: users.filter((u) =>
                     ['moderator', 'admin'].includes(u.role)
                   ).length,
@@ -240,7 +244,7 @@ export default function AdminUsersPage() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <p className="text-red-600">{error}</p>
             <Button onClick={loadUsers} className="mt-4" variant="outline">
-              Try Again
+              {t('admin.users.tryAgain')}
             </Button>
           </div>
         ) : users.length === 0 ? (
@@ -262,11 +266,9 @@ export default function AdminUsersPage() {
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No users found
+                {t('admin.users.noUsers')}
               </h3>
-              <p className="text-gray-600">
-                No users match the current filter criteria.
-              </p>
+              <p className="text-gray-600">{t('admin.users.noUsersDesc')}</p>
             </CardContent>
           </Card>
         ) : (
@@ -297,7 +299,7 @@ export default function AdminUsersPage() {
                                   : 'bg-gray-100 text-gray-800'
                             }`}
                           >
-                            {userData.role}
+                            {t(`admin.roles.${userData.role}`)}
                           </span>
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -306,17 +308,20 @@ export default function AdminUsersPage() {
                                 : 'bg-red-100 text-red-800'
                             }`}
                           >
-                            {userData.isActive ? 'Active' : 'Inactive'}
+                            {userData.isActive
+                              ? t('admin.userStatus.active')
+                              : t('admin.userStatus.inactive')}
                           </span>
                         </div>
                         <p className="text-gray-600">{userData.email}</p>
                         <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
                           <span>
-                            Joined: {userData.createdAt.toLocaleDateString()}
+                            {t('admin.users.joined')}{' '}
+                            {userData.createdAt.toLocaleDateString()}
                           </span>
                           {userData.lastLoginAt && (
                             <span>
-                              Last login:{' '}
+                              {t('admin.users.lastLogin')}{' '}
                               {userData.lastLoginAt.toLocaleDateString()}
                             </span>
                           )}
@@ -334,7 +339,7 @@ export default function AdminUsersPage() {
                                     clipRule="evenodd"
                                   />
                                 </svg>
-                                Email
+                                {t('admin.users.email')}
                               </span>
                             )}
                             {userData.verifiedPhone && (
@@ -350,7 +355,7 @@ export default function AdminUsersPage() {
                                     clipRule="evenodd"
                                   />
                                 </svg>
-                                Phone
+                                {t('admin.users.phone')}
                               </span>
                             )}
                           </div>
@@ -367,9 +372,7 @@ export default function AdminUsersPage() {
                               variant="outline"
                               onClick={() => {
                                 if (
-                                  confirm(
-                                    'Are you sure you want to deactivate this user?'
-                                  )
+                                  confirm(t('admin.users.confirmDeactivate'))
                                 ) {
                                   handleUserAction(userData.id, 'deactivate');
                                 }
@@ -377,7 +380,7 @@ export default function AdminUsersPage() {
                               disabled={actionLoading === userData.id}
                               className="text-red-600 border-red-300 hover:bg-red-50"
                             >
-                              Deactivate
+                              {t('admin.users.deactivate')}
                             </Button>
                           ) : (
                             <Button
@@ -388,7 +391,7 @@ export default function AdminUsersPage() {
                               disabled={actionLoading === userData.id}
                               className="bg-green-600 hover:bg-green-700"
                             >
-                              Activate
+                              {t('admin.users.activate')}
                             </Button>
                           )}
 
@@ -397,34 +400,26 @@ export default function AdminUsersPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                if (
-                                  confirm(
-                                    'Are you sure you want to promote this user to moderator?'
-                                  )
-                                ) {
+                                if (confirm(t('admin.users.confirmPromote'))) {
                                   handleUserAction(userData.id, 'promote');
                                 }
                               }}
                               disabled={actionLoading === userData.id}
                             >
-                              Promote to Moderator
+                              {t('admin.users.promoteToModerator')}
                             </Button>
                           ) : userData.role === 'moderator' ? (
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                if (
-                                  confirm(
-                                    'Are you sure you want to demote this moderator to user?'
-                                  )
-                                ) {
+                                if (confirm(t('admin.users.confirmDemote'))) {
                                   handleUserAction(userData.id, 'demote');
                                 }
                               }}
                               disabled={actionLoading === userData.id}
                             >
-                              Demote to User
+                              {t('admin.users.demoteToUser')}
                             </Button>
                           ) : null}
                         </>
@@ -432,7 +427,7 @@ export default function AdminUsersPage() {
 
                       {userData.id === userProfile?.id && (
                         <span className="text-sm text-gray-500 px-3 py-1 bg-gray-100 rounded-md">
-                          You
+                          {t('admin.users.you')}
                         </span>
                       )}
 

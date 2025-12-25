@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   subscribeToUserNotifications,
   markNotificationAsRead,
@@ -23,6 +24,7 @@ export default function NotificationCenter({
   className = '',
 }: NotificationCenterProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -88,12 +90,19 @@ export default function NotificationCenter({
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 60) return t('notifications.justNow');
+    if (diffInSeconds < 3600)
+      return t('notifications.minutesAgo', {
+        count: Math.floor(diffInSeconds / 60),
+      });
     if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)}h ago`;
+      return t('notifications.hoursAgo', {
+        count: Math.floor(diffInSeconds / 3600),
+      });
     if (diffInSeconds < 604800)
-      return `${Math.floor(diffInSeconds / 86400)}d ago`;
+      return t('notifications.daysAgo', {
+        count: Math.floor(diffInSeconds / 86400),
+      });
 
     return date.toLocaleDateString();
   };
@@ -179,7 +188,9 @@ export default function NotificationCenter({
           <Card className="border-0 shadow-none">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Notifications</CardTitle>
+                <CardTitle className="text-lg">
+                  {t('notifications.title')}
+                </CardTitle>
                 {unreadCount > 0 && (
                   <Button
                     onClick={handleMarkAllAsRead}
@@ -187,7 +198,7 @@ export default function NotificationCenter({
                     size="sm"
                     className="text-xs"
                   >
-                    Mark all read
+                    {t('notifications.markAllRead')}
                   </Button>
                 )}
               </div>
@@ -197,7 +208,7 @@ export default function NotificationCenter({
                 <div className="p-4 text-center">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto"></div>
                   <p className="text-sm text-gray-500 mt-2">
-                    Loading notifications...
+                    {t('notifications.loading')}
                   </p>
                 </div>
               ) : notifications.length === 0 ? (
@@ -216,9 +227,11 @@ export default function NotificationCenter({
                     />
                   </svg>
                   <h3 className="text-sm font-medium text-gray-900 mb-1">
-                    No notifications
+                    {t('notifications.noNotifications')}
                   </h3>
-                  <p className="text-xs text-gray-500">You're all caught up!</p>
+                  <p className="text-xs text-gray-500">
+                    {t('notifications.allCaughtUp')}
+                  </p>
                 </div>
               ) : (
                 <div className="max-h-96 overflow-y-auto">
@@ -272,7 +285,7 @@ export default function NotificationCenter({
                         className="text-sm text-green-600 hover:text-green-500 font-medium"
                         onClick={() => setIsOpen(false)}
                       >
-                        View all notifications
+                        {t('notifications.viewAll')}
                       </Link>
                     </div>
                   )}

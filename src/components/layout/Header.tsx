@@ -167,7 +167,7 @@ function HeaderInner() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   useEffect(() => {
     // Small delay to ensure hydration is complete
@@ -197,7 +197,9 @@ function HeaderInner() {
                 <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-lg">#</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900">3arida</span>
+                <span className="text-xl font-bold text-gray-900">
+                  {locale === 'ar' ? 'عريضة' : '3arida'}
+                </span>
               </Link>
             </div>
             {/* Desktop Navigation */}
@@ -265,7 +267,9 @@ function HeaderInner() {
               <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">#</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">3arida</span>
+              <span className="text-xl font-bold text-gray-900">
+                {locale === 'ar' ? 'عريضة' : '3arida'}
+              </span>
             </Link>
           </div>
 
@@ -287,13 +291,13 @@ function HeaderInner() {
               href="/pricing"
               className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
-              {t('nav.pricing', 'Pricing')}
+              {t('nav.pricing')}
             </Link>
             <Link
               href="/about"
               className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
-              {t('nav.about', 'About')}
+              {t('nav.about')}
             </Link>
           </nav>
 
@@ -377,14 +381,14 @@ function HeaderInner() {
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                {t('nav.pricing', 'Pricing')}
+                {t('nav.pricing')}
               </Link>
               <Link
                 href="/about"
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                {t('nav.about', 'About')}
+                {t('nav.about')}
               </Link>
 
               {/* Mobile Language Switcher */}

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export default function Footer() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   return (
     <footer className="bg-gray-900 text-white py-12 mt-auto">
@@ -14,7 +14,9 @@ export default function Footer() {
               <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">#</span>
               </div>
-              <span className="text-xl font-bold">3arida</span>
+              <span className="text-xl font-bold">
+                {locale === 'ar' ? 'عريضة' : '3arida'}
+              </span>
             </div>
             <p className="text-gray-400 whitespace-pre-line">
               {t('footer.description')}
