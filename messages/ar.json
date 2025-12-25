@@ -87,7 +87,7 @@
     "comments": "التعليقات",
     "supporters": "المؤيدون",
     "share": "مشاركة العريضة",
-    "qrCode": "رمز الاستجابة السريعة",
+    "qrCode": "QR رمز الاستجابة السريعة",
     "browse": "تصفح العرائض",
     "search": "البحث في العرائض",
     "filter": "تصفية العرائض",
@@ -169,7 +169,7 @@
     "createNewPetition": "إنشاء عريضة جديدة",
     "noPetitions": "لم تنشئ أي عرائض بعد",
     "noSignatures": "لم توقع على أي عرائض بعد",
-    "discoverPetitions": "اكتشف العرائض"
+    "discoverPetitions": "إكتشف العرائض"
   },
   "profile": {
     "title": "الملف الشخصي",

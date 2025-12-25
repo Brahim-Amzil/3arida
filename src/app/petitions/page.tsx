@@ -115,8 +115,23 @@ function PetitionsPage() {
               </p>
             </div>
             <div className="mt-4 md:mt-0">
-              <Button asChild>
-                <a href="/petitions/create">{t('petitions.startAPetition')}</a>
+              <Button asChild size="lg" className="px-6">
+                <a href="/petitions/create" className="flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  {t('petitions.startAPetition')}
+                </a>
               </Button>
             </div>
           </div>
@@ -232,8 +247,23 @@ function PetitionsPage() {
                   ? 'Try adjusting your search or filters to find more petitions.'
                   : 'Be the first to create a petition in this category!'}
               </p>
-              <Button asChild>
-                <a href="/petitions/create">Start a Petition</a>
+              <Button asChild size="lg" className="px-6">
+                <a href="/petitions/create" className="flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Start a Petition
+                </a>
               </Button>
             </div>
           )}

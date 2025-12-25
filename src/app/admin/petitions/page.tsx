@@ -8,12 +8,14 @@ import AdminNav from '@/components/admin/AdminNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useModeratorGuard } from '@/lib/auth-guards';
+import { useTranslation } from '@/hooks/useTranslation';
 import PetitionAdminActions from '@/components/admin/PetitionAdminActions';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Petition } from '@/types/petition';
 
 export default function AdminPetitionsPage() {
+  const { t } = useTranslation();
   const {
     user,
     userProfile,
@@ -184,9 +186,8 @@ export default function AdminPetitionsPage() {
         Timestamp,
         getDoc,
       } = await import('firebase/firestore');
-      const { notifyDeletionRequestApproved } = await import(
-        '@/lib/notifications'
-      );
+      const { notifyDeletionRequestApproved } =
+        await import('@/lib/notifications');
 
       // Get petition details for notification
       const petitionDoc = await getDoc(
@@ -243,9 +244,8 @@ export default function AdminPetitionsPage() {
         Timestamp,
         getDoc,
       } = await import('firebase/firestore');
-      const { notifyDeletionRequestDenied } = await import(
-        '@/lib/notifications'
-      );
+      const { notifyDeletionRequestDenied } =
+        await import('@/lib/notifications');
 
       // Get deletion request details for notification
       const requestDoc = await getDoc(
@@ -306,10 +306,10 @@ export default function AdminPetitionsPage() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Petition Moderation
+            {t('admin.moderation.title')}
           </h1>
           <p className="text-lg text-gray-600">
-            Review and manage petitions on the platform
+            {t('admin.moderation.subtitle')}
           </p>
         </div>
 
@@ -319,7 +319,7 @@ export default function AdminPetitionsPage() {
             <div className="flex-1 relative">
               <input
                 type="text"
-                placeholder="Search by title, description, category, publisher, or reference code (e.g., AB1234)..."
+                placeholder={t('admin.moderation.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
@@ -343,7 +343,7 @@ export default function AdminPetitionsPage() {
               onChange={(e) => setSearchCategory(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             >
-              <option value="all">All Categories</option>
+              <option value="all">{t('admin.moderation.allCategories')}</option>
               {Array.from(new Set(allPetitions.map((p) => p.category)))
                 .sort()
                 .map((category) => (
@@ -373,48 +373,48 @@ export default function AdminPetitionsPage() {
               {[
                 {
                   key: 'pending',
-                  label: 'Pending Review',
+                  label: t('admin.moderation.tabs.pendingReview'),
                   count: allPetitions.filter((p) => p.status === 'pending')
                     .length,
                 },
                 {
                   key: 'approved',
-                  label: 'Approved',
+                  label: t('admin.moderation.tabs.approved'),
                   count: allPetitions.filter((p) => p.status === 'approved')
                     .length,
                 },
                 {
                   key: 'rejected',
-                  label: 'Rejected',
+                  label: t('admin.moderation.tabs.rejected'),
                   count: allPetitions.filter((p) => p.status === 'rejected')
                     .length,
                 },
                 {
                   key: 'paused',
-                  label: 'Paused',
+                  label: t('admin.moderation.tabs.paused'),
                   count: allPetitions.filter((p) => p.status === 'paused')
                     .length,
                 },
                 {
                   key: 'archived',
-                  label: 'Archived',
+                  label: t('admin.moderation.tabs.archived'),
                   count: allPetitions.filter((p) => p.status === 'archived')
                     .length,
                 },
                 {
                   key: 'deleted',
-                  label: 'Deleted',
+                  label: t('admin.moderation.tabs.deleted'),
                   count: allPetitions.filter((p) => p.status === 'deleted')
                     .length,
                 },
                 {
                   key: 'deletion-requests',
-                  label: 'Deletion Requests',
+                  label: t('admin.moderation.tabs.deletionRequests'),
                   count: deletionRequestsCount,
                 },
                 {
                   key: 'all',
-                  label: 'All Petitions',
+                  label: t('admin.moderation.tabs.allPetitions'),
                   count: allPetitions.length,
                 },
               ].map((tab) => (
@@ -481,10 +481,10 @@ export default function AdminPetitionsPage() {
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No deletion requests
+                  {t('admin.moderation.noDeletionRequests')}
                 </h3>
                 <p className="text-gray-600">
-                  There are no pending deletion requests at this time.
+                  {t('admin.moderation.noDeletionRequestsDesc')}
                 </p>
               </CardContent>
             </Card>
@@ -579,10 +579,12 @@ export default function AdminPetitionsPage() {
               </h3>
               <p className="text-gray-600">
                 {searchQuery || searchCategory !== 'all'
-                  ? 'No petitions match your search criteria.'
+                  ? t('admin.moderation.noPetitions')
                   : filter === 'pending'
-                    ? 'No petitions are pending review.'
-                    : `No ${filter} petitions found.`}
+                    ? t('admin.moderation.noPendingPetitions')
+                    : t('admin.moderation.noStatusPetitions', {
+                        status: filter,
+                      })}
               </p>
             </CardContent>
           </Card>
@@ -751,7 +753,7 @@ export default function AdminPetitionsPage() {
                             <div className="ml-6 flex flex-col gap-2">
                               <Button size="sm" variant="outline" asChild>
                                 <Link href={`/admin/petitions/${petition.id}`}>
-                                  Review
+                                  {t('admin.actions.review')}
                                 </Link>
                               </Button>
 

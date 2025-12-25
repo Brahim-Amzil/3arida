@@ -12,9 +12,9 @@ Added the following new translation keys to `src/hooks/useTranslation.ts`:
 
 #### Arabic (ar) translations:
 
-- `petitions.discoverPetitions`: 'اكتشف العرائض'
-- `petitions.findAndSupport`: 'اعثر على القضايا التي تهمك وادعمها'
-- `petitions.startAPetition`: 'ابدأ عريضة'
+- `petitions.discoverPetitions`: 'إكتشف العرائض'
+- `petitions.findAndSupport`: 'أعثر على القضايا التي تهمك وادعمها'
+- `petitions.startAPetition`: 'إبدأ عريضة'
 - `petitions.searchPetitions`: 'ابحث في العرائض...'
 - `petitions.allCategories`: 'جميع الفئات'
 - `petitions.mostRecent`: 'الأحدث'

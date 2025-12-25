@@ -1,11 +1,8 @@
+'use client';
+
 import { Metadata } from 'next';
 import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
-
-export const metadata: Metadata = {
-  title: 'إرشادات المجتمع - 3arida',
-  description: 'إرشادات المجتمع لمنصة 3arida للعرائض الرقمية',
-};
 
 export default function GuidelinesPage() {
   return (
@@ -126,9 +123,7 @@ export default function GuidelinesPage() {
               </section>
 
               <div className="mt-8 pt-8 border-t border-gray-200">
-                <p className="text-sm text-gray-600">
-                  آخر تحديث: {new Date().toLocaleDateString('ar-MA')}
-                </p>
+                <p className="text-sm text-gray-600">آخر تحديث: ديسمبر 2024</p>
                 <p className="text-sm text-gray-600 mt-2">
                   شكرًا لمساعدتك في جعل 3arida مجتمعًا أفضل للجميع!
                 </p>

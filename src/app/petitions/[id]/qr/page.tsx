@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import Header from '@/components/layout/HeaderWrapper';
-import QRUpgrade from '@/components/petitions/QRUpgrade';
+import QRUpgradeWithStripe from '@/components/petitions/QRUpgradeWithStripe';
 import QRCodeDisplay from '@/components/petitions/QRCodeDisplay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -161,7 +161,7 @@ export default function PetitionQRPage() {
         </div>
 
         {showUpgrade ? (
-          <QRUpgrade
+          <QRUpgradeWithStripe
             petition={petition}
             onUpgradeComplete={handleUpgradeComplete}
             onCancel={() => setShowUpgrade(false)}

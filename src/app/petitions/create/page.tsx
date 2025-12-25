@@ -28,6 +28,7 @@ import {
 } from '@/lib/storage';
 import { useTranslation } from '@/hooks/useTranslation';
 import { isAuthenticated } from '@/lib/auth-mock';
+import PetitionPayment from '@/components/petitions/PetitionPayment';
 
 // Subcategories for each main category
 const SUBCATEGORIES: Record<string, string[]> = {
@@ -142,6 +143,8 @@ export default function CreatePetitionPage() {
 
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(0);
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentIntentId, setPaymentIntentId] = useState<string>('');
 
   // Accordion state - only one section can be open at a time
   const [openAccordion, setOpenAccordion] = useState<'pricing' | 'tips' | null>(
@@ -155,20 +158,20 @@ export default function CreatePetitionPage() {
 
     setFormData({
       publisherType: 'Individual',
-      publisherName: 'Test User',
+      publisherName: 'أحمد محمد الحسني',
       officialDocument: undefined,
       petitionType: 'Change',
       addressedToType: 'Government',
-      addressedToSpecific: 'Ministry of Environment',
-      title: 'Test Petition - Fix Road Infrastructure',
+      addressedToSpecific: 'وزارة التجهيز والنقل واللوجستيك والماء',
+      title: 'عريضة لإصلاح البنية التحتية للطرق في حي الأمل',
       description:
-        'This is a test petition to fix the road infrastructure in our area. The roads are in terrible condition and need immediate attention.\n\nWe demand:\n- Immediate road repairs\n- Better maintenance\n- Regular inspections',
+        'نحن سكان حي الأمل بمدينة الدار البيضاء نطالب بإصلاح عاجل للبنية التحتية للطرق في منطقتنا. الطرق في حالة سيئة جداً وتحتاج إلى تدخل فوري.\n\nمطالبنا:\n- إصلاح فوري للطرق المتضررة\n- صيانة دورية ومنتظمة\n- تحسين الإنارة العمومية\n- إنشاء أرصفة آمنة للمشاة\n- تركيب علامات المرور اللازمة\n\nهذه المشاكل تؤثر على حياتنا اليومية وتشكل خطراً على سلامة المواطنين، خاصة الأطفال وكبار السن.',
       category: 'Infrastructure',
       subcategory: 'Transportation',
-      targetSignatures: 1000,
+      targetSignatures: 5000, // Changed to trigger payment for testing
       mediaUrls: [],
       youtubeVideoUrl: '',
-      tags: 'infrastructure, roads, transportation, البنية التحتية, الطرق',
+      tags: 'البنية التحتية, الطرق, النقل, الدار البيضاء, حي الأمل, infrastructure, roads, transportation',
       location: {
         country: 'Morocco',
         city: 'Casablanca',
@@ -714,6 +717,22 @@ export default function CreatePetitionPage() {
     }
     console.log('✅ All validation passed!');
 
+    // Check if payment is required
+    const price = calculatePetitionPrice(formData.targetSignatures);
+    if (price > 0) {
+      console.log('💳 Payment required:', price, 'MAD');
+      setShowPayment(true);
+      return;
+    }
+
+    // Create petition directly if free
+    await createPetitionWithPayment(submissionData, null);
+  };
+
+  const createPetitionWithPayment = async (
+    submissionData: any,
+    paymentId: string | null
+  ) => {
     try {
       setLoading(true);
       setError('');
@@ -721,18 +740,20 @@ export default function CreatePetitionPage() {
       // Create petition
       const petition = await createPetition(
         submissionData,
-        user.uid,
-        user.displayName || user.email?.split('@')[0] || 'Anonymous'
+        user!.uid,
+        user!.displayName || user!.email?.split('@')[0] || 'Anonymous'
       );
 
       // Store petition ID in localStorage for success page
       localStorage.setItem('newPetitionId', petition.id);
 
-      // Redirect to success page first, then to petition
+      // Redirect to success page
       const price = calculatePetitionPrice(formData.targetSignatures);
-      if (price > 0) {
-        // Redirect to payment page
-        router.push(`/petitions/success?payment=true&id=${petition.id}`);
+      if (price > 0 && paymentId) {
+        // Redirect to success page with payment confirmation
+        router.push(
+          `/petitions/success?payment=true&id=${petition.id}&paymentId=${paymentId}`
+        );
       } else {
         // Redirect to success page
         router.push(`/petitions/success?id=${petition.id}`);
@@ -743,6 +764,32 @@ export default function CreatePetitionPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentSuccess = (paymentIntentId: string) => {
+    console.log('✅ Payment successful:', paymentIntentId);
+    setPaymentIntentId(paymentIntentId);
+    setShowPayment(false);
+
+    // Prepare form data with custom category and subcategory if "Other" is selected
+    const submissionData = {
+      ...formData,
+      category:
+        formData.category === 'Other'
+          ? customCategory.trim()
+          : formData.category,
+      subcategory:
+        formData.subcategory === 'Other'
+          ? customSubcategory.trim()
+          : formData.subcategory,
+    };
+
+    // Create petition after successful payment
+    createPetitionWithPayment(submissionData, paymentIntentId);
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
   };
 
   // Step rendering functions
@@ -1556,7 +1603,7 @@ export default function CreatePetitionPage() {
           {t('review.content')}
         </h4>
         <p>
-          <strong>{t('review.title')}</strong> {formData.title}
+          <strong>{t('review.petitionTitle')}</strong> {formData.title}
         </p>
         <div className="mt-2">
           <strong>{t('review.description')}</strong>
@@ -1664,6 +1711,19 @@ export default function CreatePetitionPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Payment Modal */}
+      {showPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <PetitionPayment
+              formData={formData}
+              onPaymentSuccess={handlePaymentSuccess}
+              onCancel={handlePaymentCancel}
+            />
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         input[type='range']::-webkit-slider-thumb {
           appearance: none;
@@ -1876,7 +1936,7 @@ export default function CreatePetitionPage() {
                           {t('form.creatingPetition')}
                         </>
                       ) : price > 0 ? (
-                        `${t('form.createPetitionButton')} - ${formatCurrency(price)}`
+                        `Proceed to Payment - ${formatCurrency(price)} MAD`
                       ) : (
                         t('form.createPetitionButton')
                       )}

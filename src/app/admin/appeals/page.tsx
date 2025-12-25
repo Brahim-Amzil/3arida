@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useModeratorGuard } from '@/lib/auth-guards';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Appeal, AppealStatus } from '@/types/appeal';
 
 export default function AdminAppealsPage() {
@@ -17,6 +18,7 @@ export default function AdminAppealsPage() {
     loading: authLoading,
     hasRequiredRole,
   } = useModeratorGuard();
+  const { t } = useTranslation();
   const [appeals, setAppeals] = useState<Appeal[]>([]);
   const [allAppeals, setAllAppeals] = useState<Appeal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +56,7 @@ export default function AdminAppealsPage() {
       );
 
       if (!response.ok) {
-        throw new Error('Failed to load appeals');
+        throw new Error(t('appeals.failedToLoad'));
       }
 
       const data = await response.json();
@@ -62,7 +64,7 @@ export default function AdminAppealsPage() {
       setAppeals(data.appeals || []);
     } catch (err) {
       console.error('Error loading appeals:', err);
-      setError('Failed to load appeals');
+      setError(t('appeals.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -93,19 +95,19 @@ export default function AdminAppealsPage() {
   const getStatusBadge = (status: AppealStatus) => {
     const statusConfig = {
       pending: {
-        label: 'Pending',
+        label: t('appeals.status.pending'),
         className: 'bg-yellow-100 text-yellow-800',
       },
       'in-progress': {
-        label: 'In Progress',
+        label: t('appeals.status.inProgress'),
         className: 'bg-blue-100 text-blue-800',
       },
       resolved: {
-        label: 'Resolved',
+        label: t('appeals.status.resolved'),
         className: 'bg-green-100 text-green-800',
       },
       rejected: {
-        label: 'Rejected',
+        label: t('appeals.status.rejected'),
         className: 'bg-red-100 text-red-800',
       },
     };
@@ -171,11 +173,9 @@ export default function AdminAppealsPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Appeals Management
+                {t('appeals.title')}
               </h1>
-              <p className="text-gray-600">
-                Review and respond to petition creator appeals
-              </p>
+              <p className="text-gray-600">{t('appeals.subtitle')}</p>
             </div>
           </div>
 
@@ -187,7 +187,9 @@ export default function AdminAppealsPage() {
                   <p className="text-2xl font-bold text-gray-900">
                     {statusCounts.all}
                   </p>
-                  <p className="text-xs text-gray-600 mt-0.5">Total Appeals</p>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    {t('appeals.totalAppeals')}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -197,7 +199,9 @@ export default function AdminAppealsPage() {
                   <p className="text-2xl font-bold text-yellow-600">
                     {statusCounts.pending}
                   </p>
-                  <p className="text-xs text-gray-600 mt-0.5">Pending</p>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    {t('appeals.pending')}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -207,7 +211,9 @@ export default function AdminAppealsPage() {
                   <p className="text-2xl font-bold text-blue-600">
                     {statusCounts['in-progress']}
                   </p>
-                  <p className="text-xs text-gray-600 mt-0.5">In Progress</p>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    {t('appeals.inProgress')}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -217,7 +223,9 @@ export default function AdminAppealsPage() {
                   <p className="text-2xl font-bold text-green-600">
                     {statusCounts.resolved}
                   </p>
-                  <p className="text-xs text-gray-600 mt-0.5">Resolved</p>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    {t('appeals.resolved')}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -227,7 +235,9 @@ export default function AdminAppealsPage() {
                   <p className="text-2xl font-bold text-red-600">
                     {statusCounts.rejected}
                   </p>
-                  <p className="text-xs text-gray-600 mt-0.5">Rejected</p>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    {t('appeals.rejected')}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -240,7 +250,7 @@ export default function AdminAppealsPage() {
                 {/* Status Filter */}
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Filter by Status
+                    {t('appeals.filterByStatus')}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     <Button
@@ -248,7 +258,7 @@ export default function AdminAppealsPage() {
                       size="sm"
                       onClick={() => setStatusFilter('all')}
                     >
-                      All ({statusCounts.all})
+                      {t('appeals.filter.all', { count: statusCounts.all })}
                     </Button>
                     <Button
                       variant={
@@ -257,7 +267,9 @@ export default function AdminAppealsPage() {
                       size="sm"
                       onClick={() => setStatusFilter('pending')}
                     >
-                      Pending ({statusCounts.pending})
+                      {t('appeals.filter.pending', {
+                        count: statusCounts.pending,
+                      })}
                     </Button>
                     <Button
                       variant={
@@ -266,7 +278,9 @@ export default function AdminAppealsPage() {
                       size="sm"
                       onClick={() => setStatusFilter('in-progress')}
                     >
-                      In Progress ({statusCounts['in-progress']})
+                      {t('appeals.filter.inProgress', {
+                        count: statusCounts['in-progress'],
+                      })}
                     </Button>
                     <Button
                       variant={
@@ -275,7 +289,9 @@ export default function AdminAppealsPage() {
                       size="sm"
                       onClick={() => setStatusFilter('resolved')}
                     >
-                      Resolved ({statusCounts.resolved})
+                      {t('appeals.filter.resolved', {
+                        count: statusCounts.resolved,
+                      })}
                     </Button>
                     <Button
                       variant={
@@ -284,7 +300,9 @@ export default function AdminAppealsPage() {
                       size="sm"
                       onClick={() => setStatusFilter('rejected')}
                     >
-                      Rejected ({statusCounts.rejected})
+                      {t('appeals.filter.rejected', {
+                        count: statusCounts.rejected,
+                      })}
                     </Button>
                   </div>
                 </div>
@@ -292,11 +310,11 @@ export default function AdminAppealsPage() {
                 {/* Search */}
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Search
+                    {t('appeals.search')}
                   </label>
                   <input
                     type="text"
-                    placeholder="Search by petition title, creator name, or appeal ID..."
+                    placeholder={t('appeals.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -309,7 +327,9 @@ export default function AdminAppealsPage() {
           {/* Appeals List */}
           <Card>
             <CardHeader>
-              <CardTitle>Appeals ({appeals.length})</CardTitle>
+              <CardTitle>
+                {t('appeals.appealsCount', { count: appeals.length })}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {error && (
@@ -319,7 +339,7 @@ export default function AdminAppealsPage() {
                     onClick={loadAppeals}
                     className="mt-4 text-sm text-blue-600 hover:underline"
                   >
-                    Try Again
+                    {t('appeals.tryAgain')}
                   </button>
                 </div>
               )}
@@ -339,11 +359,13 @@ export default function AdminAppealsPage() {
                       d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                     />
                   </svg>
-                  <p className="mt-4 text-gray-600">No appeals found</p>
+                  <p className="mt-4 text-gray-600">
+                    {t('appeals.noAppealsFound')}
+                  </p>
                   <p className="mt-2 text-sm text-gray-500">
                     {statusFilter !== 'all'
-                      ? 'Try changing the filter'
-                      : 'Appeals will appear here when creators submit them'}
+                      ? t('appeals.tryChangingFilter')
+                      : t('appeals.noAppealsMessage')}
                   </p>
                 </div>
               )}
@@ -363,10 +385,11 @@ export default function AdminAppealsPage() {
                               {appeal.petitionTitle}
                             </h3>
                             <p className="text-sm text-gray-600">
-                              Creator: {appeal.creatorName}
+                              {t('appeals.creator')} {appeal.creatorName}
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
-                              Appeal ID: {appeal.id.substring(0, 12)}...
+                              {t('appeals.appealId')}{' '}
+                              {appeal.id.substring(0, 12)}...
                             </p>
                           </div>
                           {getStatusBadge(appeal.status)}
@@ -388,7 +411,7 @@ export default function AdminAppealsPage() {
                                   d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                                 />
                               </svg>
-                              {appeal.messages.length} messages
+                              {appeal.messages.length} {t('appeals.messages')}
                             </span>
                             <span>{formatDate(appeal.createdAt)}</span>
                           </div>
@@ -401,7 +424,7 @@ export default function AdminAppealsPage() {
                             appeal.status !== 'rejected' && (
                               <span className="flex items-center gap-1 text-orange-600 font-medium">
                                 <span className="w-2 h-2 bg-orange-600 rounded-full"></span>
-                                Needs Response
+                                {t('appeals.needsResponse')}
                               </span>
                             )}
                         </div>
@@ -415,9 +438,11 @@ export default function AdminAppealsPage() {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6 pt-6 border-t">
                   <p className="text-sm text-gray-600">
-                    Showing {indexOfFirstItem + 1} to{' '}
-                    {Math.min(indexOfLastItem, appeals.length)} of{' '}
-                    {appeals.length} appeals
+                    {t('appeals.showingResults', {
+                      start: indexOfFirstItem + 1,
+                      end: Math.min(indexOfLastItem, appeals.length),
+                      total: appeals.length,
+                    })}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -426,7 +451,7 @@ export default function AdminAppealsPage() {
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
                     >
-                      Previous
+                      {t('appeals.previous')}
                     </Button>
                     <Button
                       variant="outline"
@@ -436,7 +461,7 @@ export default function AdminAppealsPage() {
                       }
                       disabled={currentPage === totalPages}
                     >
-                      Next
+                      {t('appeals.next')}
                     </Button>
                   </div>
                 </div>
