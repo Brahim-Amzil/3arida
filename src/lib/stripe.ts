@@ -7,8 +7,10 @@ export const getStripe = () => {
     const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
     if (!publishableKey) {
-      console.error('Stripe publishable key not found');
-      return null;
+      console.warn(
+        'Stripe publishable key not found. Stripe functionality will be disabled.'
+      );
+      return Promise.resolve(null);
     }
 
     stripePromise = loadStripe(publishableKey);
