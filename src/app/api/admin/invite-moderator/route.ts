@@ -105,11 +105,25 @@ export async function POST(request: NextRequest) {
       .collection('moderatorInvitations')
       .add(invitationData);
 
-    // Create invitation link
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : 'http://localhost:3000';
+    // Create invitation link - prefer production domain over deployment URL
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+    if (!baseUrl && process.env.VERCEL_URL) {
+      // If we have a Vercel URL, check if it's a production domain or deployment URL
+      const vercelUrl = process.env.VERCEL_URL;
+      if (vercelUrl.includes('3arida.vercel.app')) {
+        // Use the clean production domain
+        baseUrl = 'https://3arida.vercel.app';
+      } else {
+        // Use the deployment URL as fallback
+        baseUrl = `https://${vercelUrl}`;
+      }
+    }
+
+    if (!baseUrl) {
+      baseUrl = 'http://localhost:3000';
+    }
+
     const invitationLink = `${baseUrl}/moderator/welcome?token=${invitationToken}`;
 
     // Send invitation email in Arabic
