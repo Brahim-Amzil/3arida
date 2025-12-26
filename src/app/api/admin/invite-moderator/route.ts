@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     const db = getFirestore();
 
-    // Check if user already exists
+    // Check if user already exists in Firebase Auth
     try {
       const existingUser = await getAuth().getUserByEmail(email);
       if (existingUser) {
@@ -49,10 +49,23 @@ export async function POST(request: NextRequest) {
         );
       }
     } catch (error: any) {
-      // User doesn't exist, which is what we want
+      // User doesn't exist in Firebase Auth, which is what we want
       if (error.code !== 'auth/user-not-found') {
         throw error;
       }
+    }
+
+    // Also check if user exists in Firestore users collection
+    const usersSnapshot = await db
+      .collection('users')
+      .where('email', '==', email)
+      .get();
+
+    if (!usersSnapshot.empty) {
+      return NextResponse.json(
+        { error: 'User with this email already exists' },
+        { status: 409 }
+      );
     }
 
     // If resending, cancel existing pending invitation
