@@ -101,11 +101,8 @@ function ModeratorWelcomeContent() {
         console.log('Profile refresh failed, but invitation was accepted');
       }
 
-      // Small delay to ensure the role update is processed
-      setTimeout(() => {
-        // Redirect to admin dashboard
-        router.push('/admin');
-      }, 1000);
+      // Force a page reload to ensure the AuthProvider picks up the new role
+      window.location.href = '/admin';
     } catch (err) {
       console.error('Error accepting invitation:', err);
       setError('Failed to accept invitation');
