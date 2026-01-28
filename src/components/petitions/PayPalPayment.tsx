@@ -191,12 +191,6 @@ export default function PayPalPayment({
                 intent: 'capture',
                 components: 'buttons',
               }}
-              onError={(err) => {
-                console.error('PayPal SDK Error:', err);
-                setError(
-                  'Failed to load PayPal. Please check your internet connection and try again.',
-                );
-              }}
             >
               <PayPalButtons
                 style={{
