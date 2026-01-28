@@ -503,7 +503,7 @@ Run this test flow on each mobile browser:
 6. Add comment to petition
 7. Reply to comment
 8. Like a comment
-9. Share petition
+9. شارِك العريضة
 10. Test admin functions (if admin)
 11. Logout and login again
 12. Test forgot password

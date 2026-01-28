@@ -217,7 +217,7 @@
 - [ ] Comment on petition
 - [ ] Reply to comment
 - [ ] Like comment
-- [ ] Share petition
+- [ ] شارِك العريضة
 
 **Admin Functions:**
 

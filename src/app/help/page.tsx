@@ -11,9 +11,16 @@ export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter sections based on search query
-  const filterContent = (text: string) => {
+  const filterContent = (translationKeys: string[]) => {
     if (!searchQuery) return true;
-    return text.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const query = searchQuery.toLowerCase();
+
+    // Check if any of the translation keys contain the search query
+    return translationKeys.some((key) => {
+      const translatedText = t(key).toLowerCase();
+      return translatedText.includes(query);
+    });
   };
 
   return (
@@ -83,7 +90,11 @@ export default function HelpPage() {
         </div>
 
         {/* Getting Started */}
-        {filterContent('getting started create petition sign petition') && (
+        {filterContent([
+          'help.gettingStarted.title',
+          'help.gettingStarted.createPetition.title',
+          'help.gettingStarted.signPetition.title',
+        ]) && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-2xl">
@@ -128,7 +139,12 @@ export default function HelpPage() {
         )}
 
         {/* Account & Profile */}
-        {filterContent('account profile password reset edit bio') && (
+        {filterContent([
+          'help.account.title',
+          'help.account.createAccount.title',
+          'help.account.editProfile.title',
+          'help.account.resetPassword.title',
+        ]) && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-2xl">
@@ -167,7 +183,13 @@ export default function HelpPage() {
         )}
 
         {/* Managing Petitions */}
-        {filterContent('managing petition approval edit delete update') && (
+        {filterContent([
+          'help.managing.title',
+          'help.managing.approval.title',
+          'help.managing.edit.title',
+          'help.managing.delete.title',
+          'help.managing.updates.title',
+        ]) && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-2xl">
@@ -223,7 +245,11 @@ export default function HelpPage() {
         )}
 
         {/* Sharing & Promotion */}
-        {filterContent('sharing promotion share qr code social media') && (
+        {filterContent([
+          'help.sharing.title',
+          'help.sharing.howToShare.title',
+          'help.sharing.qrCode.title',
+        ]) && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-2xl">
@@ -259,9 +285,12 @@ export default function HelpPage() {
         )}
 
         {/* Privacy & Security */}
-        {filterContent(
-          'privacy security phone verification anonymous safe'
-        ) && (
+        {filterContent([
+          'help.privacy.title',
+          'help.privacy.safe.title',
+          'help.privacy.phoneVerification.title',
+          'help.privacy.anonymous.title',
+        ]) && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-2xl">
@@ -300,9 +329,11 @@ export default function HelpPage() {
         )}
 
         {/* Pricing & Payments */}
-        {filterContent(
-          'pricing payment free tier basic premium enterprise'
-        ) && (
+        {filterContent([
+          'help.pricing.title',
+          'help.pricing.free.title',
+          'help.pricing.payment.title',
+        ]) && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-2xl">
@@ -322,6 +353,7 @@ export default function HelpPage() {
                   <li>{t('help.pricing.free.tier2')}</li>
                   <li>{t('help.pricing.free.tier3')}</li>
                   <li>{t('help.pricing.free.tier4')}</li>
+                  <li>{t('help.pricing.free.tier5')}</li>
                 </ul>
               </div>
 
@@ -338,9 +370,11 @@ export default function HelpPage() {
         )}
 
         {/* Technical Issues */}
-        {filterContent(
-          'technical issues upload image loading troubleshooting'
-        ) && (
+        {filterContent([
+          'help.technical.title',
+          'help.technical.upload.title',
+          'help.technical.loading.title',
+        ]) && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-2xl">
@@ -381,31 +415,38 @@ export default function HelpPage() {
         )}
 
         {/* Contact Support */}
-        {filterContent('contact support help email') && (
+        {filterContent([
+          'help.contact.title',
+          'help.contact.supportTitle',
+          'help.contact.intro',
+        ]) && (
           <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="text-2xl">
-                {t('help.contact.title')}
-              </CardTitle>
-            </CardHeader>
+            <CardHeader></CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4">{t('help.contact.intro')}</p>
               <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                 <h3 className="font-semibold text-gray-900 mb-2">
-                  {t('help.contact.supportTitle')}
+                  لا تزال تحتاج مساعدة؟
                 </h3>
-                <p className="text-gray-600 mb-4">
-                  {t('help.contact.email')}{' '}
-                  <a
-                    href="mailto:support@3arida.ma"
-                    className="text-green-600 hover:text-green-700 font-medium"
+                <p className="text-gray-600 mb-4">{t('help.contact.intro')}</p>
+                <a
+                  href="/contact"
+                  className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors text-sm"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    support@3arida.ma
-                  </a>
-                </p>
-                <p className="text-sm text-gray-500">
-                  {t('help.contact.responseTime')}
-                </p>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  {t('help.contact.link')}
+                </a>
               </div>
             </CardContent>
           </Card>
@@ -413,20 +454,50 @@ export default function HelpPage() {
 
         {/* No Results Message */}
         {searchQuery &&
-          !filterContent('getting started create petition sign petition') &&
-          !filterContent('account profile password reset edit bio') &&
-          !filterContent('managing petition approval edit delete update') &&
-          !filterContent('sharing promotion share qr code social media') &&
-          !filterContent(
-            'privacy security phone verification anonymous safe'
-          ) &&
-          !filterContent(
-            'pricing payment free tier basic premium enterprise'
-          ) &&
-          !filterContent(
-            'technical issues upload image loading troubleshooting'
-          ) &&
-          !filterContent('contact support help email') && (
+          !filterContent([
+            'help.gettingStarted.title',
+            'help.gettingStarted.createPetition.title',
+            'help.gettingStarted.signPetition.title',
+          ]) &&
+          !filterContent([
+            'help.account.title',
+            'help.account.createAccount.title',
+            'help.account.editProfile.title',
+            'help.account.resetPassword.title',
+          ]) &&
+          !filterContent([
+            'help.managing.title',
+            'help.managing.approval.title',
+            'help.managing.edit.title',
+            'help.managing.delete.title',
+            'help.managing.updates.title',
+          ]) &&
+          !filterContent([
+            'help.sharing.title',
+            'help.sharing.howToShare.title',
+            'help.sharing.qrCode.title',
+          ]) &&
+          !filterContent([
+            'help.privacy.title',
+            'help.privacy.safe.title',
+            'help.privacy.phoneVerification.title',
+            'help.privacy.anonymous.title',
+          ]) &&
+          !filterContent([
+            'help.pricing.title',
+            'help.pricing.free.title',
+            'help.pricing.payment.title',
+          ]) &&
+          !filterContent([
+            'help.technical.title',
+            'help.technical.upload.title',
+            'help.technical.loading.title',
+          ]) &&
+          !filterContent([
+            'help.contact.title',
+            'help.contact.supportTitle',
+            'help.contact.intro',
+          ]) && (
             <div className="text-center py-12">
               <svg
                 className="mx-auto h-12 w-12 text-gray-400"

@@ -48,7 +48,7 @@ export default function ContactPage() {
 
     try {
       const response = await fetch(
-        `/api/petitions/${encodeURIComponent(code)}`
+        `/api/petitions/${encodeURIComponent(code)}`,
       );
       if (!response.ok) {
         throw new Error('العريضة غير موجودة');
@@ -114,8 +114,8 @@ export default function ContactPage() {
     <>
       <Header />
       <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-sm p-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-8">اتصل بنا</h1>
 
             <div className="space-y-8">
@@ -144,7 +144,7 @@ export default function ContactPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="أدخل اسمك الكامل"
                   />
                 </div>
@@ -165,7 +165,7 @@ export default function ContactPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="your@email.com"
                   />
                 </div>
@@ -190,7 +190,7 @@ export default function ContactPage() {
                         reportDetails: '',
                       })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="">اختر السبب</option>
                     {contactReasons.map((reason) => (
@@ -243,7 +243,7 @@ export default function ContactPage() {
                           petitionCode: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       placeholder="مثال: 3AR-ABC123"
                     />
 
@@ -329,7 +329,7 @@ export default function ContactPage() {
                     <textarea
                       id="reportDetails"
                       required
-                      rows={4}
+                      rows={3}
                       value={formData.reportDetails}
                       onChange={(e) =>
                         setFormData({
@@ -337,7 +337,7 @@ export default function ContactPage() {
                           reportDetails: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
                       placeholder="يرجى وصف المحتوى الذي تريد الإبلاغ عنه بالتفصيل (نوع المحتوى، الرابط إن وجد، سبب البلاغ...)"
                     />
                     <p className="mt-2 text-sm text-gray-500">
@@ -362,7 +362,7 @@ export default function ContactPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, subject: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="موضوع رسالتك"
                   />
                 </div>
@@ -378,12 +378,12 @@ export default function ContactPage() {
                   <textarea
                     id="message"
                     required
-                    rows={6}
+                    rows={5}
                     value={formData.message}
                     onChange={(e) =>
                       setFormData({ ...formData, message: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
                     placeholder="اكتب رسالتك هنا..."
                   />
                 </div>
@@ -405,13 +405,13 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={status === 'loading'}
-                  className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  className="w-full bg-green-600 text-white py-2.5 px-6 rounded-md font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
                   {status === 'loading' ? 'جاري الإرسال...' : 'إرسال الرسالة'}
                 </button>
               </form>
 
-              {/* Response Times */}
+              {/* Response Times 
               <div className="bg-green-50 p-6 rounded-lg">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                   ⏰ أوقات الاستجابة المتوقعة
@@ -430,7 +430,7 @@ export default function ContactPage() {
                     • <strong>الشراكات:</strong> خلال 3-5 أيام عمل
                   </li>
                 </ul>
-              </div>
+              </div> */}
 
               {/* FAQ Link */}
               <div className="bg-blue-50 border-r-4 border-blue-400 p-6 rounded">

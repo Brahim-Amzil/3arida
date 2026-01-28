@@ -150,12 +150,12 @@ export default function ForgotPasswordPage() {
           {/* Help */}
           <div className="text-center">
             <p className="text-xs text-gray-500">
-              Need help? Contact us at{' '}
+              Need help?{' '}
               <a
-                href="mailto:support@3arida.ma"
-                className="text-green-600 hover:text-green-500"
+                href="/contact"
+                className="text-green-600 hover:text-green-500 underline"
               >
-                support@3arida.ma
+                Contact us
               </a>
             </p>
           </div>

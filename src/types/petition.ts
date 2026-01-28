@@ -9,7 +9,12 @@ export type PetitionStatus =
   | 'deleted';
 
 // Petition Pricing Tiers
-export type PricingTier = 'free' | 'basic' | 'premium' | 'enterprise';
+export type PricingTier =
+  | 'free'
+  | 'basic'
+  | 'premium'
+  | 'advanced'
+  | 'enterprise';
 
 // Core Petition Interface
 export interface Petition {
@@ -189,9 +194,11 @@ export interface Moderator {
 // Pricing Tiers Configuration
 export interface PricingTierConfig {
   name: string;
+  nameKey?: string; // Translation key for tier name
   maxSignatures: number;
   price: number; // in MAD
   features: string[];
+  featureKeys?: string[]; // Translation keys for features
 }
 
 // Filter and Search Types

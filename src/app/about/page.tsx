@@ -49,7 +49,7 @@ export default function AboutPage() {
             </h2>
             <div className="space-y-6">
               <div className="flex items-start">
-                <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center me-4">
                   <span className="text-green-600 font-bold text-xl">1</span>
                 </div>
                 <div>
@@ -63,7 +63,7 @@ export default function AboutPage() {
               </div>
 
               <div className="flex items-start">
-                <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center me-4">
                   <span className="text-green-600 font-bold text-xl">2</span>
                 </div>
                 <div>
@@ -77,7 +77,7 @@ export default function AboutPage() {
               </div>
 
               <div className="flex items-start">
-                <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center me-4">
                   <span className="text-green-600 font-bold text-xl">3</span>
                 </div>
                 <div>
@@ -304,17 +304,27 @@ export default function AboutPage() {
         </div>
 
         {/* Contact Info */}
-        <div className="mt-12 text-center text-gray-600">
-          <p className="mb-2">{t('about.contact.question')}</p>
-          <p>
-            {t('about.contact.email')}{' '}
-            <a
-              href="mailto:support@3arida.ma"
-              className="text-green-600 hover:text-green-700 font-medium"
+        <div className="mt-12 text-center">
+          <p className="text-gray-600 mb-4">{t('about.contact.question')}</p>
+          <a
+            href="/contact"
+            className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              support@3arida.ma
-            </a>
-          </p>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            {t('about.contact.link')}
+          </a>
         </div>
       </div>
 

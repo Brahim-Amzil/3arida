@@ -23,7 +23,7 @@ Added the following translation keys to `src/hooks/useTranslation.ts`:
 - `footer.privacyPolicy`: 'سياسة الخصوصية'
 - `footer.termsOfService`: 'شروط الخدمة'
 - `footer.cookiePolicy`: 'سياسة ملفات تعريف الارتباط'
-- `footer.copyright`: '© 2025 /3aridaعريضة. جميع الحقوق محفوظة.'
+- `footer.copyright`: '© 2025 / 3aridaعريضة. جميع الحقوق محفوظة.'
 
 #### French (fr) translations:
 

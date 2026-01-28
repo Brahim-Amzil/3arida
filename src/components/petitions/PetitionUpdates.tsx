@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Clock } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface PetitionUpdate {
   id: string;
@@ -26,6 +27,8 @@ export default function PetitionUpdates({
   petitionId,
   isCreator,
 }: PetitionUpdatesProps) {
+  const { t, locale } = useTranslation();
+  const isRTL = locale === 'ar';
   const [updates, setUpdates] = useState<PetitionUpdate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -42,16 +45,15 @@ export default function PetitionUpdates({
 
   const fetchUpdates = async () => {
     try {
-      const { collection, query, where, orderBy, getDocs } = await import(
-        'firebase/firestore'
-      );
+      const { collection, query, where, orderBy, getDocs } =
+        await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
 
       const updatesRef = collection(db, 'petitionUpdates');
       const q = query(
         updatesRef,
         where('petitionId', '==', petitionId),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
       );
 
       const snapshot = await getDocs(q);
@@ -76,20 +78,19 @@ export default function PetitionUpdates({
     e.preventDefault();
 
     if (!newUpdate.title.trim() || !newUpdate.content.trim()) {
-      alert('Please fill in all fields');
+      alert(t('updates.fillAllFields'));
       return;
     }
 
     setSubmitting(true);
     try {
-      const { collection, addDoc, serverTimestamp } = await import(
-        'firebase/firestore'
-      );
+      const { collection, addDoc, serverTimestamp } =
+        await import('firebase/firestore');
       const { db, auth } = await import('@/lib/firebase');
 
       const user = auth.currentUser;
       if (!user) {
-        alert('You must be logged in to post updates');
+        alert(t('updates.mustBeLoggedIn'));
         return;
       }
 
@@ -107,7 +108,7 @@ export default function PetitionUpdates({
       await fetchUpdates();
     } catch (error) {
       console.error('Error adding update:', error);
-      alert('Failed to add update. Please try again.');
+      alert(t('updates.addFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -120,15 +121,14 @@ export default function PetitionUpdates({
 
   const handleUpdateEdit = async (updateId: string) => {
     if (!editForm.title.trim() || !editForm.content.trim()) {
-      alert('Please fill in all fields');
+      alert(t('updates.fillAllFields'));
       return;
     }
 
     setSubmitting(true);
     try {
-      const { doc, updateDoc, serverTimestamp } = await import(
-        'firebase/firestore'
-      );
+      const { doc, updateDoc, serverTimestamp } =
+        await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
 
       const updateRef = doc(db, 'petitionUpdates', updateId);
@@ -144,7 +144,7 @@ export default function PetitionUpdates({
       await fetchUpdates();
     } catch (error) {
       console.error('Error updating:', error);
-      alert('Failed to update. Please try again.');
+      alert(t('updates.updateFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -169,7 +169,7 @@ export default function PetitionUpdates({
       await fetchUpdates();
     } catch (error) {
       console.error('Error deleting update:', error);
-      alert('Failed to delete update. Please try again.');
+      alert(t('updates.deleteFailed'));
     } finally {
       setDeleting(false);
     }
@@ -180,13 +180,16 @@ export default function PetitionUpdates({
   };
 
   const formatDateTime = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
+    return new Intl.DateTimeFormat(
+      locale === 'ar' ? 'ar-MA' : locale === 'fr' ? 'fr-FR' : 'en-US',
+      {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      },
+    ).format(date);
   };
 
   if (loading) {
@@ -204,9 +207,14 @@ export default function PetitionUpdates({
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+          <div
+            className={`bg-white rounded-lg max-w-md w-full p-6 shadow-xl ${isRTL ? 'text-right' : 'text-left'}`}
+            dir={isRTL ? 'rtl' : 'ltr'}
+          >
             <div className="flex items-start mb-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <div
+                className={`flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center ${isRTL ? 'ml-4' : 'mr-4'}`}
+              >
                 <svg
                   className="w-6 h-6 text-red-600"
                   fill="none"
@@ -221,30 +229,31 @@ export default function PetitionUpdates({
                   />
                 </svg>
               </div>
-              <div className="ml-4 flex-1">
+              <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Delete Update?
+                  {t('updates.deleteConfirmTitle')}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Are you sure you want to delete this update? This action
-                  cannot be undone.
+                  {t('updates.deleteConfirmMessage')}
                 </p>
               </div>
             </div>
-            <div className="flex gap-3 justify-end">
+            <div
+              className={`flex gap-3 ${isRTL ? 'justify-start' : 'justify-end'}`}
+            >
               <Button
                 variant="outline"
                 onClick={handleDeleteCancel}
                 disabled={deleting}
               >
-                Cancel
+                {t('updates.cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDeleteConfirm}
                 disabled={deleting}
               >
-                {deleting ? 'Deleting...' : 'Delete'}
+                {deleting ? t('updates.deleting') : t('updates.delete')}
               </Button>
             </div>
           </div>
@@ -252,9 +261,11 @@ export default function PetitionUpdates({
       )}
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-6" dir={isRTL ? 'rtl' : 'ltr'}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Updates</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {t('updates.title')}
+            </h2>
             {isCreator && !showAddForm && (
               <Button
                 onClick={() => setShowAddForm(true)}
@@ -262,7 +273,7 @@ export default function PetitionUpdates({
                 className="flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                Post Update
+                {t('updates.postUpdate')}
               </Button>
             )}
           </div>
@@ -275,7 +286,7 @@ export default function PetitionUpdates({
                   htmlFor="update-title"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Update Title
+                  {t('updates.updateTitle')}
                 </label>
                 <input
                   id="update-title"
@@ -284,10 +295,11 @@ export default function PetitionUpdates({
                   onChange={(e) =>
                     setNewUpdate({ ...newUpdate, title: e.target.value })
                   }
-                  placeholder="e.g., We reached 1,000 signatures!"
+                  placeholder={t('updates.titlePlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   maxLength={100}
                   disabled={submitting}
+                  dir={isRTL ? 'rtl' : 'ltr'}
                 />
               </div>
 
@@ -296,7 +308,7 @@ export default function PetitionUpdates({
                   htmlFor="update-content"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Update Content
+                  {t('updates.updateContent')}
                 </label>
                 <textarea
                   id="update-content"
@@ -304,20 +316,23 @@ export default function PetitionUpdates({
                   onChange={(e) =>
                     setNewUpdate({ ...newUpdate, content: e.target.value })
                   }
-                  placeholder="Share progress, news, or thank supporters..."
+                  placeholder={t('updates.contentPlaceholder')}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   maxLength={1000}
                   disabled={submitting}
+                  dir={isRTL ? 'rtl' : 'ltr'}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {newUpdate.content.length}/1000 characters
+                  {t('updates.charactersCount', {
+                    count: newUpdate.content.length,
+                  })}
                 </p>
               </div>
 
               <div className="flex gap-2">
                 <Button type="submit" disabled={submitting}>
-                  {submitting ? 'Posting...' : 'Post Update'}
+                  {submitting ? t('updates.posting') : t('updates.postUpdate')}
                 </Button>
                 <Button
                   type="button"
@@ -328,7 +343,7 @@ export default function PetitionUpdates({
                   }}
                   disabled={submitting}
                 >
-                  Cancel
+                  {t('updates.cancel')}
                 </Button>
               </div>
             </form>
@@ -341,7 +356,9 @@ export default function PetitionUpdates({
                 <div key={update.id} className="relative">
                   {/* Timeline line */}
                   {index < updates.length - 1 && (
-                    <div className="absolute left-4 top-10 bottom-0 w-0.5 bg-gray-200" />
+                    <div
+                      className={`absolute top-10 bottom-0 w-0.5 bg-gray-200 ${isRTL ? 'right-4' : 'left-4'}`}
+                    />
                   )}
 
                   <div className="flex gap-4">
@@ -368,6 +385,7 @@ export default function PetitionUpdates({
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                               maxLength={100}
                               disabled={submitting}
+                              dir={isRTL ? 'rtl' : 'ltr'}
                             />
                           </div>
                           <div>
@@ -383,9 +401,12 @@ export default function PetitionUpdates({
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                               maxLength={1000}
                               disabled={submitting}
+                              dir={isRTL ? 'rtl' : 'ltr'}
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                              {editForm.content.length}/1000 characters
+                              {t('updates.charactersCount', {
+                                count: editForm.content.length,
+                              })}
                             </p>
                           </div>
                           <div className="flex gap-2">
@@ -394,7 +415,9 @@ export default function PetitionUpdates({
                               onClick={() => handleUpdateEdit(update.id)}
                               disabled={submitting}
                             >
-                              {submitting ? 'Saving...' : 'Save Changes'}
+                              {submitting
+                                ? t('updates.saving')
+                                : t('updates.saveChanges')}
                             </Button>
                             <Button
                               size="sm"
@@ -405,7 +428,7 @@ export default function PetitionUpdates({
                               }}
                               disabled={submitting}
                             >
-                              Cancel
+                              {t('updates.cancel')}
                             </Button>
                           </div>
                           <p className="text-xs text-amber-600 flex items-center gap-1">
@@ -422,7 +445,7 @@ export default function PetitionUpdates({
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                               />
                             </svg>
-                            You can only edit this update once
+                            {t('updates.editOnce')}
                           </p>
                         </div>
                       ) : (
@@ -433,12 +456,14 @@ export default function PetitionUpdates({
                               {update.title}
                             </h3>
                             {isCreator && (
-                              <div className="flex gap-1 ml-2">
+                              <div
+                                className={`flex gap-1 ${isRTL ? 'mr-2' : 'ml-2'}`}
+                              >
                                 {!update.editedOnce && (
                                   <button
                                     onClick={() => handleEdit(update)}
                                     className="p-1 text-blue-600 hover:bg-blue-100 rounded transition-colors"
-                                    title="Edit update (one time only)"
+                                    title={t('updates.edit')}
                                   >
                                     <svg
                                       className="w-4 h-4"
@@ -458,7 +483,7 @@ export default function PetitionUpdates({
                                 <button
                                   onClick={() => handleDeleteClick(update.id)}
                                   className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
-                                  title="Delete update"
+                                  title={t('updates.delete')}
                                 >
                                   <svg
                                     className="w-4 h-4"
@@ -478,11 +503,14 @@ export default function PetitionUpdates({
                             )}
                           </div>
                           <p className="text-xs text-blue-600 mb-3">
-                            {formatDateTime(update.createdAt)} • by{' '}
-                            {update.createdByName}
+                            {formatDateTime(update.createdAt)} •{' '}
+                            {t('updates.by')} {update.createdByName}
                             {update.editedAt && (
-                              <span className="ml-2 text-amber-600">
-                                • Edited {formatDateTime(update.editedAt)}
+                              <span
+                                className={`${isRTL ? 'mr-2' : 'ml-2'} text-amber-600`}
+                              >
+                                • {t('updates.edited')}{' '}
+                                {formatDateTime(update.editedAt)}
                               </span>
                             )}
                           </p>
@@ -511,11 +539,11 @@ export default function PetitionUpdates({
                   d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
                 />
               </svg>
-              <p className="font-medium">No updates yet</p>
+              <p className="font-medium">{t('updates.noUpdates')}</p>
               <p className="text-sm">
                 {isCreator
-                  ? 'Post your first update to keep supporters informed'
-                  : "The petition creator hasn't posted any updates"}
+                  ? t('updates.noUpdatesCreator')
+                  : t('updates.noUpdatesVisitor')}
               </p>
             </div>
           )}

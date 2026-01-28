@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-
+import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useBanner } from '@/contexts/BannerContext';
 import {
@@ -60,10 +60,12 @@ export default function PetitionSupporters({
   petitionId,
   className = '',
 }: PetitionSupportersProps) {
+  const { t, locale } = useTranslation();
+  const isRTL = locale === 'ar';
   const { user, userProfile } = useAuth();
   const banner = useBanner();
   const [view, setView] = useState<'all' | 'comments' | 'signatures'>(
-    'comments'
+    'comments',
   );
   const [comments, setComments] = useState<Comment[]>([]);
   const [signatures, setSignatures] = useState<Signature[]>([]);
@@ -80,7 +82,7 @@ export default function PetitionSupporters({
   const [replyingTo, setReplyingTo] = useState<string | null>(null); // Comment ID being replied to
   const [replyText, setReplyText] = useState('');
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(
-    new Set()
+    new Set(),
   ); // Expanded comment IDs
   const [deletingComment, setDeletingComment] = useState<string | null>(null); // Comment ID being deleted (for confirmation)
   const [isDeleting, setIsDeleting] = useState(false); // Loading state for delete action
@@ -107,7 +109,7 @@ export default function PetitionSupporters({
       const commentsQuery = query(
         commentsRef,
         where('petitionId', '==', petitionId),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
       );
 
       const snapshot = await getDocs(commentsQuery);
@@ -167,7 +169,7 @@ export default function PetitionSupporters({
       topLevelComments.forEach((comment) => {
         if (comment.replies && comment.replies.length > 0) {
           comment.replies.sort(
-            (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+            (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
           );
         }
       });
@@ -189,7 +191,7 @@ export default function PetitionSupporters({
         signaturesRef,
         where('petitionId', '==', petitionId),
         orderBy('createdAt', 'desc'),
-        limit(PAGE_SIZE)
+        limit(PAGE_SIZE),
       );
 
       if (loadMore && lastDoc) {
@@ -198,7 +200,7 @@ export default function PetitionSupporters({
           where('petitionId', '==', petitionId),
           orderBy('createdAt', 'desc'),
           startAfter(lastDoc),
-          limit(PAGE_SIZE)
+          limit(PAGE_SIZE),
         );
       }
 
@@ -238,13 +240,13 @@ export default function PetitionSupporters({
 
   const sortComments = (
     commentsList: Comment[],
-    sortType: 'latest' | 'mostLiked'
+    sortType: 'latest' | 'mostLiked',
   ) => {
     if (sortType === 'mostLiked') {
       return [...commentsList].sort((a, b) => b.likes - a.likes);
     }
     return [...commentsList].sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     );
   };
 
@@ -329,7 +331,7 @@ export default function PetitionSupporters({
             };
           }
           return comment;
-        })
+        }),
       );
 
       // Expand replies to show the new reply
@@ -391,8 +393,8 @@ export default function PetitionSupporters({
                   likes: c.likes - 1,
                   likedBy: c.likedBy?.filter((id) => id !== user.uid),
                 }
-              : c
-          )
+              : c,
+          ),
         );
       } else {
         const currentLikedBy =
@@ -412,8 +414,8 @@ export default function PetitionSupporters({
                   likes: c.likes + 1,
                   likedBy: [...(c.likedBy || []), user.uid],
                 }
-              : c
-          )
+              : c,
+          ),
         );
       }
     } catch (error) {
@@ -424,7 +426,7 @@ export default function PetitionSupporters({
 
   const handleDeleteComment = async (
     commentId: string,
-    isReply: boolean = false
+    isReply: boolean = false,
   ) => {
     if (!user || isDeleting) return;
 
@@ -462,18 +464,18 @@ export default function PetitionSupporters({
                       deletedAt: new Date(),
                       deletedBy: user.uid,
                     }
-                  : reply
+                  : reply,
               ),
             };
           }
           return comment;
-        })
+        }),
       );
 
       // Clear the confirmation state
       setDeletingComment(null);
       banner.success(
-        isReply ? 'Reply deleted successfully' : 'Comment deleted successfully'
+        isReply ? 'Reply deleted successfully' : 'Comment deleted successfully',
       );
     } catch (error) {
       console.error('Error deleting comment:', error);
@@ -535,7 +537,7 @@ export default function PetitionSupporters({
         : signatures.length;
 
   return (
-    <div className={className}>
+    <div className={className} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Modern Tab Design */}
       <div className="space-y-3 mb-4">
         {/* Full-width Pill-shaped Tabs */}
@@ -548,7 +550,7 @@ export default function PetitionSupporters({
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Comments ({comments.length})
+            {t('supporters.comments')} ({comments.length})
           </button>
           <button
             onClick={() => setView('signatures')}
@@ -558,19 +560,19 @@ export default function PetitionSupporters({
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Signatures ({signatures.length})
+            {t('supporters.signatures')} ({signatures.length})
           </button>
         </div>
 
         {/* Add Comment & Sort - Only show in comments view */}
         {view === 'comments' && (
           <div className="flex items-center justify-between">
-            {/* Circular Add Comment Button */}
+            {/* Add Comment Button with Text */}
             {user && !showCommentForm && (
               <button
                 onClick={() => setShowCommentForm(true)}
-                className="w-11 h-11 flex items-center justify-center bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-all shadow-sm hover:shadow-md flex-shrink-0"
-                title="Add Comment"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-all shadow-sm hover:shadow-md"
+                title={t('supporters.addComment')}
               >
                 <svg
                   className="w-5 h-5"
@@ -585,6 +587,9 @@ export default function PetitionSupporters({
                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                   />
                 </svg>
+                <span className="text-sm font-medium">
+                  {t('supporters.addComment')}
+                </span>
               </button>
             )}
 
@@ -599,7 +604,7 @@ export default function PetitionSupporters({
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  Latest
+                  {t('supporters.latest')}
                 </button>
                 <span className="text-gray-300">|</span>
                 <button
@@ -610,7 +615,7 @@ export default function PetitionSupporters({
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  Most Liked
+                  {t('supporters.mostLiked')}
                 </button>
               </div>
             )}
@@ -626,12 +631,12 @@ export default function PetitionSupporters({
             <form onSubmit={handleSubmitComment} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Share your thoughts
+                  {t('supporters.shareThoughts')}
                 </label>
                 <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Why do you support this petition?"
+                  placeholder={t('supporters.whySupport')}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
                   disabled={submitting}
@@ -645,10 +650,10 @@ export default function PetitionSupporters({
                   id="anonymous"
                   checked={isAnonymous}
                   onChange={(e) => setIsAnonymous(e.target.checked)}
-                  className="mr-2"
+                  className={isRTL ? 'ml-2' : 'mr-2'}
                 />
                 <label htmlFor="anonymous" className="text-sm text-gray-600">
-                  Comment anonymously
+                  {t('supporters.commentAnonymously')}
                 </label>
               </div>
 
@@ -661,10 +666,10 @@ export default function PetitionSupporters({
                   {submitting ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Posting...
+                      {t('supporters.posting')}
                     </>
                   ) : (
-                    'Post Comment'
+                    t('supporters.postComment')
                   )}
                 </Button>
                 <Button
@@ -677,7 +682,7 @@ export default function PetitionSupporters({
                   }}
                   size="sm"
                 >
-                  Cancel
+                  {t('supporters.cancel')}
                 </Button>
               </div>
             </form>
@@ -701,20 +706,20 @@ export default function PetitionSupporters({
               />
             </svg>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Join the Discussion
+              {t('supporters.joinDiscussion')}
             </h3>
             <p className="text-gray-600 mb-4">
-              Sign in to share your thoughts and support this petition.
+              {t('supporters.signInMessage')}
             </p>
             <Button asChild>
               <a
                 href={`/auth/login?redirect=${encodeURIComponent(
                   typeof window !== 'undefined'
                     ? window.location.pathname
-                    : `/petitions/${petitionId}`
+                    : `/petitions/${petitionId}`,
                 )}`}
               >
-                Sign In to Comment
+                {t('supporters.signInToComment')}
               </a>
             </Button>
           </div>
@@ -752,20 +757,18 @@ export default function PetitionSupporters({
               />
             </svg>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No{' '}
               {view === 'comments'
-                ? 'comments'
+                ? t('supporters.noComments')
                 : view === 'signatures'
-                  ? 'signatures'
-                  : 'activity'}{' '}
-              yet
+                  ? t('supporters.noSignatures')
+                  : t('supporters.noActivity')}
             </h3>
             <p className="text-gray-600">
               {view === 'comments'
-                ? 'Be the first to share your thoughts on this petition.'
+                ? t('supporters.firstComment')
                 : view === 'signatures'
-                  ? 'Be the first to sign this petition!'
-                  : 'Be the first to support this petition.'}
+                  ? t('supporters.firstSignature')
+                  : t('supporters.firstSupport')}
             </p>
           </div>
         ) : (
@@ -811,7 +814,7 @@ export default function PetitionSupporters({
 
                         {comment.deleted ? (
                           <p className="text-gray-400 italic mb-3">
-                            [Comment deleted]
+                            {t('supporters.commentDeleted')}
                           </p>
                         ) : (
                           <p className="text-gray-700 whitespace-pre-wrap mb-3">
@@ -863,7 +866,9 @@ export default function PetitionSupporters({
                               <button
                                 onClick={() => {
                                   if (!user) {
-                                    alert('Please sign in to reply');
+                                    banner.info(
+                                      t('supporters.signInToComment'),
+                                    );
                                     return;
                                   }
                                   setReplyingTo(comment.id);
@@ -871,7 +876,7 @@ export default function PetitionSupporters({
                                 }}
                                 className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
                               >
-                                Reply
+                                {t('supporters.reply')}
                               </button>
 
                               {/* Delete Button - Only show for comment author */}
@@ -880,7 +885,7 @@ export default function PetitionSupporters({
                                   onClick={() => setDeletingComment(comment.id)}
                                   className="text-sm text-red-500 hover:text-red-600 transition-colors"
                                 >
-                                  Delete
+                                  {t('supporters.delete')}
                                 </button>
                               )}
                             </>
@@ -893,8 +898,11 @@ export default function PetitionSupporters({
                               className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
                             >
                               {expandedReplies.has(comment.id)
-                                ? `Hide ${comment.replyCount} ${comment.replyCount === 1 ? 'reply' : 'replies'}`
-                                : `Show ${comment.replyCount} ${comment.replyCount === 1 ? 'reply' : 'replies'}`}
+                                ? t('supporters.hideReplies')
+                                : t('supporters.showReplies').replace(
+                                    '{count}',
+                                    String(comment.replyCount),
+                                  )}
                             </button>
                           )}
                         </div>
@@ -903,8 +911,7 @@ export default function PetitionSupporters({
                         {deletingComment === comment.id && (
                           <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
                             <p className="text-sm text-gray-700 mb-3">
-                              Are you sure you want to delete this comment?
-                              Replies will still be visible.
+                              {t('supporters.deleteMessage')}
                             </p>
                             <div className="flex gap-2">
                               <button
@@ -917,14 +924,16 @@ export default function PetitionSupporters({
                                 {isDeleting && (
                                   <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                                 )}
-                                {isDeleting ? 'Deleting...' : 'Delete'}
+                                {isDeleting
+                                  ? t('supporters.deleting')
+                                  : t('supporters.delete')}
                               </button>
                               <button
                                 onClick={() => setDeletingComment(null)}
                                 disabled={isDeleting}
                                 className="px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors disabled:opacity-50"
                               >
-                                Cancel
+                                {t('supporters.cancel')}
                               </button>
                             </div>
                           </div>
@@ -932,11 +941,13 @@ export default function PetitionSupporters({
 
                         {/* Reply Form */}
                         {replyingTo === comment.id && (
-                          <div className="mt-3 ml-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <div
+                            className={`mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200 ${isRTL ? 'mr-2' : 'ml-2'}`}
+                          >
                             <textarea
                               value={replyText}
                               onChange={(e) => setReplyText(e.target.value)}
-                              placeholder="Write your reply..."
+                              placeholder={t('supporters.writeReply')}
                               rows={2}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 resize-none text-sm"
                               disabled={submitting}
@@ -947,7 +958,9 @@ export default function PetitionSupporters({
                                 disabled={submitting || !replyText.trim()}
                                 className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                {submitting ? 'Posting...' : 'Post Reply'}
+                                {submitting
+                                  ? t('supporters.replying')
+                                  : t('supporters.postReply')}
                               </button>
                               <button
                                 onClick={() => {
@@ -956,7 +969,7 @@ export default function PetitionSupporters({
                                 }}
                                 className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
                               >
-                                Cancel
+                                {t('supporters.cancel')}
                               </button>
                             </div>
                           </div>
@@ -991,7 +1004,7 @@ export default function PetitionSupporters({
                                     </div>
                                     {reply.deleted ? (
                                       <p className="text-sm text-gray-400 italic">
-                                        [Reply deleted]
+                                        {t('supporters.replyDeleted')}
                                       </p>
                                     ) : (
                                       <p className="text-sm text-gray-700">
@@ -1065,7 +1078,7 @@ export default function PetitionSupporters({
                                             onClick={() =>
                                               handleDeleteComment(
                                                 reply.id,
-                                                true
+                                                true,
                                               )
                                             }
                                             disabled={isDeleting}
@@ -1243,7 +1256,7 @@ export default function PetitionSupporters({
                           <button
                             onClick={() => {
                               if (!user) {
-                                banner.info('Please sign in to reply');
+                                banner.info(t('supporters.signInToComment'));
                                 return;
                               }
                               setReplyingTo(comment.id);
@@ -1251,7 +1264,7 @@ export default function PetitionSupporters({
                             }}
                             className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
                           >
-                            Reply
+                            {t('supporters.reply')}
                           </button>
 
                           {/* Delete Button - Only show for comment author */}
@@ -1260,7 +1273,7 @@ export default function PetitionSupporters({
                               onClick={() => setDeletingComment(comment.id)}
                               className="text-sm text-red-500 hover:text-red-600 transition-colors"
                             >
-                              Delete
+                              {t('supporters.delete')}
                             </button>
                           )}
                         </>
@@ -1273,8 +1286,11 @@ export default function PetitionSupporters({
                           className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
                         >
                           {expandedReplies.has(comment.id)
-                            ? `Hide ${comment.replyCount} ${comment.replyCount === 1 ? 'reply' : 'replies'}`
-                            : `Show ${comment.replyCount} ${comment.replyCount === 1 ? 'reply' : 'replies'}`}
+                            ? t('supporters.hideReplies')
+                            : t('supporters.showReplies').replace(
+                                '{count}',
+                                String(comment.replyCount),
+                              )}
                         </button>
                       )}
                     </div>
@@ -1572,10 +1588,10 @@ export default function PetitionSupporters({
               {loadingMore ? (
                 <span className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Loading...
+                  {t('supporters.loading')}
                 </span>
               ) : (
-                'Load More'
+                t('supporters.loadMore')
               )}
             </button>
           </div>

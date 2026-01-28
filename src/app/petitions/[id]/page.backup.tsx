@@ -96,15 +96,14 @@ export default function PetitionDetailPage() {
       if (!petition?.id) return;
 
       try {
-        const { collection, query, where, getCountFromServer } = await import(
-          'firebase/firestore'
-        );
+        const { collection, query, where, getCountFromServer } =
+          await import('firebase/firestore');
         const { db } = await import('@/lib/firebase');
 
         const commentsRef = collection(db, 'comments');
         const commentsQuery = query(
           commentsRef,
-          where('petitionId', '==', petition.id)
+          where('petitionId', '==', petition.id),
         );
 
         const snapshot = await getCountFromServer(commentsQuery);
@@ -126,16 +125,15 @@ export default function PetitionDetailPage() {
       }
 
       try {
-        const { collection, query, where, getDocs } = await import(
-          'firebase/firestore'
-        );
+        const { collection, query, where, getDocs } =
+          await import('firebase/firestore');
         const { db } = await import('@/lib/firebase');
 
         const signaturesRef = collection(db, 'signatures');
         const q = query(
           signaturesRef,
           where('petitionId', '==', petition.id),
-          where('userId', '==', user.uid)
+          where('userId', '==', user.uid),
         );
 
         const snapshot = await getDocs(q);
@@ -252,7 +250,7 @@ export default function PetitionDetailPage() {
       } else {
         console.log(
           '❌ No alert data created for notification type:',
-          notifType
+          notifType,
         );
       }
     } else {
@@ -270,23 +268,22 @@ export default function PetitionDetailPage() {
 
     // Check if user already signed this petition
     try {
-      const { collection, query, where, getDocs } = await import(
-        'firebase/firestore'
-      );
+      const { collection, query, where, getDocs } =
+        await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
 
       const signaturesRef = collection(db, 'signatures');
       const q = query(
         signaturesRef,
         where('petitionId', '==', petition?.id),
-        where('userId', '==', user.uid)
+        where('userId', '==', user.uid),
       );
 
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
         alert(
-          'لقد قمت بالفعل بالتوقيع على هذه العريضة!\nYou have already signed this petition!'
+          'لقد قمت بالفعل بالتوقيع على هذه العريضة!\nYou have already signed this petition!',
         );
         return;
       }
@@ -296,14 +293,14 @@ export default function PetitionDetailPage() {
         const phoneQuery = query(
           signaturesRef,
           where('petitionId', '==', petition?.id),
-          where('signerPhone', '==', userProfile.phone)
+          where('signerPhone', '==', userProfile.phone),
         );
 
         const phoneSnapshot = await getDocs(phoneQuery);
 
         if (!phoneSnapshot.empty) {
           alert(
-            'رقم هاتفك قد تم استخدامه بالفعل للتوقيع على هذه العريضة!\nYour phone number has already been used to sign this petition!'
+            'رقم هاتفك قد تم استخدامه بالفعل للتوقيع على هذه العريضة!\nYour phone number has already been used to sign this petition!',
           );
           return;
         }
@@ -362,7 +359,7 @@ export default function PetitionDetailPage() {
           },
           comment: '',
         },
-        user.uid
+        user.uid,
       );
 
       // The petition will be updated via real-time listener
@@ -411,7 +408,7 @@ export default function PetitionDetailPage() {
 
   // Admin function to update petition status
   const handleUpdatePetitionStatus = async (
-    newStatus: 'approved' | 'rejected' | 'paused' | 'deleted' | 'archived'
+    newStatus: 'approved' | 'rejected' | 'paused' | 'deleted' | 'archived',
   ) => {
     if (!isModeratorOrAdmin(userProfile) || !petition || !userProfile) return;
 
@@ -425,12 +422,12 @@ export default function PetitionDetailPage() {
           petition.id,
           petition.creatorId,
           petition.title,
-          newStatus
+          newStatus,
         );
       } catch (notifError) {
         console.warn(
           'Failed to send notification, but status updated:',
-          notifError
+          notifError,
         );
       }
 
@@ -460,7 +457,7 @@ export default function PetitionDetailPage() {
 
     if (
       confirm(
-        'Are you sure you want to delete this petition? This action cannot be undone.'
+        'Are you sure you want to delete this petition? This action cannot be undone.',
       )
     ) {
       await handleUpdatePetitionStatus('deleted');
@@ -502,15 +499,14 @@ export default function PetitionDetailPage() {
 
       // Notify admins of the deletion request
       try {
-        const { notifyAdminsOfDeletionRequest } = await import(
-          '@/lib/notifications'
-        );
+        const { notifyAdminsOfDeletionRequest } =
+          await import('@/lib/notifications');
         await notifyAdminsOfDeletionRequest(
           petition.id,
           petition.title,
           user.uid,
           reason,
-          petition.currentSignatures
+          petition.currentSignatures,
         );
       } catch (notifError) {
         console.error('Error sending notification to admins:', notifError);
@@ -572,7 +568,7 @@ export default function PetitionDetailPage() {
 
   const progress = calculateProgress(
     petition.currentSignatures,
-    petition.targetSignatures
+    petition.targetSignatures,
   );
   const statusColor = getPetitionStatusColor(petition.status);
   const statusLabel = getPetitionStatusLabel(petition.status);
@@ -598,7 +594,7 @@ export default function PetitionDetailPage() {
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                Share QR Code
+                شارِك رمز QR الخاص بالعريضة
               </h3>
               <button
                 onClick={() => setShowQRCode(false)}
@@ -982,7 +978,7 @@ export default function PetitionDetailPage() {
                                 d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
                               />
                             </svg>
-                            Share Petition
+                            شارِك العريضة
                           </Button>
                           <Button
                             size="sm"
@@ -1291,14 +1287,14 @@ export default function PetitionDetailPage() {
                                 {creator?.createdAt
                                   ? typeof creator.createdAt === 'string'
                                     ? new Date(
-                                        creator.createdAt
+                                        creator.createdAt,
                                       ).toLocaleDateString()
                                     : (creator.createdAt as any).toDate
                                       ? (creator.createdAt as any)
                                           .toDate()
                                           .toLocaleDateString()
                                       : new Date(
-                                          creator.createdAt as any
+                                          creator.createdAt as any,
                                         ).toLocaleDateString()
                                   : 'N/A'}
                               </p>
@@ -1568,7 +1564,7 @@ export default function PetitionDetailPage() {
                             <p className="text-sm text-gray-700">
                               <strong>Resubmitted:</strong>{' '}
                               {new Date(
-                                history.resubmittedAt
+                                history.resubmittedAt,
                               ).toLocaleDateString()}
                             </p>
                           )}

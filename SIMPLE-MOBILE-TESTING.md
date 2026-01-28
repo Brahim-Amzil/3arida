@@ -121,7 +121,7 @@ Test how app performs on slow networks!
 - [ ] View petition details
 - [ ] Sign petition
 - [ ] Add comment
-- [ ] Share petition
+- [ ] شارِك العريضة
 
 ---
 

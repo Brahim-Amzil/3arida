@@ -44,7 +44,7 @@ export function petitionApprovedEmail(
   userName: string,
   petitionTitle: string,
   petitionId: string,
-  userEmail: string
+  userEmail: string,
 ) {
   return `
     <!DOCTYPE html>
@@ -89,7 +89,7 @@ export function signatureConfirmationEmail(
   userName: string,
   petitionTitle: string,
   petitionId: string,
-  userEmail: string
+  userEmail: string,
 ) {
   return `
     <!DOCTYPE html>
@@ -136,7 +136,7 @@ export function petitionUpdateEmail(
   petitionId: string,
   updateTitle: string,
   updateContent: string,
-  userEmail: string
+  userEmail: string,
 ) {
   return `
     <!DOCTYPE html>
@@ -179,7 +179,7 @@ export function milestoneReachedEmail(
   milestone: number,
   currentSignatures: number,
   targetSignatures: number,
-  userEmail: string
+  userEmail: string,
 ) {
   return `
     <!DOCTYPE html>
@@ -195,7 +195,7 @@ export function milestoneReachedEmail(
           </div>
           <div class="content">
             <h2>مبروك ${userName}!</h2>
-            <p>عريضتك "<strong>${petitionTitle}</strong>" وصلت إلى ${milestone}% من الهدف!</p>
+            <p>عريضتك "<strong>${petitionTitle}</strong>" وصلت إلى ${milestone}% من مُوَجهة لِ!</p>
             <p>Your petition "<strong>${petitionTitle}</strong>" has reached ${milestone}% of its goal!</p>
             
             <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
@@ -206,7 +206,7 @@ export function milestoneReachedEmail(
               </div>
             </div>
             
-            <p>استمر في المشاركة للوصول إلى الهدف الكامل!</p>
+            <p>استمر في المشاركة للوصول إلى مُوَجهة لِ الكامل!</p>
             
             <a href="${process.env.NEXT_PUBLIC_APP_URL}/petitions/${petitionId}" class="button">عرض العريضة</a>
           </div>
