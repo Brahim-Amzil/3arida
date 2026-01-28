@@ -147,9 +147,8 @@ export default function PetitionDetailPage() {
         case 'approved':
           alertData = {
             type: 'approved',
-            title: 'Petition Approved!',
-            message:
-              'Your petition has been approved by our moderation team and is now live on the platform.',
+            title: t('notification.approved.title'),
+            message: t('notification.approved.message'),
             reason: notifReason || undefined,
             timestamp: new Date(),
           };
@@ -158,8 +157,8 @@ export default function PetitionDetailPage() {
         case 'rejected':
           alertData = {
             type: 'rejected',
-            title: 'Petition Rejected',
-            message: 'Your petition has been rejected by our moderation team.',
+            title: t('notification.rejected.title'),
+            message: t('notification.rejected.message'),
             reason: notifReason || undefined,
             timestamp: new Date(),
           };
@@ -168,9 +167,8 @@ export default function PetitionDetailPage() {
         case 'paused':
           alertData = {
             type: 'paused',
-            title: 'Petition Paused',
-            message:
-              'Your petition has been temporarily paused by our moderation team.',
+            title: t('notification.paused.title'),
+            message: t('notification.paused.message'),
             reason: notifReason || undefined,
             timestamp: new Date(),
           };
@@ -179,8 +177,8 @@ export default function PetitionDetailPage() {
         case 'deleted':
           alertData = {
             type: 'deleted',
-            title: 'Petition Deleted',
-            message: 'Your petition has been removed from the platform.',
+            title: t('notification.deleted.title'),
+            message: t('notification.deleted.message'),
             reason: notifReason || undefined,
             timestamp: new Date(),
           };
@@ -189,8 +187,8 @@ export default function PetitionDetailPage() {
         case 'archived':
           alertData = {
             type: 'archived',
-            title: 'Petition Archived',
-            message: 'Your petition has been archived.',
+            title: t('notification.archived.title'),
+            message: t('notification.archived.message'),
             reason: notifReason || undefined,
             timestamp: new Date(),
           };
@@ -199,9 +197,8 @@ export default function PetitionDetailPage() {
         case 'deletion_approved':
           alertData = {
             type: 'deletion_approved',
-            title: 'Deletion Request Approved',
-            message:
-              'Your deletion request has been approved. The petition has been removed.',
+            title: t('notification.deletion_approved.title'),
+            message: t('notification.deletion_approved.message'),
             reason: notifReason || undefined,
             timestamp: new Date(),
           };
@@ -210,9 +207,8 @@ export default function PetitionDetailPage() {
         case 'deletion_denied':
           alertData = {
             type: 'deletion_denied',
-            title: 'Deletion Request Denied',
-            message:
-              'Your deletion request has been denied by our moderation team.',
+            title: t('notification.deletion_denied.title'),
+            message: t('notification.deletion_denied.message'),
             reason: notifReason || undefined,
             timestamp: new Date(),
           };

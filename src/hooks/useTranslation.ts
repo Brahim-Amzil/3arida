@@ -865,6 +865,26 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.createPetitionButton': 'إنشاء العريضة',
     'form.validationErrors': 'يرجى تصحيح الأخطاء التالية',
 
+    // Notification Alerts
+    'notification.approved.title': 'تمت الموافقة على العريضة!',
+    'notification.approved.message':
+      'تمت الموافقة على عريضتك من قبل فريق الإشراف وهي الآن مباشرة على المنصة.',
+    'notification.rejected.title': 'تم رفض العريضة',
+    'notification.rejected.message': 'تم رفض عريضتك من قبل فريق الإشراف.',
+    'notification.paused.title': 'تم إيقاف العريضة مؤقتاً',
+    'notification.paused.message':
+      'تم إيقاف عريضتك مؤقتاً من قبل فريق الإشراف.',
+    'notification.deleted.title': 'تم حذف العريضة',
+    'notification.deleted.message': 'تم إزالة عريضتك من المنصة.',
+    'notification.archived.title': 'تم أرشفة العريضة',
+    'notification.archived.message': 'تم أرشفة عريضتك.',
+    'notification.deletion_approved.title': 'تمت الموافقة على طلب الحذف',
+    'notification.deletion_approved.message':
+      'تمت الموافقة على طلب الحذف الخاص بك. تم إزالة العريضة.',
+    'notification.deletion_denied.title': 'تم رفض طلب الحذف',
+    'notification.deletion_denied.message':
+      'تم رفض طلب الحذف الخاص بك من قبل فريق الإشراف.',
+
     // Review Step
     'review.title': 'راجع عريضتك',
     'review.subtitle': 'يرجى مراجعة جميع المعلومات أدناه قبل إرسال عريضتك.',
@@ -2283,6 +2303,28 @@ const translations: Record<Locale, TranslationMessages> = {
       'Le nombre maximum de signatures est de 1 000 000',
     'form.selectTargetSignaturesError':
       'Veuillez sélectionner ou entrer un nombre cible de signatures',
+
+    // Notification Alerts
+    'notification.approved.title': 'Pétition approuvée !',
+    'notification.approved.message':
+      'Votre pétition a été approuvée par notre équipe de modération et est maintenant en ligne sur la plateforme.',
+    'notification.rejected.title': 'Pétition rejetée',
+    'notification.rejected.message':
+      'Votre pétition a été rejetée par notre équipe de modération.',
+    'notification.paused.title': 'Pétition mise en pause',
+    'notification.paused.message':
+      'Votre pétition a été temporairement mise en pause par notre équipe de modération.',
+    'notification.deleted.title': 'Pétition supprimée',
+    'notification.deleted.message':
+      'Votre pétition a été retirée de la plateforme.',
+    'notification.archived.title': 'Pétition archivée',
+    'notification.archived.message': 'Votre pétition a été archivée.',
+    'notification.deletion_approved.title': 'Demande de suppression approuvée',
+    'notification.deletion_approved.message':
+      'Votre demande de suppression a été approuvée. La pétition a été retirée.',
+    'notification.deletion_denied.title': 'Demande de suppression refusée',
+    'notification.deletion_denied.message':
+      'Votre demande de suppression a été refusée par notre équipe de modération.',
 
     // Form File Upload
     'form.fileSizeError': 'La taille du fichier doit être inférieure à 5MB',
