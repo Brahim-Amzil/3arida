@@ -15,7 +15,7 @@ export interface QRCodeOptions {
  */
 export const generateQRCodeDataURL = async (
   petitionId: string,
-  options: QRCodeOptions = {}
+  options: QRCodeOptions = {},
 ): Promise<string> => {
   const { size = 256, branded = false, includeAnalytics = true } = options;
 
@@ -61,7 +61,7 @@ export const generateQRCodeDataURL = async (
  */
 export const generateAndStorePetitionQR = async (
   petitionId: string,
-  options: QRCodeOptions = {}
+  options: QRCodeOptions = {},
 ): Promise<string> => {
   const { size = 512, branded = false, updatePetition = true } = options;
 
@@ -107,7 +107,7 @@ export const generateAndStorePetitionQR = async (
  */
 const addBrandingToQR = async (
   qrCodeDataURL: string,
-  size: number
+  size: number,
 ): Promise<string> => {
   try {
     // Create canvas
@@ -150,7 +150,7 @@ const addBrandingToQR = async (
 export const generateShareQR = async (
   petitionId: string,
   petitionTitle: string,
-  options: QRCodeOptions = {}
+  options: QRCodeOptions = {},
 ): Promise<string> => {
   const { size = 300, branded = true } = options;
 
@@ -163,7 +163,7 @@ export const generateShareQR = async (
 
     return qrCodeDataURL;
   } catch (error) {
-    console.error('Error generating share QR code:', error);
+    console.error('Error generating شارِك رمز QR الخاص بالعريضة:', error);
     throw new Error('Failed to generate QR code for sharing');
   }
 };
@@ -175,7 +175,7 @@ export const downloadQRCode = async (
   petitionId: string,
   petitionTitle: string,
   format: 'png' | 'pdf' = 'png',
-  options: QRCodeOptions = {}
+  options: QRCodeOptions = {},
 ): Promise<void> => {
   try {
     const { size = 512, branded = true } = options;
@@ -212,7 +212,7 @@ export const downloadQRCode = async (
  * Get QR code analytics (placeholder for future implementation)
  */
 export const getQRCodeAnalytics = async (
-  petitionId: string
+  petitionId: string,
 ): Promise<{
   scans: number;
   uniqueScans: number;

@@ -111,7 +111,7 @@ export default function PetitionDetailPage() {
         const q = query(
           signaturesRef,
           where('petitionId', '==', petition.id),
-          where('userId', '==', user.uid)
+          where('userId', '==', user.uid),
         );
 
         const snapshot = await getDocs(q);
@@ -230,7 +230,7 @@ export default function PetitionDetailPage() {
       } else {
         console.log(
           '❌ No alert data created for notification type:',
-          notifType
+          notifType,
         );
       }
     } else {
@@ -258,14 +258,14 @@ export default function PetitionDetailPage() {
       const q = query(
         signaturesRef,
         where('petitionId', '==', petition?.id),
-        where('userId', '==', user.uid)
+        where('userId', '==', user.uid),
       );
 
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
         alert(
-          'لقد قمت بالفعل بالتوقيع على هذه العريضة!\nYou have already signed this petition!'
+          'لقد قمت بالفعل بالتوقيع على هذه العريضة!\nYou have already signed this petition!',
         );
         return;
       }
@@ -324,7 +324,7 @@ export default function PetitionDetailPage() {
           userId: user.uid,
           petitionId: petition.id,
           userName: userProfile?.name || user.displayName || 'Anonymous',
-        }
+        },
       );
 
       await signPetition(
@@ -337,7 +337,7 @@ export default function PetitionDetailPage() {
           },
           comment: '',
         },
-        user.uid
+        user.uid,
       );
 
       // Update button state immediately after successful signing
@@ -384,7 +384,7 @@ export default function PetitionDetailPage() {
 
   // Admin function to update petition status
   const handleUpdatePetitionStatus = async (
-    newStatus: 'approved' | 'rejected' | 'paused' | 'deleted' | 'archived'
+    newStatus: 'approved' | 'rejected' | 'paused' | 'deleted' | 'archived',
   ) => {
     if (!isModeratorOrAdmin(userProfile) || !petition || !userProfile) return;
 
@@ -398,12 +398,12 @@ export default function PetitionDetailPage() {
           petition.id,
           petition.creatorId,
           petition.title,
-          newStatus
+          newStatus,
         );
       } catch (notifError) {
         console.warn(
           'Failed to send notification, but status updated:',
-          notifError
+          notifError,
         );
       }
 
@@ -435,7 +435,7 @@ export default function PetitionDetailPage() {
 
     if (
       confirm(
-        'Are you sure you want to delete this petition? This action cannot be undone.'
+        'Are you sure you want to delete this petition? This action cannot be undone.',
       )
     ) {
       await handleUpdatePetitionStatus('deleted');
@@ -484,7 +484,7 @@ export default function PetitionDetailPage() {
           petition.title,
           user.uid,
           reason,
-          petition.currentSignatures
+          petition.currentSignatures,
         );
       } catch (notifError) {
         console.error('Error sending notification to admins:', notifError);
@@ -546,10 +546,30 @@ export default function PetitionDetailPage() {
 
   const progress = calculateProgress(
     petition.currentSignatures,
-    petition.targetSignatures
+    petition.targetSignatures,
   );
   const statusColor = getPetitionStatusColor(petition.status);
-  const statusLabel = getPetitionStatusLabel(petition.status);
+
+  // Get translated status label
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return t('dashboard.filter.all'); // Draft not in filters, using fallback
+      case 'pending':
+        return t('dashboard.filter.pending');
+      case 'approved':
+        return t('dashboard.filter.active');
+      case 'paused':
+        return t('dashboard.filter.paused');
+      case 'deleted':
+        return t('dashboard.filter.deleted');
+      case 'archived':
+        return t('dashboard.filter.archived');
+      default:
+        return status;
+    }
+  };
+  const statusLabel = getStatusLabel(petition.status);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -561,7 +581,7 @@ export default function PetitionDetailPage() {
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                Share QR Code
+                شارِك رمز QR الخاص بالعريضة
               </h3>
               <button
                 onClick={() => setShowQRCode(false)}
@@ -584,10 +604,18 @@ export default function PetitionDetailPage() {
             </div>
             <QRCodeDisplay
               petition={petition}
+              creator={
+                creator ||
+                (petition.creatorName ? { name: petition.creatorName } : null)
+              }
               size={250}
               branded={true}
               downloadable={true}
               shareable={true}
+              onShare={() => {
+                setShowQRCode(false);
+                setShowShareModal(true);
+              }}
             />
           </div>
         </div>
@@ -616,11 +644,11 @@ export default function PetitionDetailPage() {
         <div className="mb-6">
           <nav className="flex items-center space-x-2 text-sm text-gray-500">
             <Link href="/" className="hover:text-gray-700">
-              Home
+              {t('common.home')}
             </Link>
             <span>/</span>
             <Link href="/petitions" className="hover:text-gray-700">
-              Petitions
+              {t('petitions.title')}
             </Link>
             <span>/</span>
             <span className="text-gray-900">{petition.title}</span>
@@ -660,10 +688,10 @@ export default function PetitionDetailPage() {
                   </span>
                   <span className="text-sm text-gray-500">•</span>
                   <span className="text-sm text-gray-600">
-                    By{' '}
+                    {t('common.by')}{' '}
                     <span className="font-medium">
                       {creatorLoading
-                        ? 'Loading...'
+                        ? t('common.loading')
                         : creator?.name || 'Unknown User'}
                     </span>
                   </span>
@@ -1350,16 +1378,16 @@ export default function PetitionDetailPage() {
                               console.log('🏷️ Raw tags data:', petition.tags);
                               console.log(
                                 '🏷️ Tags type:',
-                                typeof petition.tags
+                                typeof petition.tags,
                               );
                               const splitTags = petition.tags.split(',');
                               console.log('🏷️ Split tags:', splitTags);
                               const trimmedTags = splitTags.map((tag: string) =>
-                                tag.trim()
+                                tag.trim(),
                               );
                               console.log('🏷️ Trimmed tags:', trimmedTags);
                               const filteredTags = trimmedTags.filter(
-                                (tag: string) => tag.length > 0
+                                (tag: string) => tag.length > 0,
                               );
                               console.log('🏷️ Filtered tags:', filteredTags);
 
@@ -1373,7 +1401,7 @@ export default function PetitionDetailPage() {
                                   >
                                     #{tag}
                                   </Link>
-                                )
+                                ),
                               );
                             })()}
                           </div>
@@ -1413,18 +1441,18 @@ export default function PetitionDetailPage() {
                             </p>
                             <div className="text-sm text-gray-500">
                               <p>
-                                Member since{' '}
+                                {t('publisher.memberSince')}{' '}
                                 {creator?.createdAt
                                   ? typeof creator.createdAt === 'string'
                                     ? new Date(
-                                        creator.createdAt
+                                        creator.createdAt,
                                       ).toLocaleDateString()
                                     : (creator.createdAt as any).toDate
                                       ? (creator.createdAt as any)
                                           .toDate()
                                           .toLocaleDateString()
                                       : new Date(
-                                          creator.createdAt as any
+                                          creator.createdAt as any,
                                         ).toLocaleDateString()
                                   : 'N/A'}
                               </p>
@@ -1453,7 +1481,7 @@ export default function PetitionDetailPage() {
                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                 />
                               </svg>
-                              Edit Bio
+                              {t('publisher.editBio')}
                             </Button>
                           </Link>
                         )}
@@ -1462,7 +1490,7 @@ export default function PetitionDetailPage() {
                       {/* About the Publisher */}
                       <div className="border-t border-gray-200 pt-4">
                         <h4 className="font-medium text-gray-900 mb-2">
-                          About the Publisher
+                          {t('publisher.aboutPublisher')}
                         </h4>
                         {creator?.bio ? (
                           <p className="text-gray-700 whitespace-pre-wrap">
@@ -1471,10 +1499,11 @@ export default function PetitionDetailPage() {
                         ) : (
                           <p className="text-gray-500 italic">
                             {user && petition.creatorId === user.uid
-                              ? 'You haven\'t added a bio yet. Click "Edit Bio" to add one.'
-                              : `${
-                                  creator?.name || 'This user'
-                                } hasn't added a bio yet.`}
+                              ? t('publisher.noBioYet')
+                              : t('publisher.userNoBio').replace(
+                                  '{name}',
+                                  creator?.name || t('publisher.thisUser'),
+                                )}
                           </p>
                         )}
                       </div>
@@ -1483,12 +1512,14 @@ export default function PetitionDetailPage() {
                       {(petition.publisherType || petition.publisherName) && (
                         <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4">
                           <h3 className="text-base font-bold text-blue-700 mb-3">
-                            Publisher Information
+                            {t('publisher.publisherInformation')}
                           </h3>
                           <div className="grid grid-cols-2 gap-3">
                             {petition.publisherType && (
                               <div>
-                                <p className="text-xs text-blue-700">Type</p>
+                                <p className="text-xs text-blue-700">
+                                  {t('publisher.type')}
+                                </p>
                                 <p className="text-sm font-medium text-blue-900">
                                   {petition.publisherType}
                                 </p>
@@ -1496,7 +1527,9 @@ export default function PetitionDetailPage() {
                             )}
                             {petition.publisherName && (
                               <div>
-                                <p className="text-xs text-blue-700">Name</p>
+                                <p className="text-xs text-blue-700">
+                                  {t('publisher.name')}
+                                </p>
                                 <p className="text-sm font-medium text-blue-900">
                                   {petition.publisherName}
                                 </p>
@@ -1513,14 +1546,14 @@ export default function PetitionDetailPage() {
                         petition.referenceCode) && (
                         <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-4">
                           <h3 className="text-base font-bold text-purple-700 mb-3">
-                            Petition Details
+                            {t('publisher.petitionDetails')}
                           </h3>
                           <div className="grid grid-cols-2 gap-3">
                             {/* Type */}
                             {petition.petitionType && (
                               <div>
                                 <p className="text-xs text-purple-700 mb-1">
-                                  Type
+                                  {t('publisher.type')}
                                 </p>
                                 <p className="text-sm font-medium text-purple-900">
                                   {petition.petitionType}
@@ -1532,7 +1565,7 @@ export default function PetitionDetailPage() {
                             {petition.addressedToType && (
                               <div>
                                 <p className="text-xs text-purple-700 mb-1">
-                                  Addressed To
+                                  {t('publisher.addressedTo')}
                                 </p>
                                 <p className="text-sm font-medium text-purple-900">
                                   {petition.addressedToType}
@@ -1544,7 +1577,7 @@ export default function PetitionDetailPage() {
                             {petition.addressedToSpecific && (
                               <div className="col-span-1">
                                 <p className="text-xs text-purple-700 mb-1">
-                                  Specific Target
+                                  {t('publisher.specificTarget')}
                                 </p>
                                 <p className="text-sm font-medium text-purple-900">
                                   {petition.addressedToSpecific}
@@ -1562,13 +1595,13 @@ export default function PetitionDetailPage() {
                                 }
                               >
                                 <p className="text-xs text-purple-700 mb-1">
-                                  Reference Code
+                                  {t('publisher.referenceCode')}
                                 </p>
                                 <p className="text-lg font-bold text-purple-900 font-mono tracking-wider">
                                   {petition.referenceCode}
                                 </p>
                                 <p className="text-xs text-purple-600 mt-1">
-                                  Use this code for support inquiries
+                                  {t('publisher.useCodeForSupport')}
                                 </p>
                               </div>
                             )}
@@ -1687,7 +1720,7 @@ export default function PetitionDetailPage() {
                             <p className="text-sm text-gray-700">
                               <strong>{t('resubmission.resubmitted')}:</strong>{' '}
                               {new Date(
-                                history.resubmittedAt
+                                history.resubmittedAt,
                               ).toLocaleDateString()}
                             </p>
                           )}
@@ -1810,6 +1843,10 @@ export default function PetitionDetailPage() {
             >
               <QRCodeDisplay
                 petition={petition}
+                creator={
+                  creator ||
+                  (petition.creatorName ? { name: petition.creatorName } : null)
+                }
                 size={200}
                 variant="card"
                 branded={false}

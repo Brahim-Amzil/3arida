@@ -97,7 +97,7 @@ export default function PricingPage() {
       id: 'free',
       name: t('pricing.page.freePlan'),
       signatureRange: t('pricing.page.upTo', { count: '2,500' }),
-      price: '0 MAD',
+      price: `0 ${t('common.moroccanDirham')}`,
       features: [
         t('pricing.features.createPublish'),
         t('pricing.features.basicSharing'),
@@ -116,7 +116,7 @@ export default function PricingPage() {
       id: 'starter',
       name: t('pricing.page.starterPlan'),
       signatureRange: t('pricing.page.upTo', { count: '10,000' }),
-      price: '49 MAD',
+      price: `69 ${t('common.moroccanDirham')}`,
       features: [
         t('pricing.features.allFreeFeatures'),
         t('pricing.features.customCoverImage'),
@@ -135,8 +135,8 @@ export default function PricingPage() {
     {
       id: 'pro',
       name: t('pricing.page.proPlan'),
-      signatureRange: t('pricing.page.upTo', { count: '25,000' }),
-      price: '99 MAD',
+      signatureRange: t('pricing.page.upTo', { count: '30,000' }),
+      price: `129 ${t('common.moroccanDirham')}`,
       features: [
         t('pricing.features.allStarterFeatures'),
         t('pricing.features.regionalTargeting'),
@@ -158,8 +158,8 @@ export default function PricingPage() {
     {
       id: 'advanced',
       name: t('pricing.page.advancedPlan'),
-      signatureRange: t('pricing.page.upTo', { count: '70,000' }),
-      price: '199 MAD',
+      signatureRange: t('pricing.page.upTo', { count: '75,000' }),
+      price: `229 ${t('common.moroccanDirham')}`,
       features: [
         t('pricing.features.allProFeatures'),
         t('pricing.features.advancedAnalytics'),
@@ -183,7 +183,7 @@ export default function PricingPage() {
       id: 'enterprise',
       name: t('pricing.page.enterprisePlan'),
       signatureRange: t('pricing.page.upTo', { count: '100,000' }),
-      price: '499 MAD',
+      price: `369 ${t('common.moroccanDirham')}`,
       features: [
         t('pricing.features.allAdvancedFeatures'),
         t('pricing.features.apiAccess'),
@@ -249,7 +249,7 @@ export default function PricingPage() {
         </div>
 
         {/* Selected Plan Details Card */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto mb-12">
           <Card className="shadow-2xl border-none overflow-hidden">
             {/* Header Section with Subtle Gradient Accent */}
             <CardHeader className="p-8 bg-white border-b border-gray-100">
@@ -272,7 +272,7 @@ export default function PricingPage() {
                   asChild
                 >
                   <Link href="/petitions/create">
-                    {currentPlan.price === '0 MAD'
+                    {currentPlan.price.startsWith('0')
                       ? t('pricing.page.getStartedFree')
                       : t('pricing.page.chooseThisPlan')}
                   </Link>
@@ -347,6 +347,45 @@ export default function PricingPage() {
               </p>
             </div>
           </Card>
+        </div>
+
+        {/* Enterprise Contact Info Box */}
+        <div className="max-w-4xl mx-auto">
+          <div className="rounded-lg border-2 border-red-500 bg-red-50 dark:bg-red-950/20 p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-6 h-6 text-red-600 mt-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1 text-center">
+                <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">
+                  {t('pricing.enterprise.title', 'Expecting 100K+ signatures?')}
+                </h3>
+                <p className="text-red-800 dark:text-red-200 mb-4">
+                  {t(
+                    'pricing.enterprise.description',
+                    'We offer custom enterprise plans with dedicated support, SLA guarantees, and volume pricing.',
+                  )}
+                </p>
+                <Link href="/contact">
+                  <Button className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    {t('pricing.enterprise.cta', 'Contact Us')}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

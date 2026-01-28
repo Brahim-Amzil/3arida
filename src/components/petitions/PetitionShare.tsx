@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Petition } from '@/types/petition';
 import { incrementPetitionShares } from '@/lib/petitions';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface PetitionShareProps {
   petition: Petition;
@@ -15,7 +16,9 @@ export default function PetitionShare({
   petition,
   onClose,
 }: PetitionShareProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const [instagramNotification, setInstagramNotification] = useState(false);
 
   const petitionUrl =
     typeof window !== 'undefined'
@@ -25,6 +28,14 @@ export default function PetitionShare({
   const shareText = `Support this petition: ${petition.title}`;
   const encodedUrl = encodeURIComponent(petitionUrl);
   const encodedText = encodeURIComponent(shareText);
+
+  // Helper function to translate category
+  const getCategoryTranslation = (category: string) => {
+    const categoryKey = `categories.${category.toLowerCase()}`;
+    const translated = t(categoryKey);
+    // If translation key is returned as-is, return original category
+    return translated === categoryKey ? category : translated;
+  };
 
   const handleCopyLink = async () => {
     try {
@@ -39,14 +50,29 @@ export default function PetitionShare({
     }
   };
 
-  const handleSocialShare = async (platform: string, url: string) => {
-    window.open(url, '_blank', 'width=600,height=400');
+  const handleSocialShare = async (platform: string, url: string | null) => {
+    // Special handling for Instagram (copy link and show notification)
+    if (platform === 'Instagram') {
+      try {
+        await navigator.clipboard.writeText(petitionUrl);
+        setInstagramNotification(true);
+        setTimeout(() => setInstagramNotification(false), 5000);
+        await incrementPetitionShares(petition.id);
+      } catch (error) {
+        console.error('Failed to copy link:', error);
+      }
+      return;
+    }
 
-    // Track share
-    try {
-      await incrementPetitionShares(petition.id);
-    } catch (error) {
-      console.error('Failed to track share:', error);
+    if (url) {
+      window.open(url, '_blank', 'width=600,height=400');
+
+      // Track share
+      try {
+        await incrementPetitionShares(petition.id);
+      } catch (error) {
+        console.error('Failed to track share:', error);
+      }
     }
   };
 
@@ -118,17 +144,30 @@ export default function PetitionShare({
       url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`,
       color: 'bg-blue-500 hover:bg-blue-600',
     },
+    {
+      name: 'Instagram',
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />
+        </svg>
+      ),
+      // Instagram doesn't have a direct share URL, so we'll copy the link and show a message
+      url: null,
+      color:
+        'bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 hover:from-purple-700 hover:via-pink-700 hover:to-orange-600',
+    },
   ];
 
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Share Petition</CardTitle>
+          <CardTitle>{t('petitions.share')}</CardTitle>
           {onClose && (
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-1"
+              className="text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors"
+              aria-label="Close"
             >
               <svg
                 className="w-5 h-5"
@@ -148,16 +187,58 @@ export default function PetitionShare({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Instagram Copy Notification */}
+        {instagramNotification && (
+          <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white p-4 rounded-lg shadow-lg animate-in slide-in-from-top duration-300">
+            <div className="flex items-start gap-3">
+              <svg
+                className="w-6 h-6 flex-shrink-0 mt-0.5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />
+              </svg>
+              <div className="flex-1">
+                <p className="font-semibold text-sm mb-1">تم نسخ الرابط! ✨</p>
+                <p className="text-sm opacity-95">
+                  الصق الرابط في منشور أو قصة Instagram
+                </p>
+              </div>
+              <button
+                onClick={() => setInstagramNotification(false)}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Petition Preview */}
         <div className="p-4 bg-gray-50 rounded-lg">
           <h4 className="font-medium text-gray-900 mb-2 line-clamp-2">
             {petition.title}
           </h4>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <span>
-              {petition.currentSignatures.toLocaleString()} signatures
+          <div className="flex items-center gap-3 text-sm text-gray-600">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              {getCategoryTranslation(petition.category)}
             </span>
-            <span>{petition.category}</span>
+            <span>
+              {petition.currentSignatures.toLocaleString()}{' '}
+              {t('petitions.signaturesCount')}
+            </span>
           </div>
         </div>
 
@@ -166,7 +247,7 @@ export default function PetitionShare({
           onClick={() =>
             handleSocialShare(
               'WhatsApp',
-              `https://wa.me/?text=${encodedText}%20${encodedUrl}`
+              `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
             )
           }
           className="w-full bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
@@ -180,7 +261,7 @@ export default function PetitionShare({
         {/* Social Media Platforms */}
         <div>
           <h4 className="text-sm font-medium text-gray-700 mb-3">
-            Share on social media
+            {t('petitions.shareOnSocial')}
           </h4>
           <div className="grid grid-cols-2 gap-3">
             {socialPlatforms
@@ -195,35 +276,14 @@ export default function PetitionShare({
                   <span className="text-sm font-medium">{platform.name}</span>
                 </button>
               ))}
-
-            {/* Native Share (if available) - moved to grid */}
-            {typeof window !== 'undefined' && navigator.share !== undefined && (
-              <button
-                onClick={handleNativeShare}
-                className="bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-                  />
-                </svg>
-                <span className="text-sm font-medium">Share</span>
-              </button>
-            )}
           </div>
         </div>
 
         {/* Copy Link */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Copy link</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-3">
+            {t('petitions.copyLink')}
+          </h4>
           <div className="flex gap-2">
             <input
               type="text"
@@ -253,7 +313,7 @@ export default function PetitionShare({
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  Copied
+                  {t('petitions.copied')}
                 </>
               ) : (
                 <>
@@ -270,7 +330,7 @@ export default function PetitionShare({
                       d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                     />
                   </svg>
-                  Copy
+                  {t('petitions.copyLink')}
                 </>
               )}
             </Button>
@@ -295,13 +355,13 @@ export default function PetitionShare({
             </svg>
             <div>
               <h5 className="text-sm font-medium text-blue-800 mb-1">
-                Sharing Tips
+                {t('petitions.sharingTips')}
               </h5>
               <ul className="text-xs text-blue-700 space-y-1">
-                <li>• Add a personal message when sharing</li>
-                <li>• Share with friends who care about this cause</li>
-                <li>• Post in relevant groups and communities</li>
-                <li>• Use relevant hashtags on social media</li>
+                <li>• {t('petitions.sharingTip1')}</li>
+                <li>• {t('petitions.sharingTip2')}</li>
+                <li>• {t('petitions.sharingTip3')}</li>
+                <li>• {t('petitions.sharingTip4')}</li>
               </ul>
             </div>
           </div>

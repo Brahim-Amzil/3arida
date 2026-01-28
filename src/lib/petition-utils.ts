@@ -6,9 +6,11 @@ import {
 } from '../types/petition';
 
 // Pricing configuration for Morocco (MAD)
+// Note: Use getTierName() and getTierFeatures() with translation hook for localized content
 export const PRICING_TIERS: Record<PricingTier, PricingTierConfig> = {
   free: {
     name: 'Free',
+    nameKey: 'pricing.tierName.free', // Translation key
     maxSignatures: 2500,
     price: 0,
     features: [
@@ -16,40 +18,88 @@ export const PRICING_TIERS: Record<PricingTier, PricingTierConfig> = {
       'Basic petition page',
       'Email sharing',
     ],
+    featureKeys: [
+      'pricing.tierFeature.upTo2500',
+      'pricing.tierFeature.basicPetitionPage',
+      'pricing.tierFeature.emailSharing',
+    ],
   },
   basic: {
-    name: 'Basic',
-    maxSignatures: 5000,
-    price: 49,
+    name: 'Starter',
+    nameKey: 'pricing.tierName.starter',
+    maxSignatures: 10000,
+    price: 69,
     features: [
-      'Up to 5,000 signatures',
+      'Up to 10,000 signatures',
       'Enhanced petition page',
       'Social media sharing',
       'Basic analytics',
     ],
+    featureKeys: [
+      'pricing.tierFeature.upTo10000',
+      'pricing.tierFeature.enhancedPetitionPage',
+      'pricing.tierFeature.socialMediaSharing',
+      'pricing.tierFeature.basicAnalytics',
+    ],
   },
   premium: {
-    name: 'Premium',
-    maxSignatures: 10000,
-    price: 79,
+    name: 'Pro',
+    nameKey: 'pricing.tierName.pro',
+    maxSignatures: 30000,
+    price: 129,
     features: [
-      'Up to 10,000 signatures',
+      'Up to 30,000 signatures',
       'Premium petition page',
       'Advanced sharing',
       'Detailed analytics',
       'Priority support',
     ],
+    featureKeys: [
+      'pricing.tierFeature.upTo30000',
+      'pricing.tierFeature.premiumPetitionPage',
+      'pricing.tierFeature.advancedSharing',
+      'pricing.tierFeature.detailedAnalytics',
+      'pricing.tierFeature.prioritySupport',
+    ],
+  },
+  advanced: {
+    name: 'Advanced',
+    nameKey: 'pricing.tierName.advanced',
+    maxSignatures: 75000,
+    price: 229,
+    features: [
+      'Up to 75,000 signatures',
+      'Advanced analytics',
+      'Export signees data',
+      'Featured listing',
+      'Email support',
+    ],
+    featureKeys: [
+      'pricing.tierFeature.upTo75000',
+      'pricing.tierFeature.advancedAnalytics',
+      'pricing.tierFeature.exportSigneesData',
+      'pricing.tierFeature.featuredListing',
+      'pricing.tierFeature.emailSupport',
+    ],
   },
   enterprise: {
     name: 'Enterprise',
+    nameKey: 'pricing.tierName.enterprise',
     maxSignatures: 100000,
-    price: 199,
+    price: 369,
     features: [
       'Up to 100,000 signatures',
       'Custom branding',
       'API access',
       'Advanced analytics',
       'Dedicated support',
+    ],
+    featureKeys: [
+      'pricing.tierFeature.upTo100000',
+      'pricing.tierFeature.customBranding',
+      'pricing.tierFeature.apiAccess',
+      'pricing.tierFeature.advancedAnalytics',
+      'pricing.tierFeature.dedicatedSupport',
     ],
   },
 };
@@ -124,7 +174,7 @@ export interface ValidationError {
 }
 
 export const validatePetitionData = (
-  data: PetitionFormData
+  data: PetitionFormData,
 ): ValidationError[] => {
   const errors: ValidationError[] = [];
 
@@ -241,6 +291,8 @@ export const calculatePricingTier = (targetSignatures: number): PricingTier => {
     return 'basic';
   } else if (targetSignatures <= PRICING_TIERS.premium.maxSignatures) {
     return 'premium';
+  } else if (targetSignatures <= PRICING_TIERS.advanced.maxSignatures) {
+    return 'advanced';
   } else {
     return 'enterprise';
   }
@@ -311,9 +363,9 @@ export const formatMoroccanPhoneDisplay = (phone: string): string => {
     const number = digits.substring(3);
     return `+212 ${number.substring(0, 1)} ${number.substring(
       1,
-      3
+      3,
     )} ${number.substring(3, 5)} ${number.substring(5, 7)} ${number.substring(
-      7
+      7,
     )}`;
   }
 
@@ -352,7 +404,7 @@ export const getTimeRemaining = (deadline?: Date): string | null => {
 // Check if user can sign petition
 export const canSignPetition = (
   petition: Petition,
-  userId?: string
+  userId?: string,
 ): boolean => {
   // Must be approved and active
   if (petition.status !== 'approved' || !petition.isActive) {
@@ -375,7 +427,7 @@ export const canSignPetition = (
 // Check if user can edit petition
 export const canEditPetition = (
   petition: Petition,
-  userId?: string
+  userId?: string,
 ): boolean => {
   if (!userId) return false;
 
@@ -398,8 +450,8 @@ export const calculateMomentum = (petition: Petition): number => {
   const daysSinceCreated = Math.max(
     1,
     Math.floor(
-      (Date.now() - petition.createdAt.getTime()) / (1000 * 60 * 60 * 24)
-    )
+      (Date.now() - petition.createdAt.getTime()) / (1000 * 60 * 60 * 24),
+    ),
   );
   return Math.round(petition.currentSignatures / daysSinceCreated);
 };

@@ -8,7 +8,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 export default function AdminNav() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { t } = useTranslation();
   const [pendingAppealsCount, setPendingAppealsCount] = useState(0);
 
@@ -31,6 +31,7 @@ export default function AdminNav() {
           />
         </svg>
       ),
+      adminOnly: true, // Admin-only tab
     },
     {
       name: t('admin.nav.petitions'),
@@ -50,6 +51,7 @@ export default function AdminNav() {
           />
         </svg>
       ),
+      adminOnly: false, // Moderator + Admin access
     },
     {
       name: t('admin.nav.appeals'),
@@ -69,6 +71,7 @@ export default function AdminNav() {
           />
         </svg>
       ),
+      adminOnly: false, // Moderator + Admin access
     },
     {
       name: t('admin.nav.users'),
@@ -88,6 +91,7 @@ export default function AdminNav() {
           />
         </svg>
       ),
+      adminOnly: true, // Admin-only tab
     },
     {
       name: t('admin.nav.moderators'),
@@ -107,6 +111,7 @@ export default function AdminNav() {
           />
         </svg>
       ),
+      adminOnly: true, // Admin-only tab
     },
     {
       name: t('admin.nav.activity'),
@@ -126,6 +131,7 @@ export default function AdminNav() {
           />
         </svg>
       ),
+      adminOnly: true, // Admin-only tab
     },
     {
       name: t('admin.nav.analytics'),
@@ -145,6 +151,7 @@ export default function AdminNav() {
           />
         </svg>
       ),
+      adminOnly: true, // Admin-only tab
     },
     {
       name: t('admin.nav.maintenance'),
@@ -170,6 +177,7 @@ export default function AdminNav() {
           />
         </svg>
       ),
+      adminOnly: true, // Admin-only tab
     },
   ];
 
@@ -205,6 +213,20 @@ export default function AdminNav() {
     return pathname.startsWith(href);
   };
 
+  // Filter navigation items based on user role
+  const visibleNavItems = navItems.filter((item) => {
+    // Show all items to admins
+    if (userProfile?.role === 'admin') {
+      return true;
+    }
+    // Show only non-admin items to moderators
+    if (userProfile?.role === 'moderator') {
+      return !item.adminOnly;
+    }
+    // Hide all items for other roles (shouldn't happen in admin area)
+    return false;
+  });
+
   return (
     <div className="border-b border-gray-200 bg-white mb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -212,7 +234,7 @@ export default function AdminNav() {
           className="flex space-x-8 overflow-x-auto"
           aria-label="Admin Navigation"
         >
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const active = isActive(item.href);
             return (
               <Link

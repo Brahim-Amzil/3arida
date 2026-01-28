@@ -231,7 +231,7 @@
    - Browse petitions
    - Sign petitions
    - Comment and like
-   - Share petitions
+   - شارِك العريضة s
 
 3. **Admin Panel**
    - Moderate petitions

@@ -288,5 +288,62 @@
     "maxLength": "Doit contenir moins de {max} caractères",
     "passwordMatch": "Les mots de passe ne correspondent pas",
     "invalidFormat": "Format invalide"
+  },
+  "pricing": {
+    "page": {
+      "title": "Tarification",
+      "subtitle": "Choisissez le plan adapté à votre pétition",
+      "freePlan": "Gratuit",
+      "starterPlan": "Débutant",
+      "proPlan": "Pro",
+      "advancedPlan": "Avancé",
+      "enterprisePlan": "Entreprise",
+      "upTo": "Jusqu'à {count}",
+      "signatures": "signatures",
+      "optionalAddon": "Option supplémentaire : {price} MAD",
+      "messagingAddon": "{count} messages gratuits, puis {price} MAD par {count} messages supplémentaires",
+      "freeMessages": "{count} messages gratuits, puis {price} MAD par {extraCount} messages supplémentaires",
+      "getStartedFree": "Commencer gratuitement",
+      "chooseThisPlan": "Choisir ce plan",
+      "features": "Fonctionnalités",
+      "qrCode": "Code QR",
+      "messaging": "Messagerie",
+      "includedWithPlan": "Inclus dans le plan",
+      "notIncluded": "Non inclus",
+      "available": "Disponible",
+      "notAvailable": "Non disponible",
+      "readyToStart": "Prêt à commencer avec"
+    },
+    "features": {
+      "createPublish": "Créer et publier des pétitions",
+      "basicSharing": "Partage basique",
+      "basicAnalytics": "Analyses basiques",
+      "publicListing": "Liste publique",
+      "allFreeFeatures": "Toutes les fonctionnalités gratuites",
+      "customCoverImage": "Image de couverture personnalisée",
+      "enhancedSocialSharing": "Partage social amélioré",
+      "basicAnalyticsDashboard": "Tableau de bord analytique basique",
+      "fasterApproval": "Approbation plus rapide",
+      "allStarterFeatures": "Toutes les fonctionnalités Débutant",
+      "regionalTargeting": "Ciblage régional",
+      "petitionBranding": "Branding de pétition",
+      "priorityVisibility": "Visibilité prioritaire",
+      "allProFeatures": "Toutes les fonctionnalités Pro",
+      "advancedAnalytics": "Analyses avancées",
+      "exportSigneesData": "Export des données des signataires",
+      "featuredListing": "Liste en vedette",
+      "emailSupport": "Support par e-mail",
+      "allAdvancedFeatures": "Toutes les fonctionnalités Avancées",
+      "apiAccess": "Accès API",
+      "customDomain": "Domaine personnalisé",
+      "dedicatedSupport": "Support dédié",
+      "organizationBadge": "Badge d'organisation",
+      "highestVisibility": "Visibilité maximale"
+    },
+    "enterprise": {
+      "title": "Vous attendez plus de 100K signatures ?",
+      "description": "Nous proposons des plans entreprise personnalisés avec support dédié, garanties SLA et tarification au volume.",
+      "cta": "Nous contacter"
+    }
   }
 }

@@ -476,7 +476,8 @@ export default function PetitionQRPage() {
                     </div>
                     <h3 className="font-medium text-gray-900 mb-2">Share</h3>
                     <p className="text-sm text-gray-600">
-                      Share on social media and messaging apps
+                      شارِك العريضة على منصات التواصل الإجتماعي and messaging
+                      apps
                     </p>
                   </div>
                 </div>
