@@ -23,6 +23,9 @@ const translations: Record<Locale, TranslationMessages> = {
     'nav.about': 'حول المنصة',
 
     // Common
+    'common.home': 'الرئيسية',
+    'common.by': 'بواسطة',
+    'common.download': ' تحميل الرمز',
     'common.loading': 'جاري التحميل...',
     'common.error': 'خطأ',
     'common.success': 'نجح',
@@ -39,6 +42,8 @@ const translations: Record<Locale, TranslationMessages> = {
     'common.viewAll': 'عرض الكل',
     'common.getStarted': 'إبدأ الآن',
     'common.signIn': 'تسجيل الدخول',
+    'common.morocco': 'المغرب',
+    'common.moroccanDirham': 'درهم مغربي',
 
     // Petitions Page
     'petitions.discoverPetitions': 'إكتشف العرائض',
@@ -59,10 +64,22 @@ const translations: Record<Locale, TranslationMessages> = {
     'petitions.sign': 'وقع العريضة',
     'petitions.signed': 'تم التوقيع',
     'petitions.signatures': 'التوقيعات',
-    'petitions.goal': 'الهدف',
+    'petitions.goal': 'مُوَجهة لِ',
     'petitions.createdBy': 'أنشأها',
     'petitions.browse': 'تصفح العرائض',
+    'petitions.share': 'مشاركة العريضة',
     'petitions.qrCode': ' QR رمز الاستجابة السريعة',
+    'petitions.sharingTips': 'نصائح للمشاركة',
+    'petitions.sharingTip1': 'أضف رسالة شخصية عند المشاركة',
+    'petitions.sharingTip2': 'شارك مع الأصدقاء المهتمين بهذه القضية',
+    'petitions.sharingTip3': 'انشر في المجموعات والمجتمعات ذات الصلة',
+    'petitions.sharingTip4':
+      'استخدم الهاشتاجات ذات الصلة على وسائل التواصل الاجتماعي',
+    'petitions.copyLink': 'نسخ الرابط',
+    'petitions.copied': 'تم النسخ',
+    'petitions.shareOnSocial': 'شارِك العريضة على منصات التواصل الإجتماعي',
+    'petitions.shareButton': 'مشاركة',
+    'petitions.signaturesCount': 'توقيعات',
     'petitions.startPetition': 'إبدأ عريضة',
     'petitions.viewAllPetitions': 'عرض جميع العرائض',
     'petitions.alreadySigned': 'تم التوقيع بالفعل',
@@ -121,6 +138,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'dashboard.filter.rejected': 'مرفوضة',
     'dashboard.filter.paused': 'متوقفة',
     'dashboard.filter.deleted': 'محذوفة',
+    'dashboard.filter.archived': 'مؤرشفة',
 
     // Dashboard Empty States
     'dashboard.noPetitions.title': 'لا توجد عرائض بعد',
@@ -215,6 +233,91 @@ const translations: Record<Locale, TranslationMessages> = {
     'help.managing.updates.description':
       'كمنشئ عريضة، يمكنك نشر تحديثات لإبقاء المؤيدين على اطلاع بالتقدم أو الانتصارات أو الخطوات التالية. تظهر التحديثات على صفحة عريضتك.',
 
+    // Petition Updates Component
+    'updates.title': 'التحديثات',
+    'updates.postUpdate': 'نشر تحديث',
+    'updates.noUpdates': 'لا توجد تحديثات بعد',
+    'updates.noUpdatesCreator': 'انشر أول تحديث لإبقاء المؤيدين على اطلاع',
+    'updates.noUpdatesVisitor': 'لم ينشر منشئ العريضة أي تحديثات',
+    'updates.updateTitle': 'عنوان التحديث',
+    'updates.updateContent': 'محتوى التحديث',
+    'updates.titlePlaceholder': 'مثال: وصلنا إلى 1,000 توقيع!',
+    'updates.contentPlaceholder': 'شارك التقدم أو الأخبار أو اشكر المؤيدين...',
+    'updates.charactersCount': '{count}/1000 حرف',
+    'updates.posting': 'جاري النشر...',
+    'updates.cancel': 'إلغاء',
+    'updates.edit': 'تعديل',
+    'updates.delete': 'حذف',
+    'updates.save': 'حفظ',
+    'updates.saving': 'جاري الحفظ...',
+    'updates.saveChanges': 'حفظ التغييرات',
+    'updates.editOnce': 'يمكنك تعديل هذا التحديث مرة واحدة فقط',
+    'updates.edited': 'تم التعديل',
+    'updates.by': 'بواسطة',
+    'updates.deleteConfirmTitle': 'حذف التحديث؟',
+    'updates.deleteConfirmMessage':
+      'هل أنت متأكد من حذف هذا التحديث؟ لا يمكن التراجع عن هذا الإجراء.',
+    'updates.deleting': 'جاري الحذف...',
+    'updates.fillAllFields': 'يرجى ملء جميع الحقول',
+    'updates.mustBeLoggedIn': 'يجب تسجيل الدخول لنشر التحديثات',
+    'updates.addFailed': 'فشل إضافة التحديث. يرجى المحاولة مرة أخرى.',
+    'updates.updateFailed': 'فشل التحديث. يرجى المحاولة مرة أخرى.',
+    'updates.deleteFailed': 'فشل حذف التحديث. يرجى المحاولة مرة أخرى.',
+
+    // Supporters Tab
+    'supporters.addComment': 'أضف تعليق',
+    'supporters.comments': 'التعليقات',
+    'supporters.signatures': 'التوقيعات',
+
+    // Publisher Tab
+    'publisher.memberSince': 'عضو منذ',
+    'publisher.editBio': 'تعديل السيرة',
+    'publisher.aboutPublisher': 'حول الناشر',
+    'publisher.noBioYet':
+      'لم تضف سيرة ذاتية بعد. انقر على "تعديل السيرة" لإضافة واحدة.',
+    'publisher.userNoBio': '{name} لم يضف سيرة ذاتية بعد.',
+    'publisher.thisUser': 'هذا المستخدم',
+    'publisher.publisherInformation': 'معلومات الناشر',
+    'publisher.type': 'النوع',
+    'publisher.name': 'الاسم',
+    'publisher.petitionDetails': 'تفاصيل العريضة',
+    'publisher.addressedTo': 'موجهة إلى',
+    'publisher.specificTarget': 'الهدف المحدد',
+    'publisher.referenceCode': 'رمز العريضة',
+    'publisher.useCodeForSupport': 'استخدم هذا الرمز لاستفسارات الدعم',
+
+    // Supporters Tab (continued)
+    'supporters.latest': 'الأحدث',
+    'supporters.mostLiked': 'الأكثر إعجاباً',
+    'supporters.shareThoughts': 'شارك أفكارك',
+    'supporters.whySupport': 'لماذا تدعم هذه العريضة؟',
+    'supporters.commentAnonymously': 'علق بشكل مجهول',
+    'supporters.posting': 'جاري النشر...',
+    'supporters.postComment': 'نشر تعليق',
+    'supporters.cancel': 'إلغاء',
+    'supporters.joinDiscussion': 'انضم إلى النقاش',
+    'supporters.signInToComment': 'سجل الدخول للتعليق',
+    'supporters.signInMessage': 'سجل الدخول لمشاركة أفكارك ودعم هذه العريضة.',
+    'supporters.noComments': 'لا توجد تعليقات بعد',
+    'supporters.noSignatures': 'لا توجد توقيعات بعد',
+    'supporters.noActivity': 'لا يوجد نشاط بعد',
+    'supporters.firstComment': 'كن أول من يشارك أفكاره حول هذه العريضة.',
+    'supporters.firstSignature': 'كن أول من يوقع على هذه العريضة!',
+    'supporters.firstSupport': 'كن أول من يدعم هذه العريضة.',
+    'supporters.anonymous': 'مجهول',
+    'supporters.comment': 'تعليق',
+    'supporters.signature': 'توقيع',
+    'supporters.reply': 'رد',
+    'supporters.delete': 'حذف',
+    'supporters.commentDeleted': '[تم حذف التعليق]',
+    'supporters.showReplies': 'عرض {count} رد',
+    'supporters.hideReplies': 'إخفاء الردود',
+    'supporters.replyTo': 'الرد على {name}',
+    'supporters.replying': 'جاري الرد...',
+    'supporters.postReply': 'نشر الرد',
+    'supporters.loadMore': 'تحميل المزيد',
+    'supporters.loading': 'جاري التحميل...',
+
     // Sharing & Promotion Section
     'help.sharing.title': 'المشاركة والترويج',
     'help.sharing.howToShare.title': 'كيف أشارك عريضتي؟',
@@ -232,7 +335,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'help.privacy.title': 'الخصوصية والأمان',
     'help.privacy.safe.title': 'هل معلوماتي الشخصية آمنة؟',
     'help.privacy.safe.description':
-      'نعم. نستخدم تدابير أمنية معيارية في الصناعة لحماية بياناتك. بريدك الإلكتروني ورقم هاتفك لا يتم مشاركتهما علنًا أبدًا. فقط اسمك والتعليق الاختياري يظهران عند توقيع عريضة.',
+      'نعم. نستخدم تدابير أمنية معيارية في المجال لحماية بياناتك. بريدك الإلكتروني ورقم هاتفك لا يتم مشاركتهما علنًا أبدًا. فقط اسمك والتعليق الاختياري يظهران عند توقيع عريضة.',
     'help.privacy.phoneVerification.title': 'لماذا أحتاج للتحقق من رقم هاتفي؟',
     'help.privacy.phoneVerification.description':
       'التحقق من الهاتف يضمن أن كل توقيع من شخص حقيقي ويمنع التوقيعات المكررة أو الاحتيالية. هذا يحافظ على سلامة جميع العرائض على منصتنا.',
@@ -245,13 +348,14 @@ const translations: Record<Locale, TranslationMessages> = {
     'help.pricing.free.title': 'هل عريضة مجانية الاستخدام؟',
     'help.pricing.free.intro':
       'نعم! إنشاء وتوقيع العرائض مجاني. نقدم مستويات مختلفة بناءً على هدف التوقيعات:',
-    'help.pricing.free.tier1': 'مجاني: حتى 2,500 توقيع',
-    'help.pricing.free.tier2': 'أساسي: حتى 5,000 توقيع',
-    'help.pricing.free.tier3': 'متقدم: حتى 10,000 توقيع',
-    'help.pricing.free.tier4': 'مؤسسي: حتى 100,000 توقيع',
+    'help.pricing.free.tier1': 'الخطة المجانية: حتى 2,500 توقيع (0 درهم)',
+    'help.pricing.free.tier2': 'الخطة الأساسية: حتى 10,000 توقيع (69 درهم)',
+    'help.pricing.free.tier3': 'الخطة الاحترافية: حتى 30,000 توقيع (129 درهم)',
+    'help.pricing.free.tier4': 'الخطة المتقدمة: حتى 75,000 توقيع (229 درهم)',
+    'help.pricing.free.tier5': 'الخطة المؤسسية: حتى 100,000 توقيع (369 درهم)',
     'help.pricing.payment.title': 'ما طرق الدفع التي تقبلونها؟',
     'help.pricing.payment.description':
-      'نقبل جميع بطاقات الائتمان والخصم الرئيسية من خلال معالج الدفع الآمن Stripe. جميع المعاملات مشفرة وآمنة.',
+      'نقبل جميع بطاقات الائتمان والخصم الرئيسية من خلال معالج الدفع الآمن PayPal. جميع المعاملات مشفرة وآمنة.',
 
     // Technical Issues Section
     'help.technical.title': 'المشاكل التقنية',
@@ -274,7 +378,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'help.contact.intro':
       'إذا لم تجد إجابة لسؤالك، فريق الدعم لدينا هنا للمساعدة.',
     'help.contact.supportTitle': 'اتصل بالدعم',
-    'help.contact.email': 'راسلنا على:',
+    'help.contact.link': 'اتصل بنا',
     'help.contact.responseTime': 'نحن عادة نرد خلال 24 ساعة خلال أيام العمل.',
 
     // No Results
@@ -339,7 +443,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'about.cta.startPetition': 'إبدأ عريضة',
     'about.cta.browsePetitions': 'تصفح العرائض',
     'about.contact.question': 'لديك أسئلة أو تحتاج دعم؟',
-    'about.contact.email': 'اتصل بنا على',
+    'about.contact.link': 'اتصل بنا',
 
     // Footer
     'footer.description': 'منصة العرائض الرقمية للمغرب.\nوصَّل صوتك.',
@@ -354,7 +458,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'footer.termsOfService': 'شروط الخدمة',
     'footer.cookiePolicy': 'سياسة ملفات تعريف الارتباط',
     'footer.aboutUs': 'حول المنصة',
-    'footer.copyright': '© 2025 عريضة  /3arida . جميع الحقوق محفوظة.',
+    'footer.copyright': '© 2025 عريضة  / 3arida . جميع الحقوق محفوظة.',
 
     // Privacy Page
     'privacy.title': 'سياسة الخصوصية',
@@ -370,7 +474,8 @@ const translations: Record<Locale, TranslationMessages> = {
       'نستخدم بياناتك لتوفير خدماتنا، والتحقق من هويتك، وإرسال الإشعارات المهمة، وتحسين تجربة المستخدم. لا نشارك معلوماتك الشخصية مع أطراف ثالثة دون موافقتك.',
     'privacy.contact.title': 'اتصل بنا',
     'privacy.contact.content':
-      'إذا كان لديك أي أسئلة حول سياسة الخصوصية هذه، يرجى الاتصال بنا على support@3arida.ma',
+      'إذا كان لديك أي أسئلة حول سياسة الخصوصية هذه، يرجى',
+    'privacy.contact.link': 'الاتصال بنا',
 
     // Terms Page
     'terms.title': 'شروط الخدمة',
@@ -385,8 +490,8 @@ const translations: Record<Locale, TranslationMessages> = {
     'terms.userResponsibilities.content':
       'أنت مسؤول عن المحتوى الذي تنشره والتأكد من أنه لا يخالف القوانين أو يضر بالآخرين. يجب استخدام المنصة بطريقة مسؤولة وأخلاقية.',
     'terms.contact.title': 'اتصل بنا',
-    'terms.contact.content':
-      'للأسئلة حول شروط الخدمة، اتصل بنا على support@3arida.ma',
+    'terms.contact.content': 'للأسئلة حول شروط الخدمة،',
+    'terms.contact.link': 'اتصل بنا',
 
     // Cookies Page
     'cookies.title': 'سياسة ملفات تعريف الارتباط',
@@ -401,8 +506,8 @@ const translations: Record<Locale, TranslationMessages> = {
     'cookies.control.content':
       'يمكنك التحكم في ملفات تعريف الارتباط من خلال إعدادات متصفحك. إيقافها قد يؤثر على وظائف الموقع.',
     'cookies.contact.title': 'اتصل بنا',
-    'cookies.contact.content':
-      'للأسئلة حول ملفات تعريف الارتباط، اتصل بنا على support@3arida.ma',
+    'cookies.contact.content': 'للأسئلة حول ملفات تعريف الارتباط،',
+    'cookies.contact.link': 'اتصل بنا',
 
     // Admin Page
     'admin.dashboard.title': 'لوحة تحكم الإدارة',
@@ -579,7 +684,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'admin.moderation.subtitle': 'مراجعة وإدارة العرائض على المنصة',
     'admin.moderation.allCategories': 'جميع الفئات',
     'admin.moderation.searchPlaceholder':
-      'البحث بالعنوان، الوصف، الفئة، الناشر، أو الرمز المرجعي (مثل: AB1234)',
+      'البحث بالعنوان، الوصف، الفئة، الناشر، أو الرمز العريضةي (مثل: AB1234)',
 
     // Petition Status Tabs
     'admin.moderation.tabs.allPetitions': 'جميع العرائض',
@@ -620,6 +725,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'create.reviewSubmitDesc': 'راجع عريضتك قبل النشر',
 
     // Form Labels
+    'form.petitionDetails': 'تفاصيل العريضة',
     'form.publishAs': 'نشر العريضة كـ *',
     'form.selectPublisherType': 'اختر نوع الناشر',
     'form.yourName': 'اسمك',
@@ -628,13 +734,22 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.enterOrganizationName': 'أدخل اسم المنظمة/الجمعية/المؤسسة',
     'form.officialDocument': 'الوثيقة الرسمية *',
     'form.officialDocumentDesc':
-      'ارفع وثيقة رسمية (PDF، DOC، DOCX، JPG، PNG). الحد الأقصى: 5 ميجابايت',
+      'ارفع وثيقة رسمية عن المنظمة/الجمعية أو المؤسسة التي تمثلها  (PDF، DOC، DOCX، JPG، PNG). الحد الأقصى: 5 ميجابايت',
     'form.petitionType': 'نوع العريضة *',
     'form.selectPetitionType': 'اختر نوع العريضة',
     'form.addressedTo': 'من هو المخاطب بهذه العريضة؟ *',
     'form.selectAddressedTo': 'اختر من توجه إليه هذه العريضة',
     'form.specificName': 'الاسم المحدد لـ {type} *',
     'form.enterSpecificName': 'أدخل الاسم المحدد لـ {type}',
+
+    // Addressed To Type Names (for use in labels)
+    'form.governmentType': 'المسؤول / الجهة الحكومية',
+    'form.companyType': 'الشركة أو الجهة الخاصة',
+    'form.organizationType': 'المنظمة أو الجهة غير الربحية',
+    'form.communityType': 'المجتمع / السلطة المحلية',
+    'form.individualType': 'الفرد',
+    'form.otherType': 'الجهة الأخرى',
+
     'form.category': 'الفئة *',
     'form.selectCategory': 'اختر فئة',
     'form.customCategory': 'فئة مخصصة *',
@@ -651,8 +766,11 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.petitionImage': 'صورة العريضة (اختياري)',
     'form.petitionImageDesc':
       'ارفع صورة لجعل عريضتك أكثر إقناعًا. الحد الأقصى: 5 ميجابايت',
-    'form.addVideo': 'إضافة فيديو (اختياري)',
-    'form.youtubeUrlPlaceholder': 'الصق رابط فيديو يوتيوب هنا',
+    'form.chooseFile': 'إختر ملف',
+    'form.noFileChosen': 'لم يتم اختيار ملف',
+    'form.changeFile': 'تغيير الملف',
+    'form.addVideo': 'إضافة فيديو (إ`ختياري)',
+    'form.youtubeUrlPlaceholder': 'ألصق رابط فيديو يوتيوب هنا',
     'form.youtubeVideoDesc':
       'أضف فيديو يوتيوب لمساعدة في شرح قضيتك (الصق الرابط الكامل لليوتيوب)',
     'form.targetSignatures': 'العدد المستهدف من التوقيعات *',
@@ -672,15 +790,34 @@ const translations: Record<Locale, TranslationMessages> = {
     // Form Options
     'form.individual': '👤 فرد',
     'form.organization': '🏢 جمعية، منظمة، مؤسسة',
-    'form.change': '🔄 تغيير - طلب تغيير في السياسة أو الممارسة',
+    'form.change': '🔄 تغيير - طلب تغيير في سياسة أو ممارسة',
     'form.support': '✊ دعم - إظهار الدعم لقضية أو شخص',
-    'form.stop': '🛑 إيقاف - منع حدوث شيء ما',
-    'form.start': '🚀 بدء - بدء مبادرة أو برنامج جديد',
-    'form.government': '🏛️ مسؤول/وكالة حكومية',
-    'form.company': '🏢 شركة/مؤسسة',
-    'form.organizationOption': '🏛️ منظمة/مؤسسة',
+    'form.stop': '⛔ إيقاف - منع أو إيقاف إجراء أو قرار',
+    'form.start': '🚀 بدء - إطلاق مبادرة أو برنامج جديد',
+    'form.accountability':
+      '⚖️ مساءلة وعدالة - المطالبة بالمحاسبة أو التحقيق أو تحقيق العدالة',
+    'form.awareness':
+      '📢 توعية واعتراف - رفع الوعي أو المطالبة بالاعتراف بقضية ما',
+
+    // Petition Type Help Text
+    'form.changeHelp':
+      'استخدم هذه الفئة إذا كنت تطالب بتعديل سياسة، قانون، إجراء، أو ممارسة قائمة.',
+    'form.supportHelp':
+      'اختر هذه الفئة لإظهار الدعم أو التضامن مع قضية، مبادرة، أو شخص.',
+    'form.stopHelp':
+      'مناسبة للعرائض التي تهدف إلى منع أو إيقاف قرار، إجراء، أو حدث قبل وقوعه أو استمراره.',
+    'form.startHelp':
+      'استخدم هذه الفئة عند المطالبة بإطلاق مبادرة، برنامج، خدمة، أو مشروع جديد.',
+    'form.accountabilityHelp':
+      'اختر هذه الفئة إذا كانت العريضة تطالب بالتحقيق، المحاسبة، أو اتخاذ إجراءات قانونية عادلة.',
+    'form.awarenessHelp':
+      'مناسبة للعرائض التي تهدف إلى رفع الوعي، لفت الانتباه، أو المطالبة بالاعتراف الرسمي بقضية ما.',
+
+    'form.government': '🏛️ مسؤول / جهة حكومية',
+    'form.company': '🏢 شركة أو جهة خاصة',
+    'form.organizationOption': '🏛️ منظمة أو جهة غير ربحية',
+    'form.community': '🏘️ مجتمع / سلطة محلية',
     'form.individualOption': '👤 فرد',
-    'form.community': '🏘️ مجتمع/سلطة محلية',
     'form.other': '📝 أخرى',
 
     // Form Buttons and Actions
@@ -702,10 +839,14 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.enterPublisherNameError': 'يرجى إدخال اسم الناشر',
     'form.uploadDocumentError':
       'يرجى رفع وثيقة رسمية تثبت منظمتك/جمعيتك/مؤسستك',
-    'form.specifyCustomCategoryError': 'يرجى تحديد فئة مخصصة',
-    'form.specifyCustomSubcategoryError': 'يرجى تحديد فئة فرعية مخصصة',
+    'form.selectPetitionTypeError': 'يرجى اختيار نوع العريضة',
     'form.selectAddressedToError': 'يرجى اختيار من توجه إليه هذه العريضة',
     'form.specifyAddressedToError': 'يرجى تحديد {type}',
+    'form.selectCategoryError': 'يرجى اختيار فئة العريضة',
+    'form.specifyCustomCategoryError': 'يرجى تحديد فئة مخصصة',
+    'form.specifyCustomSubcategoryError': 'يرجى تحديد فئة فرعية مخصصة',
+    'form.enterTitleError': 'يرجى إدخال عنوان العريضة',
+    'form.enterDescriptionError': 'يرجى إدخال وصف العريضة',
     'form.enterValidSignaturesError': 'يرجى إدخال عدد صحيح من التوقيعات',
     'form.maxSignaturesError': 'العدد الأقصى للتوقيعات هو 1,000,000',
     'form.selectTargetSignaturesError':
@@ -722,6 +863,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.uploadingImageButton': 'جاري رفع الصورة...',
     'form.creatingPetition': 'جاري إنشاء العريضة...',
     'form.createPetitionButton': 'إنشاء العريضة',
+    'form.validationErrors': 'يرجى تصحيح الأخطاء التالية',
 
     // Review Step
     'review.title': 'راجع عريضتك',
@@ -757,9 +899,69 @@ const translations: Record<Locale, TranslationMessages> = {
     'pricing.upTo': 'حتى {count} توقيع',
     'pricing.free': 'مجاني',
     'pricing.oneTimePayment': 'دفعة واحدة',
-    'pricing.securePayment': '💳 سيتم معالجة الدفع بأمان من خلال Stripe',
+    'pricing.securePayment': '💳 سيتم معالجة الدفع بأمان من خلال PayPal',
     'pricing.moroccanDirham': '🇲🇦 جميع الأسعار بالدرهم المغربي (MAD)',
     'pricing.includes': 'يتضمن:',
+
+    // Pricing Tier Names
+    'pricing.tierName.free': 'المجانية',
+    'pricing.tierName.starter': 'الأساسية',
+    'pricing.tierName.pro': 'الاحترافية',
+    'pricing.tierName.advanced': 'المتقدمة',
+    'pricing.tierName.enterprise': 'المؤسسية',
+
+    // Pricing Tier Features
+    'pricing.tierFeature.upTo2500': 'حتى 2,500 توقيع',
+    'pricing.tierFeature.upTo10000': 'حتى 10,000 توقيع',
+    'pricing.tierFeature.upTo30000': 'حتى 30,000 توقيع',
+    'pricing.tierFeature.upTo75000': 'حتى 75,000 توقيع',
+    'pricing.tierFeature.upTo100000': 'حتى 100,000 توقيع',
+    'pricing.tierFeature.basicPetitionPage': 'صفحة عريضة أساسية',
+    'pricing.tierFeature.emailSharing': 'مشاركة عبر البريد الإلكتروني',
+    'pricing.tierFeature.enhancedPetitionPage': 'صفحة عريضة محسنة',
+    'pricing.tierFeature.socialMediaSharing':
+      'مشاركة عبر وسائل التواصل الاجتماعي',
+    'pricing.tierFeature.basicAnalytics': 'تحليلات أساسية',
+    'pricing.tierFeature.premiumPetitionPage': 'صفحة عريضة متميزة',
+    'pricing.tierFeature.advancedSharing': 'مشاركة متقدمة',
+    'pricing.tierFeature.detailedAnalytics': 'تحليلات مفصلة',
+    'pricing.tierFeature.prioritySupport': 'دعم ذو أولوية',
+    'pricing.tierFeature.advancedAnalytics': 'تحليلات متقدمة',
+    'pricing.tierFeature.exportSigneesData': 'تصدير بيانات الموقعين',
+    'pricing.tierFeature.featuredListing': 'إدراج مميز',
+    'pricing.tierFeature.emailSupport': 'دعم عبر البريد الإلكتروني',
+    'pricing.tierFeature.customBranding': 'علامة تجارية مخصصة',
+    'pricing.tierFeature.apiAccess': 'وصول API',
+    'pricing.tierFeature.dedicatedSupport': 'دعم مخصص',
+
+    // Moroccan Cities
+    'city.kingdomOfMorocco': 'المملكة المغربية',
+    'city.agadir': 'أكادير',
+    'city.alhoceima': 'الحسيمة',
+    'city.benimellal': 'بني ملال',
+    'city.berkane': 'بركان',
+    'city.casablanca': 'الدار البيضاء',
+    'city.chefchaouen': 'شفشاون',
+    'city.eljadida': 'الجديدة',
+    'city.errachidia': 'الراشيدية',
+    'city.essaouira': 'الصويرة',
+    'city.fez': 'فاس',
+    'city.ifrane': 'إفران',
+    'city.kenitra': 'القنيطرة',
+    'city.khenifra': 'خنيفرة',
+    'city.khouribga': 'خريبكة',
+    'city.larache': 'العرائش',
+    'city.marrakech': 'مراكش',
+    'city.meknes': 'مكناس',
+    'city.nador': 'الناظور',
+    'city.ouarzazate': 'ورزازات',
+    'city.oujda': 'وجدة',
+    'city.rabat': 'الرباط',
+    'city.safi': 'آسفي',
+    'city.sale': 'سلا',
+    'city.tangier': 'طنجة',
+    'city.tetouan': 'تطوان',
+    'city.other': 'أخرى',
 
     // Payment Modal
     'payment.completePayment': 'أكمل دفعتك',
@@ -789,6 +991,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'pricing.page.title': 'تسعير بسيط وشفاف',
     'pricing.page.subtitle':
       'اختر الخطة المثالية لعريضتك. ابدأ بخطتنا المجانية وقم بالترقية مع نمو حركتك.',
+    'pricing.page.plan': 'الخطة',
     'pricing.page.freePlan': 'الخطة المجانية',
     'pricing.page.starterPlan': 'الخطة الأساسية',
     'pricing.page.proPlan': 'الخطة الاحترافية',
@@ -838,11 +1041,18 @@ const translations: Record<Locale, TranslationMessages> = {
     'pricing.features.dedicatedSupport': 'فريق دعم مخصص',
     'pricing.features.organizationBadge': 'شارة تحقق المنظمة',
     'pricing.features.highestVisibility': 'أعلى ظهور على المنصة',
+
+    // Enterprise Contact
+    'pricing.enterprise.title': 'تتوقع أكثر من 100 ألف توقيع؟',
+    'pricing.enterprise.description':
+      'نقدم خطط مؤسسات مخصصة مع دعم مخصص، وضمانات SLA، وأسعار حسب الحجم.',
+    'pricing.enterprise.cta': 'اتصل بنا',
+
     'payment.testCard': 'بطاقة اختبار (وضع التطوير)',
     'payment.testCardNumber': 'رقم البطاقة: 4242 4242 4242 4242',
     'payment.testExpiry': 'تاريخ الانتهاء: أي تاريخ مستقبلي (مثل 12/25)',
     'payment.testCvc': 'رمز الأمان: أي 3 أرقام (مثل 123)',
-    'payment.secureProcessing': '🔒 دفع آمن معالج بواسطة Stripe',
+    'payment.secureProcessing': '🔒 دفع آمن معالج بواسطة PayPal',
     'payment.backToReview': 'العودة إلى المراجعة',
     'payment.loadingPaymentSystem': 'جاري تحميل نظام الدفع...',
     'payment.paymentSystemError': '❌ خطأ في نظام الدفع',
@@ -851,6 +1061,18 @@ const translations: Record<Locale, TranslationMessages> = {
     'payment.cardInformation': 'معلومات البطاقة',
     'payment.cardValid': 'البطاقة صالحة',
     'payment.processing': 'جاري المعالجة...',
+    'payment.paymentInfo': 'معلومات الدفع',
+    'payment.paypalSupportsCards':
+      'يدعم PayPal جميع بطاقات الائتمان والخصم الرئيسية',
+    'payment.paypalSupportsAccount':
+      'يمكنك الدفع باستخدام حساب PayPal الخاص بك',
+    'payment.securePayment': 'معاملات آمنة ومشفرة',
+    'payment.currencyDisclosure':
+      'السعر الثابت: {mad} درهم مغربي (حوالي ${usd} دولار أمريكي)',
+    'payment.currencyNote':
+      'يتم احتساب المبلغ النهائي وفق سعر الصرف المعتمد من PayPal. قد يختلف المبلغ المحمل قليلاً بناءً على سعر الصرف.',
+    'payment.noRefunds':
+      'نظرًا لطبيعة الخدمة الرقمية، لا يتم تقديم أي استرداد للمبالغ المدفوعة بعد إتمام عملية الدفع.',
 
     // Success Page
     'success.paymentSuccessful': 'تم إنشاء العريضة بنجاح!',
@@ -877,13 +1099,20 @@ const translations: Record<Locale, TranslationMessages> = {
     'success.completePaymentStep': '• أكمل الدفع لإرسال عريضتك للمراجعة',
 
     // Tips for Success
-    'tips.title': '💡 نصائح للنجاح',
-    'tips.clearTitle': 'اكتب عنوانًا واضحًا ومقنعًا يشرح قضيتك',
-    'tips.explainWhy': 'اشرح لماذا هذه القضية مهمة وما التغيير الذي تريد رؤيته',
-    'tips.realisticGoal': 'اختر هدف توقيعات واقعي للبدء',
-    'tips.addMedia': 'أضف صورًا أو مقاطع فيديو لجعل عريضتك أكثر جاذبية',
+    'tips.title': '💡 نصائح لإنجاح عريضتك',
+    'tips.clearTitle': 'أكتب عنوانًا واضحًا ومقنعًا يعبّر عن قضيتك مباشرة',
+    'tips.explainWhy':
+      'إشرح المشكلة بوضوح ولماذا تهم الناس، وما التغيير الذي تطالب به',
+    'tips.realisticGoal': 'حدّد هدف توقيعات واقعي للمرحلة الأولى',
+    'tips.addMedia': 'أضف صورًا و مقطع فيديو لدعم قصتك وجعلها أكثر تأثيرًا',
     'tips.shareWithFriends':
-      'شارك عريضتك مع الأصدقاء والعائلة للحصول على الدعم الأولي',
+      'شارك عريضتك مع الأصدقاء والعائلة أولًا للحصول على دعم مبكر',
+    'tips.shareOnSocial':
+      'أنشر العريضة على وسائل التواصل الاجتماعي (فيسبوك، واتساب، إنستغرام، تويتر) للوصول إلى أكبر عدد ممكن',
+    'tips.updatePetition':
+      'حدّث العريضة وشارك تطوراتها لإبقاء الداعمين متفاعلين',
+    'tips.successStory':
+      '⭐  العرائض الناجحة تبدأ بدعم بسيط… ثم تنتشر وتكبر مع المشاركة.',
 
     // Character and File Limits
     'limits.characters': '{count} حرف',
@@ -963,7 +1192,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'petition.sharePetition': 'شارك العريضة',
     'petition.viewDiscussion': 'عرض النقاش',
     'petition.publisher': 'الناشر',
-    'petition.target': 'الهدف',
+    'petition.target': 'مُوَجهة لِ',
     'petition.subject': 'الموضوع',
     'petition.createdBy': 'أنشأها',
     'petition.createdAt': 'تاريخ الإنشاء',
@@ -1052,7 +1281,7 @@ const translations: Record<Locale, TranslationMessages> = {
     // Petition Stats
     'stats.petitionStats': 'إحصائيات العريضة',
     'stats.signatures': 'التوقيعات',
-    'stats.goal': 'الهدف',
+    'stats.goal': 'مُوَجهة لِ',
     'stats.progress': 'التقدم',
     'stats.views': 'المشاهدات',
     'stats.shares': 'المشاركات',
@@ -1164,6 +1393,8 @@ const translations: Record<Locale, TranslationMessages> = {
     'categories.environment': 'البيئة',
     'categories.education': 'التعليم',
     'categories.health': 'الصحة',
+    'categories.healthcare': 'الرعاية الصحية',
+    'categories.infrastructure': 'البنية التحتية',
     'categories.social': 'اجتماعية',
     'categories.politics': 'السياسة',
     'categories.economy': 'الاقتصاد',
@@ -1215,6 +1446,9 @@ const translations: Record<Locale, TranslationMessages> = {
     'nav.logout': 'Déconnexion',
 
     // Common
+    'common.home': 'Accueil',
+    'common.by': 'Par',
+    'common.download': 'Télécharger',
     'common.loading': 'Chargement...',
     'common.error': 'Erreur',
     'common.success': 'Succès',
@@ -1227,6 +1461,8 @@ const translations: Record<Locale, TranslationMessages> = {
     'common.search': 'Rechercher',
     'common.filter': 'Filtrer',
     'common.sort': 'Trier',
+    'common.morocco': 'Maroc',
+    'common.moroccanDirham': 'Dirham marocain',
 
     // Petitions Page
     'petitions.discoverPetitions': 'Découvrir les pétitions',
@@ -1251,7 +1487,21 @@ const translations: Record<Locale, TranslationMessages> = {
     'petitions.goal': 'Objectif',
     'petitions.createdBy': 'Créé par',
     'petitions.browse': 'Parcourir les pétitions',
+    'petitions.share': 'Partager la pétition',
     'petitions.qrCode': 'Code QR',
+    'petitions.sharingTips': 'Conseils de partage',
+    'petitions.sharingTip1': 'Ajoutez un message personnel lors du partage',
+    'petitions.sharingTip2':
+      'Partagez avec des amis qui se soucient de cette cause',
+    'petitions.sharingTip3':
+      'Publiez dans des groupes et communautés pertinents',
+    'petitions.sharingTip4':
+      'Utilisez des hashtags pertinents sur les réseaux sociaux',
+    'petitions.copyLink': 'Copier le lien',
+    'petitions.copied': 'Copié',
+    'petitions.shareOnSocial': 'Partager sur les réseaux sociaux',
+    'petitions.shareButton': 'Partager',
+    'petitions.signaturesCount': 'signatures',
     'petitions.startPetition': 'Commencer une pétition',
 
     // Home page
@@ -1412,6 +1662,44 @@ const translations: Record<Locale, TranslationMessages> = {
     'help.managing.updates.description':
       'En tant que créateur de pétition, vous pouvez publier des mises à jour pour tenir les supporters informés des progrès, victoires ou prochaines étapes. Les mises à jour apparaissent sur votre page de pétition.',
 
+    // Petition Updates Component
+    'updates.title': 'Mises à jour',
+    'updates.postUpdate': 'Publier une mise à jour',
+    'updates.noUpdates': 'Aucune mise à jour pour le moment',
+    'updates.noUpdatesCreator':
+      'Publiez votre première mise à jour pour tenir les supporters informés',
+    'updates.noUpdatesVisitor':
+      "Le créateur de la pétition n'a publié aucune mise à jour",
+    'updates.updateTitle': 'Titre de la mise à jour',
+    'updates.updateContent': 'Contenu de la mise à jour',
+    'updates.titlePlaceholder': 'ex: Nous avons atteint 1 000 signatures !',
+    'updates.contentPlaceholder':
+      'Partagez les progrès, les nouvelles ou remerciez les supporters...',
+    'updates.charactersCount': '{count}/1000 caractères',
+    'updates.posting': 'Publication...',
+    'updates.cancel': 'Annuler',
+    'updates.edit': 'Modifier',
+    'updates.delete': 'Supprimer',
+    'updates.save': 'Enregistrer',
+    'updates.saving': 'Enregistrement...',
+    'updates.saveChanges': 'Enregistrer les modifications',
+    'updates.editOnce':
+      "Vous ne pouvez modifier cette mise à jour qu'une seule fois",
+    'updates.edited': 'Modifié',
+    'updates.by': 'par',
+    'updates.deleteConfirmTitle': 'Supprimer la mise à jour ?',
+    'updates.deleteConfirmMessage':
+      'Êtes-vous sûr de vouloir supprimer cette mise à jour ? Cette action ne peut pas être annulée.',
+    'updates.deleting': 'Suppression...',
+    'updates.fillAllFields': 'Veuillez remplir tous les champs',
+    'updates.mustBeLoggedIn':
+      'Vous devez être connecté pour publier des mises à jour',
+    'updates.addFailed':
+      "Échec de l'ajout de la mise à jour. Veuillez réessayer.",
+    'updates.updateFailed': 'Échec de la mise à jour. Veuillez réessayer.',
+    'updates.deleteFailed':
+      'Échec de la suppression de la mise à jour. Veuillez réessayer.',
+
     // Sharing & Promotion Section
     'help.sharing.title': 'Partage et promotion',
     'help.sharing.howToShare.title': 'Comment partager ma pétition ?',
@@ -1446,13 +1734,18 @@ const translations: Record<Locale, TranslationMessages> = {
     'help.pricing.free.title': '3arida est-il gratuit ?',
     'help.pricing.free.intro':
       'Oui ! Créer et signer des pétitions est gratuit. Nous offrons différents niveaux basés sur votre objectif de signatures :',
-    'help.pricing.free.tier1': "Gratuit : Jusqu'à 2 500 signatures",
-    'help.pricing.free.tier2': "Basique : Jusqu'à 5 000 signatures",
-    'help.pricing.free.tier3': "Premium : Jusqu'à 10 000 signatures",
-    'help.pricing.free.tier4': "Entreprise : Jusqu'à 100 000 signatures",
+    'help.pricing.free.tier1':
+      "Plan Gratuit : Jusqu'à 2 500 signatures (0 MAD)",
+    'help.pricing.free.tier2':
+      "Plan Débutant : Jusqu'à 10 000 signatures (69 MAD)",
+    'help.pricing.free.tier3': "Plan Pro : Jusqu'à 30 000 signatures (129 MAD)",
+    'help.pricing.free.tier4':
+      "Plan Avancé : Jusqu'à 75 000 signatures (229 MAD)",
+    'help.pricing.free.tier5':
+      "Plan Entreprise : Jusqu'à 100 000 signatures (369 MAD)",
     'help.pricing.payment.title': 'Quels modes de paiement acceptez-vous ?',
     'help.pricing.payment.description':
-      'Nous acceptons toutes les principales cartes de crédit et de débit via notre processeur de paiement sécurisé Stripe. Toutes les transactions sont cryptées et sécurisées.',
+      'Nous acceptons toutes les principales cartes de crédit et de débit via notre processeur de paiement sécurisé PayPal. Toutes les transactions sont cryptées et sécurisées.',
 
     // Technical Issues Section
     'help.technical.title': 'Problèmes techniques',
@@ -1478,7 +1771,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'help.contact.intro':
       "Si vous n'avez pas trouvé la réponse à votre question, notre équipe de support est là pour vous aider.",
     'help.contact.supportTitle': 'Contacter le support',
-    'help.contact.email': 'Envoyez-nous un e-mail à :',
+    'help.contact.link': 'Contactez-nous',
     'help.contact.responseTime':
       'Nous répondons généralement dans les 24 heures pendant les jours ouvrables.',
 
@@ -1545,7 +1838,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'about.cta.startPetition': 'Commencer une pétition',
     'about.cta.browsePetitions': 'Parcourir les pétitions',
     'about.contact.question': "Vous avez des questions ou besoin d'aide ?",
-    'about.contact.email': 'Contactez-nous à',
+    'about.contact.link': 'Contactez-nous',
 
     // Footer
     'footer.description':
@@ -1577,7 +1870,8 @@ const translations: Record<Locale, TranslationMessages> = {
       "Nous utilisons vos données pour fournir nos services, vérifier votre identité, envoyer des notifications importantes et améliorer l'expérience utilisateur. Nous ne partageons pas vos informations personnelles avec des tiers sans votre consentement.",
     'privacy.contact.title': 'Nous contacter',
     'privacy.contact.content':
-      'Si vous avez des questions concernant cette politique de confidentialité, veuillez nous contacter à support@3arida.ma',
+      'Si vous avez des questions concernant cette politique de confidentialité, veuillez',
+    'privacy.contact.link': 'nous contacter',
 
     // Terms Page
     'terms.title': "Conditions d'utilisation",
@@ -1593,7 +1887,8 @@ const translations: Record<Locale, TranslationMessages> = {
       "Vous êtes responsable du contenu que vous publiez et devez vous assurer qu'il ne viole pas les lois ou ne nuit pas à autrui. Vous devez utiliser la plateforme de manière responsable et éthique.",
     'terms.contact.title': 'Nous contacter',
     'terms.contact.content':
-      "Pour des questions sur les conditions d'utilisation, contactez-nous à support@3arida.ma",
+      "Pour des questions sur les conditions d'utilisation,",
+    'terms.contact.link': 'contactez-nous',
 
     // Cookies Page
     'cookies.title': 'Politique des cookies',
@@ -1608,8 +1903,8 @@ const translations: Record<Locale, TranslationMessages> = {
     'cookies.control.content':
       'Vous pouvez contrôler les cookies via les paramètres de votre navigateur. Les désactiver peut affecter les fonctionnalités du site.',
     'cookies.contact.title': 'Nous contacter',
-    'cookies.contact.content':
-      'Pour des questions sur les cookies, contactez-nous à support@3arida.ma',
+    'cookies.contact.content': 'Pour des questions sur les cookies,',
+    'cookies.contact.link': 'contactez-nous',
 
     // Admin Page
     'admin.dashboard.title': 'Tableau de bord administrateur',
@@ -1848,6 +2143,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'create.reviewSubmitDesc': 'Révisez votre pétition avant publication',
 
     // Form Labels
+    'form.petitionDetails': 'Détails de la pétition',
     'form.publishAs': 'Publier une pétition en tant que *',
     'form.selectPublisherType': "Sélectionner le type d'éditeur",
     'form.yourName': 'Votre nom',
@@ -1864,6 +2160,15 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.selectAddressedTo': 'Sélectionner à qui cette pétition est destinée',
     'form.specificName': 'Nom spécifique de {type} *',
     'form.enterSpecificName': 'Entrez le nom spécifique de {type}',
+
+    // Addressed To Type Names (for use in labels)
+    'form.governmentType': "l'officiel / l'agence gouvernementale",
+    'form.companyType': "l'entreprise ou l'entité privée",
+    'form.organizationType': "l'organisation ou l'entité à but non lucratif",
+    'form.communityType': "la communauté / l'autorité locale",
+    'form.individualType': "l'individu",
+    'form.otherType': "l'autre entité",
+
     'form.category': 'Catégorie *',
     'form.selectCategory': 'Sélectionner une catégorie',
     'form.customCategory': 'Catégorie personnalisée *',
@@ -1881,6 +2186,9 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.petitionImage': 'Image de la pétition (Optionnel)',
     'form.petitionImageDesc':
       'Téléchargez une image pour rendre votre pétition plus convaincante. Taille max : 5MB',
+    'form.chooseFile': 'Choisir un fichier',
+    'form.noFileChosen': 'Aucun fichier choisi',
+    'form.changeFile': 'Changer le fichier',
     'form.addVideo': 'Ajouter une vidéo (Optionnel)',
     'form.youtubeUrlPlaceholder': "Collez l'URL de la vidéo YouTube ici",
     'form.youtubeVideoDesc':
@@ -1906,13 +2214,32 @@ const translations: Record<Locale, TranslationMessages> = {
       '🔄 Changement - Demander un changement de politique ou de pratique',
     'form.support':
       '✊ Soutien - Montrer le soutien pour une cause ou une personne',
-    'form.stop': '🛑 Arrêter - Empêcher que quelque chose se produise',
+    'form.stop': '⛔ Arrêter - Empêcher ou arrêter une action ou une décision',
     'form.start': '🚀 Commencer - Lancer une nouvelle initiative ou programme',
-    'form.government': '🏛️ Officiel/Agence gouvernementale',
-    'form.company': '🏢 Entreprise/Corporation',
-    'form.organizationOption': '🏛️ Organisation/Institution',
+    'form.accountability':
+      '⚖️ Responsabilité et justice - Demander des comptes, une enquête ou la justice',
+    'form.awareness':
+      "📢 Sensibilisation et reconnaissance - Sensibiliser ou demander la reconnaissance d'une cause",
+
+    // Petition Type Help Text
+    'form.changeHelp':
+      "Utilisez cette catégorie si vous demandez la modification d'une politique, loi, procédure ou pratique existante.",
+    'form.supportHelp':
+      'Choisissez cette catégorie pour montrer votre soutien ou solidarité avec une cause, initiative ou personne.',
+    'form.stopHelp':
+      "Approprié pour les pétitions visant à empêcher ou arrêter une décision, action ou événement avant qu'il ne se produise ou ne continue.",
+    'form.startHelp':
+      "Utilisez cette catégorie pour demander le lancement d'une nouvelle initiative, programme, service ou projet.",
+    'form.accountabilityHelp':
+      'Choisissez cette catégorie si la pétition demande une enquête, des comptes ou des actions juridiques justes.',
+    'form.awarenessHelp':
+      "Approprié pour les pétitions visant à sensibiliser, attirer l'attention ou demander la reconnaissance officielle d'une cause.",
+
+    'form.government': '🏛️ Officiel / Agence gouvernementale',
+    'form.company': '🏢 Entreprise ou entité privée',
+    'form.organizationOption': '🏛️ Organisation ou entité à but non lucratif',
+    'form.community': '🏘️ Communauté / Autorité locale',
     'form.individualOption': '👤 Individu',
-    'form.community': '🏘️ Communauté/Autorité locale',
     'form.other': '📝 Autre',
 
     // Form Buttons and Actions
@@ -1937,13 +2264,19 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.enterPublisherNameError': "Veuillez entrer le nom de l'éditeur",
     'form.uploadDocumentError':
       'Veuillez télécharger un document officiel prouvant votre organisation/association/institution',
+    'form.selectPetitionTypeError': 'Veuillez sélectionner le type de pétition',
+    'form.selectAddressedToError':
+      'Veuillez sélectionner à qui cette pétition est adressée',
+    'form.specifyAddressedToError': 'Veuillez spécifier le {type}',
+    'form.selectCategoryError':
+      'Veuillez sélectionner la catégorie de la pétition',
     'form.specifyCustomCategoryError':
       'Veuillez spécifier une catégorie personnalisée',
     'form.specifyCustomSubcategoryError':
       'Veuillez spécifier une sous-catégorie personnalisée',
-    'form.selectAddressedToError':
-      'Veuillez sélectionner à qui cette pétition est adressée',
-    'form.specifyAddressedToError': 'Veuillez spécifier le {type}',
+    'form.enterTitleError': 'Veuillez entrer le titre de la pétition',
+    'form.enterDescriptionError':
+      'Veuillez entrer la description de la pétition',
     'form.enterValidSignaturesError':
       'Veuillez entrer un nombre valide de signatures',
     'form.maxSignaturesError':
@@ -1962,6 +2295,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.uploadingImageButton': "Téléchargement de l'image...",
     'form.creatingPetition': 'Création de la pétition...',
     'form.createPetitionButton': 'Créer la pétition',
+    'form.validationErrors': 'Veuillez corriger les erreurs suivantes',
 
     // Review Step
     'review.title': 'Révisez votre pétition',
@@ -1999,9 +2333,69 @@ const translations: Record<Locale, TranslationMessages> = {
     'pricing.free': 'Gratuit',
     'pricing.oneTimePayment': 'Paiement unique',
     'pricing.securePayment':
-      '💳 Le paiement sera traité en toute sécurité via Stripe',
+      '💳 Le paiement sera traité en toute sécurité via PayPal',
     'pricing.moroccanDirham': '🇲🇦 Tous les prix sont en Dirham marocain (MAD)',
     'pricing.includes': 'Comprend :',
+
+    // Pricing Tier Names
+    'pricing.tierName.free': 'Gratuite',
+    'pricing.tierName.starter': 'Démarrage',
+    'pricing.tierName.pro': 'Pro',
+    'pricing.tierName.advanced': 'Avancée',
+    'pricing.tierName.enterprise': 'Entreprise',
+
+    // Pricing Tier Features
+    'pricing.tierFeature.upTo2500': "Jusqu'à 2 500 signatures",
+    'pricing.tierFeature.upTo10000': "Jusqu'à 10 000 signatures",
+    'pricing.tierFeature.upTo30000': "Jusqu'à 30 000 signatures",
+    'pricing.tierFeature.upTo75000': "Jusqu'à 75 000 signatures",
+    'pricing.tierFeature.upTo100000': "Jusqu'à 100 000 signatures",
+    'pricing.tierFeature.basicPetitionPage': 'Page de pétition basique',
+    'pricing.tierFeature.emailSharing': 'Partage par e-mail',
+    'pricing.tierFeature.enhancedPetitionPage': 'Page de pétition améliorée',
+    'pricing.tierFeature.socialMediaSharing': 'Partage sur les réseaux sociaux',
+    'pricing.tierFeature.basicAnalytics': 'Analyses de base',
+    'pricing.tierFeature.premiumPetitionPage': 'Page de pétition premium',
+    'pricing.tierFeature.advancedSharing': 'Partage avancé',
+    'pricing.tierFeature.detailedAnalytics': 'Analyses détaillées',
+    'pricing.tierFeature.prioritySupport': 'Support prioritaire',
+    'pricing.tierFeature.advancedAnalytics': 'Analyses avancées',
+    'pricing.tierFeature.exportSigneesData':
+      'Exportation des données des signataires',
+    'pricing.tierFeature.featuredListing': 'Liste en vedette',
+    'pricing.tierFeature.emailSupport': 'Support par e-mail',
+    'pricing.tierFeature.customBranding': 'Marque personnalisée',
+    'pricing.tierFeature.apiAccess': 'Accès API',
+    'pricing.tierFeature.dedicatedSupport': 'Support dédié',
+
+    // Moroccan Cities
+    'city.kingdomOfMorocco': 'Royaume du Maroc',
+    'city.agadir': 'Agadir',
+    'city.alhoceima': 'Al Hoceima',
+    'city.benimellal': 'Beni Mellal',
+    'city.berkane': 'Berkane',
+    'city.casablanca': 'Casablanca',
+    'city.chefchaouen': 'Chefchaouen',
+    'city.eljadida': 'El Jadida',
+    'city.errachidia': 'Errachidia',
+    'city.essaouira': 'Essaouira',
+    'city.fez': 'Fès',
+    'city.ifrane': 'Ifrane',
+    'city.kenitra': 'Kénitra',
+    'city.khenifra': 'Khénifra',
+    'city.khouribga': 'Khouribga',
+    'city.larache': 'Larache',
+    'city.marrakech': 'Marrakech',
+    'city.meknes': 'Meknès',
+    'city.nador': 'Nador',
+    'city.ouarzazate': 'Ouarzazate',
+    'city.oujda': 'Oujda',
+    'city.rabat': 'Rabat',
+    'city.safi': 'Safi',
+    'city.sale': 'Salé',
+    'city.tangier': 'Tanger',
+    'city.tetouan': 'Tétouan',
+    'city.other': 'Autre',
 
     // Payment Modal
     'payment.completePayment': 'Complétez votre paiement',
@@ -2032,6 +2426,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'pricing.page.title': 'Tarification simple et transparente',
     'pricing.page.subtitle':
       'Sélectionnez le plan parfait pour votre pétition. Commencez avec notre plan gratuit et mettez à niveau au fur et à mesure que votre mouvement grandit.',
+    'pricing.page.plan': 'Plan',
     'pricing.page.freePlan': 'Plan Gratuit',
     'pricing.page.starterPlan': 'Plan Débutant',
     'pricing.page.proPlan': 'Plan Pro',
@@ -2092,11 +2487,18 @@ const translations: Record<Locale, TranslationMessages> = {
       "Badge de vérification d'organisation",
     'pricing.features.highestVisibility':
       'Visibilité maximale sur la plateforme',
+
+    // Enterprise Contact
+    'pricing.enterprise.title': 'Vous attendez plus de 100K signatures ?',
+    'pricing.enterprise.description':
+      'Nous proposons des plans entreprise personnalisés avec support dédié, garanties SLA et tarification au volume.',
+    'pricing.enterprise.cta': 'Nous contacter',
+
     'payment.testCard': 'Carte de test (mode développement)',
     'payment.testCardNumber': 'Numéro de carte : 4242 4242 4242 4242',
     'payment.testExpiry': "Date d'expiration : toute date future (ex. 12/25)",
     'payment.testCvc': 'CVC : tout 3 chiffres (ex. 123)',
-    'payment.secureProcessing': '🔒 Paiement sécurisé traité par Stripe',
+    'payment.secureProcessing': '🔒 Paiement sécurisé traité par PayPal',
     'payment.backToReview': 'Retour à la révision',
     'payment.loadingPaymentSystem': 'Chargement du système de paiement...',
     'payment.paymentSystemError': '❌ Erreur du système de paiement',
@@ -2105,6 +2507,17 @@ const translations: Record<Locale, TranslationMessages> = {
     'payment.cardInformation': 'Informations de carte',
     'payment.cardValid': 'Carte valide',
     'payment.processing': 'Traitement en cours...',
+    'payment.paymentInfo': 'Informations de paiement',
+    'payment.paypalSupportsCards':
+      'PayPal prend en charge toutes les principales cartes de crédit et de débit',
+    'payment.paypalSupportsAccount':
+      'Vous pouvez payer avec votre compte PayPal',
+    'payment.securePayment': 'Transactions sécurisées et cryptées',
+    'payment.currencyDisclosure': 'Prix fixe : {mad} MAD (environ ${usd} USD)',
+    'payment.currencyNote':
+      'Le montant final est calculé selon le taux de change adopté par PayPal. Le montant facturé peut varier légèrement en fonction du taux de change.',
+    'payment.noRefunds':
+      "En raison de la nature du service numérique, aucun remboursement n'est accordé après la finalisation du paiement.",
 
     // Success Page
     'success.paymentSuccessful': 'Pétition créée avec succès !',
@@ -2135,17 +2548,23 @@ const translations: Record<Locale, TranslationMessages> = {
       '• Complétez le paiement pour envoyer votre pétition en révision',
 
     // Tips for Success
-    'tips.title': '💡 Conseils pour réussir',
+    'tips.title': '💡 Conseils pour réussir votre pétition',
     'tips.clearTitle':
-      'Rédigez un titre clair et convaincant qui explique votre cause',
+      'Rédigez un titre clair et convaincant qui exprime directement votre cause',
     'tips.explainWhy':
-      'Expliquez pourquoi cette question est importante et quel changement vous voulez voir',
+      'Expliquez clairement le problème, pourquoi il importe aux gens, et quel changement vous demandez',
     'tips.realisticGoal':
-      'Choisissez un objectif de signatures réaliste pour commencer',
+      'Fixez un objectif de signatures réaliste pour la première étape',
     'tips.addMedia':
-      'Ajoutez des photos ou des vidéos pour rendre votre pétition plus attrayante',
+      'Ajoutez des photos et une vidéo pour soutenir votre histoire et la rendre plus percutante',
     'tips.shareWithFriends':
-      'Partagez votre pétition avec vos amis et votre famille pour obtenir un soutien initial',
+      "Partagez d'abord votre pétition avec vos amis et votre famille pour obtenir un soutien précoce",
+    'tips.shareOnSocial':
+      'Publiez la pétition sur les réseaux sociaux (Facebook, WhatsApp, Instagram, Twitter) pour atteindre le plus grand nombre possible',
+    'tips.updatePetition':
+      'Mettez à jour la pétition et partagez ses développements pour garder les supporters engagés',
+    'tips.successStory':
+      '⭐ Les pétitions réussies commencent par un soutien simple… puis se propagent et grandissent avec le partage.',
 
     // Character and File Limits
     'limits.characters': '{count} caractères',
@@ -2441,6 +2860,8 @@ const translations: Record<Locale, TranslationMessages> = {
     'categories.environment': 'Environnement',
     'categories.education': 'Éducation',
     'categories.health': 'Santé',
+    'categories.healthcare': 'Soins de santé',
+    'categories.infrastructure': 'Infrastructure',
     'categories.social': 'Social',
     'categories.politics': 'Politique',
     'categories.economy': 'Économie',
@@ -2479,6 +2900,71 @@ const translations: Record<Locale, TranslationMessages> = {
     'notifications.minutesAgo': 'Il y a {count} minute',
     'notifications.hoursAgo': 'Il y a {count} heure',
     'notifications.daysAgo': 'Il y a {count} jour',
+
+    // Supporters Tab
+    'supporters.addComment': 'Ajouter un commentaire',
+    'supporters.comments': 'Commentaires',
+    'supporters.signatures': 'Signatures',
+
+    // Publisher Tab
+    'publisher.memberSince': 'Membre depuis',
+    'publisher.editBio': 'Modifier la bio',
+    'publisher.aboutPublisher': 'À propos du créateur',
+    'publisher.noBioYet':
+      'Vous n\'avez pas encore ajouté de bio. Cliquez sur "Modifier la bio" pour en ajouter une.',
+    'publisher.userNoBio': "{name} n'a pas encore ajouté de bio.",
+    'publisher.thisUser': 'Cet utilisateur',
+    'publisher.publisherInformation': 'Informations sur le créateur',
+    'publisher.type': 'Type',
+    'publisher.name': 'Nom',
+    'publisher.petitionDetails': 'Détails de la pétition',
+    'publisher.addressedTo': 'Adressée à',
+    'publisher.specificTarget': 'Cible spécifique',
+    'publisher.referenceCode': 'Code de référence',
+    'publisher.useCodeForSupport':
+      "Utilisez ce code pour les demandes d'assistance",
+
+    // Supporters Tab (continued)
+    'supporters.latest': 'Récents',
+    'supporters.mostLiked': 'Les plus aimés',
+    'supporters.shareThoughts': 'Partagez vos pensées',
+    'supporters.whySupport': 'Pourquoi soutenez-vous cette pétition ?',
+    'supporters.commentAnonymously': 'Commenter anonymement',
+    'supporters.posting': 'Publication...',
+    'supporters.postComment': 'Publier le commentaire',
+    'supporters.cancel': 'Annuler',
+    'supporters.joinDiscussion': 'Rejoindre la discussion',
+    'supporters.signInToComment': 'Se connecter pour commenter',
+    'supporters.signInMessage':
+      'Connectez-vous pour partager vos pensées et soutenir cette pétition.',
+    'supporters.noComments': 'Aucun commentaire pour le moment',
+    'supporters.noSignatures': 'Aucune signature pour le moment',
+    'supporters.noActivity': 'Aucune activité pour le moment',
+    'supporters.firstComment':
+      'Soyez le premier à partager vos pensées sur cette pétition.',
+    'supporters.firstSignature': 'Soyez le premier à signer cette pétition !',
+    'supporters.firstSupport': 'Soyez le premier à soutenir cette pétition.',
+    'supporters.anonymous': 'Anonyme',
+    'supporters.comment': 'Commentaire',
+    'supporters.signature': 'Signature',
+    'supporters.reply': 'Répondre',
+    'supporters.delete': 'Supprimer',
+    'supporters.commentDeleted': '[Commentaire supprimé]',
+    'supporters.showReplies': 'Afficher {count} réponse(s)',
+    'supporters.hideReplies': 'Masquer les réponses',
+    'supporters.replyTo': 'Répondre à {name}',
+    'supporters.replying': 'Réponse en cours...',
+    'supporters.postReply': 'Publier la réponse',
+    'supporters.loadMore': 'Charger plus',
+    'supporters.loading': 'Chargement...',
+    'supporters.signed': 'Signé',
+    'supporters.writeReply': 'Écrivez votre réponse...',
+    'supporters.deleteReply': 'Supprimer cette réponse ?',
+    'supporters.deleteComment': 'Supprimer ce commentaire ?',
+    'supporters.deleteMessage':
+      'Êtes-vous sûr de vouloir supprimer ce commentaire ? Les réponses resteront visibles.',
+    'supporters.deleting': 'Suppression...',
+    'supporters.replyDeleted': '[Réponse supprimée]',
   },
 };
 
@@ -2502,11 +2988,11 @@ export function useTranslation() {
     // Update body class for styling and fonts
     document.body.className = document.body.className.replace(
       /\b(rtl|ltr|font-arabic|font-inter)\b/g,
-      ''
+      '',
     );
     document.body.classList.add(currentLocale === 'ar' ? 'rtl' : 'ltr');
     document.body.classList.add(
-      currentLocale === 'ar' ? 'font-arabic' : 'font-inter'
+      currentLocale === 'ar' ? 'font-arabic' : 'font-inter',
     );
   }, []);
 
@@ -2535,11 +3021,11 @@ export function useTranslation() {
     // Update body class and fonts
     document.body.className = document.body.className.replace(
       /\b(rtl|ltr|font-arabic|font-inter)\b/g,
-      ''
+      '',
     );
     document.body.classList.add(newLocale === 'ar' ? 'rtl' : 'ltr');
     document.body.classList.add(
-      newLocale === 'ar' ? 'font-arabic' : 'font-inter'
+      newLocale === 'ar' ? 'font-arabic' : 'font-inter',
     );
 
     // Update URL without page reload

@@ -28,7 +28,7 @@ import {
 } from '@/lib/storage';
 import { useTranslation } from '@/hooks/useTranslation';
 import { isAuthenticated } from '@/lib/auth-mock';
-import PetitionPayment from '@/components/petitions/PetitionPayment';
+import PayPalPayment from '@/components/petitions/PayPalPayment';
 
 // Subcategories for each main category
 const SUBCATEGORIES: Record<string, string[]> = {
@@ -148,18 +148,16 @@ export default function CreatePetitionPage() {
 
   // Accordion state - only one section can be open at a time
   const [openAccordion, setOpenAccordion] = useState<'pricing' | 'tips' | null>(
-    null
+    null,
   );
   const [showPreview, setShowPreview] = useState(false);
+  const [mockPetitionIndex, setMockPetitionIndex] = useState(0);
 
-  // Auto-fill function for testing
-  const autoFillTestData = () => {
-    console.log('🤖 Auto-filling test data...');
-
-    setFormData({
+  // Mock petition data - 4 different petitions to rotate through
+  const mockPetitions = [
+    {
       publisherType: 'Individual',
       publisherName: 'أحمد محمد الحسني',
-      officialDocument: undefined,
       petitionType: 'Change',
       addressedToType: 'Government',
       addressedToSpecific: 'وزارة التجهيز والنقل واللوجستيك والماء',
@@ -168,14 +166,80 @@ export default function CreatePetitionPage() {
         'نحن سكان حي الأمل بمدينة الدار البيضاء نطالب بإصلاح عاجل للبنية التحتية للطرق في منطقتنا. الطرق في حالة سيئة جداً وتحتاج إلى تدخل فوري.\n\nمطالبنا:\n- إصلاح فوري للطرق المتضررة\n- صيانة دورية ومنتظمة\n- تحسين الإنارة العمومية\n- إنشاء أرصفة آمنة للمشاة\n- تركيب علامات المرور اللازمة\n\nهذه المشاكل تؤثر على حياتنا اليومية وتشكل خطراً على سلامة المواطنين، خاصة الأطفال وكبار السن.',
       category: 'Infrastructure',
       subcategory: 'Transportation',
-      targetSignatures: 5000, // Changed to trigger payment for testing
+      targetSignatures: 5000,
+      tags: 'البنية التحتية, الطرق, النقل, الدار البيضاء, حي الأمل',
+      location: { country: 'Morocco', city: 'Casablanca' },
+    },
+    {
+      publisherType: 'Individual',
+      publisherName: 'فاطمة الزهراء بنعلي',
+      petitionType: 'Start',
+      addressedToType: 'Government',
+      addressedToSpecific: 'وزارة التربية الوطنية والتعليم الأولي والرياضة',
+      title: 'إنشاء مكتبة عمومية حديثة في حي النخيل',
+      description:
+        'نطالب بإنشاء مكتبة عمومية حديثة في حي النخيل بمدينة الرباط لتوفير مساحة تعليمية وثقافية للأطفال والشباب.\n\nالمكتبة ستوفر:\n- كتب ومراجع في مختلف المجالات\n- قاعات للمطالعة والدراسة\n- أنشطة ثقافية وتعليمية\n- إنترنت مجاني للبحث العلمي\n- برامج لتشجيع القراءة\n\nالحي يفتقر لأي مرافق ثقافية، وهذا يؤثر سلباً على تعليم أبنائنا وتطورهم الثقافي.',
+      category: 'Education',
+      subcategory: 'Educational Access',
+      targetSignatures: 2500,
+      tags: 'التعليم, المكتبات, الثقافة, الرباط, حي النخيل',
+      location: { country: 'Morocco', city: 'Rabat' },
+    },
+    {
+      publisherType: 'Association, Organization, Institution',
+      publisherName: 'جمعية حماية البيئة بمراكش',
+      petitionType: 'Stop',
+      addressedToType: 'Government',
+      addressedToSpecific: 'وزارة الانتقال الطاقي والتنمية المستدامة',
+      title: 'وقف التلوث الصناعي في منطقة سيدي غانم',
+      description:
+        'نطالب بوقف فوري للتلوث الصناعي الناتج عن المصانع في منطقة سيدي غانم الصناعية بمراكش.\n\nالمشاكل الحالية:\n- تلوث الهواء بالدخان والغازات السامة\n- تلوث المياه الجوفية\n- روائح كريهة تؤثر على السكان\n- أمراض تنفسية متزايدة\n- تدهور البيئة المحيطة\n\nنطالب بتطبيق صارم للقوانين البيئية ومراقبة دورية للمصانع وفرض عقوبات على المخالفين.',
+      category: 'Environment',
+      subcategory: 'Pollution',
+      targetSignatures: 10000,
+      tags: 'البيئة, التلوث, الصناعة, مراكش, سيدي غانم',
+      location: { country: 'Morocco', city: 'Marrakech' },
+    },
+    {
+      publisherType: 'Individual',
+      publisherName: 'يوسف التازي',
+      petitionType: 'Support',
+      addressedToType: 'Government',
+      addressedToSpecific: 'وزارة الصحة والحماية الاجتماعية',
+      title: 'دعم توسيع خدمات الصحة النفسية في المستشفيات العمومية',
+      description:
+        'ندعم مبادرة توسيع خدمات الصحة النفسية في المستشفيات العمومية ونطالب بتسريع تنفيذها.\n\nما نطالب به:\n- زيادة عدد الأطباء النفسيين\n- إنشاء أقسام متخصصة للصحة النفسية\n- توفير العلاج النفسي المجاني\n- برامج توعية بأهمية الصحة النفسية\n- تدريب الكوادر الطبية\n\nالصحة النفسية حق أساسي ويجب أن تكون متاحة للجميع دون تمييز.',
+      category: 'Healthcare',
+      subcategory: 'Mental Health',
+      targetSignatures: 1000,
+      tags: 'الصحة, الصحة النفسية, المستشفيات, الخدمات الصحية',
+      location: { country: 'Morocco', city: 'Fez' },
+    },
+  ];
+
+  // Auto-fill function for testing - rotates through 4 mock petitions
+  const autoFillTestData = () => {
+    const mockData = mockPetitions[mockPetitionIndex];
+    console.log(
+      `🤖 Auto-filling test data (Petition ${mockPetitionIndex + 1}/4)...`,
+    );
+
+    setFormData({
+      publisherType: mockData.publisherType,
+      publisherName: mockData.publisherName,
+      officialDocument: undefined,
+      petitionType: mockData.petitionType,
+      addressedToType: mockData.addressedToType,
+      addressedToSpecific: mockData.addressedToSpecific,
+      title: mockData.title,
+      description: mockData.description,
+      category: mockData.category,
+      subcategory: mockData.subcategory,
+      targetSignatures: mockData.targetSignatures,
       mediaUrls: [],
       youtubeVideoUrl: '',
-      tags: 'البنية التحتية, الطرق, النقل, الدار البيضاء, حي الأمل, infrastructure, roads, transportation',
-      location: {
-        country: 'Morocco',
-        city: 'Casablanca',
-      },
+      tags: mockData.tags,
+      location: mockData.location,
     });
 
     setCustomCategory('');
@@ -186,7 +250,12 @@ export default function CreatePetitionPage() {
     // Navigate to review step
     setCurrentStep(formSteps.length - 1);
 
-    console.log('✅ Test data filled and navigated to review step');
+    // Rotate to next petition for next auto-fill
+    setMockPetitionIndex((prev) => (prev + 1) % mockPetitions.length);
+
+    console.log(
+      `✅ Test data filled (Petition ${mockPetitionIndex + 1}/4) and navigated to review step`,
+    );
   };
 
   // Define form steps
@@ -348,7 +417,7 @@ export default function CreatePetitionPage() {
     console.log('📍 Step changed to:', currentStep);
     if (currentStep === formSteps.length - 1) {
       console.log(
-        '🔍 REACHED REVIEW STEP - Monitoring for automatic submission...'
+        '🔍 REACHED REVIEW STEP - Monitoring for automatic submission...',
       );
 
       // Clear any existing manual submission flag
@@ -357,7 +426,7 @@ export default function CreatePetitionPage() {
       // Set up a timer to detect automatic submissions
       const timer = setTimeout(() => {
         console.log(
-          '⏰ 5 seconds passed on review step - checking for automatic behavior'
+          '⏰ 5 seconds passed on review step - checking for automatic behavior',
         );
       }, 5000);
 
@@ -383,7 +452,7 @@ export default function CreatePetitionPage() {
           petitionCount: 0,
           createdAt: new Date(),
           updatedAt: new Date(),
-        }))
+        })),
       );
     }
   };
@@ -573,10 +642,10 @@ export default function CreatePetitionPage() {
     if (currentStep !== formSteps.length - 1) {
       console.log(
         '⚠️ Form submission blocked - not on review step. Current step:',
-        currentStep
+        currentStep,
       );
       console.log(
-        '⚠️ Please navigate to the Review step and click "Create Petition" button'
+        '⚠️ Please navigate to the Review step and click "Create Petition" button',
       );
       return;
     }
@@ -602,96 +671,144 @@ export default function CreatePetitionPage() {
     console.log('🔍 Starting validation checks...');
     console.log('📋 Form data:', formData);
 
-    // Additional validation for publisher type
+    // Comprehensive validation with step navigation
+    const validationErrors: { step: number; field: string; message: string }[] =
+      [];
+
+    // Step 0: Publisher Information
     if (!formData.publisherType) {
-      console.log('❌ Validation failed: Missing publisher type');
-      setError(t('form.selectPublisherTypeError'));
-      return;
+      validationErrors.push({
+        step: 0,
+        field: 'publisherType',
+        message: t('form.selectPublisherTypeError'),
+      });
     }
-    console.log('✅ Publisher type valid:', formData.publisherType);
-
-    // Additional validation for publisher name
     if (!formData.publisherName?.trim()) {
-      console.log('❌ Validation failed: Missing publisher name');
-      setError(t('form.enterPublisherNameError'));
-      return;
+      validationErrors.push({
+        step: 0,
+        field: 'publisherName',
+        message: t('form.enterPublisherNameError'),
+      });
     }
-    console.log('✅ Publisher name valid:', formData.publisherName);
-
-    // Additional validation for official document (organizations only)
     if (
       formData.publisherType === 'Association, Organization, Institution' &&
       !formData.officialDocument
     ) {
-      console.log(
-        '❌ Validation failed: Missing official document for organization'
-      );
-      setError(t('form.uploadDocumentError'));
-      return;
+      validationErrors.push({
+        step: 0,
+        field: 'officialDocument',
+        message: t('form.uploadDocumentError'),
+      });
     }
-    console.log('✅ Official document check passed');
 
-    // Additional validation for custom category
-    if (formData.category === 'Other' && !customCategory.trim()) {
-      console.log('❌ Validation failed: Missing custom category');
-      setError(t('form.specifyCustomCategoryError'));
-      return;
+    // Step 1: Petition Details
+    if (!formData.petitionType) {
+      validationErrors.push({
+        step: 1,
+        field: 'petitionType',
+        message: t('form.selectPetitionTypeError'),
+      });
     }
-    console.log('✅ Category valid:', formData.category);
-
-    // Additional validation for custom subcategory
-    if (formData.subcategory === 'Other' && !customSubcategory.trim()) {
-      console.log('❌ Validation failed: Missing custom subcategory');
-      setError(t('form.specifyCustomSubcategoryError'));
-      return;
+    if (formData.petitionType && !formData.addressedToType) {
+      validationErrors.push({
+        step: 1,
+        field: 'addressedToType',
+        message: t('form.selectAddressedToError'),
+      });
     }
-    console.log('✅ Subcategory valid:', formData.subcategory);
-
-    // Additional validation for petition type
-    if (
-      formData.petitionType === 'Specific: Addressed to:' &&
-      !formData.addressedToType
-    ) {
-      console.log('❌ Validation failed: Missing addressed to type');
-      setError(t('form.selectAddressedToError'));
-      return;
-    }
-    console.log('✅ Petition type valid:', formData.petitionType);
-
-    // Additional validation for addressed to specific
     if (formData.addressedToType && !formData.addressedToSpecific?.trim()) {
-      console.log('❌ Validation failed: Missing addressed to specific');
-      setError(
-        t('form.specifyAddressedToError', {
+      validationErrors.push({
+        step: 1,
+        field: 'addressedToSpecific',
+        message: t('form.specifyAddressedToError', {
           type: formData.addressedToType.toLowerCase(),
-        })
-      );
-      return;
+        }),
+      });
     }
-    console.log('✅ Addressed to valid:', formData.addressedToSpecific);
+    if (!formData.category) {
+      validationErrors.push({
+        step: 1,
+        field: 'category',
+        message: t('form.selectCategoryError'),
+      });
+    }
+    if (formData.category === 'Other' && !customCategory.trim()) {
+      validationErrors.push({
+        step: 1,
+        field: 'customCategory',
+        message: t('form.specifyCustomCategoryError'),
+      });
+    }
+    if (formData.subcategory === 'Other' && !customSubcategory.trim()) {
+      validationErrors.push({
+        step: 1,
+        field: 'customSubcategory',
+        message: t('form.specifyCustomSubcategoryError'),
+      });
+    }
 
-    // Additional validation for custom signatures
+    // Step 2: Content
+    if (!formData.title?.trim()) {
+      validationErrors.push({
+        step: 2,
+        field: 'title',
+        message: t('form.enterTitleError'),
+      });
+    }
+    if (!formData.description?.trim()) {
+      validationErrors.push({
+        step: 2,
+        field: 'description',
+        message: t('form.enterDescriptionError'),
+      });
+    }
+
+    // Step 4: Location & Targeting
+    if (!formData.targetSignatures || formData.targetSignatures <= 0) {
+      validationErrors.push({
+        step: 4,
+        field: 'targetSignatures',
+        message: t('form.selectTargetSignaturesError'),
+      });
+    }
     if (signatureInputType === 'specific') {
       if (!customSignatures || parseInt(customSignatures) <= 0) {
-        console.log('❌ Validation failed: Invalid custom signatures');
-        setError(t('form.enterValidSignaturesError'));
-        return;
+        validationErrors.push({
+          step: 4,
+          field: 'customSignatures',
+          message: t('form.enterValidSignaturesError'),
+        });
       }
       if (parseInt(customSignatures) > 1000000) {
-        console.log('❌ Validation failed: Too many signatures');
-        setError(t('form.maxSignaturesError'));
-        return;
+        validationErrors.push({
+          step: 4,
+          field: 'customSignatures',
+          message: t('form.maxSignaturesError'),
+        });
       }
     }
-    console.log('✅ Signatures valid:', formData.targetSignatures);
 
-    // Ensure targetSignatures is set
-    if (!formData.targetSignatures || formData.targetSignatures <= 0) {
-      console.log('❌ Validation failed: Invalid target signatures');
-      setError(t('form.selectTargetSignaturesError'));
+    // If there are validation errors, show them and navigate to first error
+    if (validationErrors.length > 0) {
+      console.log('❌ Validation failed with errors:', validationErrors);
+
+      // Navigate to the step with the first error
+      const firstError = validationErrors[0];
+      setCurrentStep(firstError.step);
+
+      // Show error message with all missing fields
+      const errorMessage = validationErrors
+        .map((e) => `• ${e.message}`)
+        .join('\n');
+      setError(`${t('form.validationErrors')}:\n${errorMessage}`);
+
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
       return;
     }
-    console.log('✅ Target signatures valid:', formData.targetSignatures);
+
+    console.log('✅ All validation passed!');
 
     // Prepare form data with custom category and subcategory if "Other" is selected
     const submissionData = {
@@ -706,16 +823,7 @@ export default function CreatePetitionPage() {
           : formData.subcategory,
     };
 
-    // Validate form data
-    console.log('🔍 Running validatePetitionData...');
-    console.log('📋 Submission data:', submissionData);
-    const validationErrors = validatePetitionData(submissionData);
-    if (validationErrors.length > 0) {
-      console.log('❌ Validation errors found:', validationErrors);
-      setError(validationErrors.map((e) => e.message).join(', '));
-      return;
-    }
-    console.log('✅ All validation passed!');
+    console.log('✅ Form data prepared for submission');
 
     // Check if payment is required
     const price = calculatePetitionPrice(formData.targetSignatures);
@@ -731,7 +839,7 @@ export default function CreatePetitionPage() {
 
   const createPetitionWithPayment = async (
     submissionData: any,
-    paymentId: string | null
+    paymentId: string | null,
   ) => {
     try {
       setLoading(true);
@@ -741,18 +849,45 @@ export default function CreatePetitionPage() {
       const petition = await createPetition(
         submissionData,
         user!.uid,
-        user!.displayName || user!.email?.split('@')[0] || 'Anonymous'
+        user!.displayName || user!.email?.split('@')[0] || 'Anonymous',
       );
+
+      // If payment was made, update petition status to pending for moderation
+      const price = calculatePetitionPrice(formData.targetSignatures);
+      if (price > 0 && paymentId) {
+        console.log(
+          '💳 Payment successful, updating petition status to pending...',
+        );
+        try {
+          const {
+            doc: firestoreDoc,
+            updateDoc,
+            Timestamp,
+          } = await import('firebase/firestore');
+          const { db } = await import('@/lib/firebase');
+
+          await updateDoc(firestoreDoc(db, 'petitions', petition.id), {
+            status: 'pending',
+            paymentStatus: 'paid',
+            amountPaid: price,
+            paymentId: paymentId,
+            updatedAt: Timestamp.now(),
+          });
+          console.log('✅ Petition status updated to pending for moderation');
+        } catch (updateError) {
+          console.error('❌ Error updating petition status:', updateError);
+          // Don't fail the whole process if status update fails
+        }
+      }
 
       // Store petition ID in localStorage for success page
       localStorage.setItem('newPetitionId', petition.id);
 
       // Redirect to success page
-      const price = calculatePetitionPrice(formData.targetSignatures);
       if (price > 0 && paymentId) {
         // Redirect to success page with payment confirmation
         router.push(
-          `/petitions/success?payment=true&id=${petition.id}&paymentId=${paymentId}`
+          `/petitions/success?payment=true&id=${petition.id}&paymentId=${paymentId}`,
         );
       } else {
         // Redirect to success page
@@ -766,9 +901,14 @@ export default function CreatePetitionPage() {
     }
   };
 
-  const handlePaymentSuccess = (paymentIntentId: string) => {
-    console.log('✅ Payment successful:', paymentIntentId);
-    setPaymentIntentId(paymentIntentId);
+  const handlePaymentSuccess = (orderId: string, captureId: string) => {
+    console.log(
+      '✅ Payment successful - Order ID:',
+      orderId,
+      'Capture ID:',
+      captureId,
+    );
+    setPaymentIntentId(captureId); // Store capture ID as payment reference
     setShowPayment(false);
 
     // Prepare form data with custom category and subcategory if "Other" is selected
@@ -785,7 +925,7 @@ export default function CreatePetitionPage() {
     };
 
     // Create petition after successful payment
-    createPetitionWithPayment(submissionData, paymentIntentId);
+    createPetitionWithPayment(submissionData, captureId);
   };
 
   const handlePaymentCancel = () => {
@@ -858,24 +998,63 @@ export default function CreatePetitionPage() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {t('form.officialDocument')}
           </label>
-          <input
-            type="file"
-            required
-            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                // Validate file size (max 5MB)
-                if (file.size > 5 * 1024 * 1024) {
-                  alert(t('form.fileSizeError'));
-                  e.target.value = '';
-                  return;
+
+          {/* Custom File Upload Button */}
+          <div className="relative">
+            <input
+              type="file"
+              id="official-document-upload"
+              required
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  // Validate file size (max 5MB)
+                  if (file.size > 5 * 1024 * 1024) {
+                    alert(t('form.fileSizeError'));
+                    e.target.value = '';
+                    return;
+                  }
+                  handleInputChange('officialDocument', file);
                 }
-                handleInputChange('officialDocument', file);
-              }
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-          />
+              }}
+              className="hidden"
+            />
+            <label
+              htmlFor="official-document-upload"
+              className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-green-300 rounded-lg cursor-pointer hover:border-green-400 bg-green-100  hover:bg-green-300 transition-colors"
+            >
+              <svg
+                className="w-5 h-5 text-green-600 me-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              <span className="text-green-700 font-semibold">
+                {formData.officialDocument
+                  ? t('form.changeFile')
+                  : t('form.chooseFile')}
+              </span>
+            </label>
+            {formData.officialDocument && (
+              <p className="text-sm text-gray-700 mt-2">
+                📄 {formData.officialDocument.name}
+              </p>
+            )}
+            {!formData.officialDocument && (
+              <p className="text-sm text-gray-500 mt-2">
+                {t('form.noFileChosen')}
+              </p>
+            )}
+          </div>
+
           <p className="text-sm text-gray-500 mt-1">
             {t('form.officialDocumentDesc')}
           </p>
@@ -902,7 +1081,40 @@ export default function CreatePetitionPage() {
           <option value="Support">{t('form.support')}</option>
           <option value="Stop">{t('form.stop')}</option>
           <option value="Start">{t('form.start')}</option>
+          <option value="Accountability">{t('form.accountability')}</option>
+          <option value="Awareness">{t('form.awareness')}</option>
         </select>
+
+        {/* Inline Help Text for Selected Petition Type */}
+        {formData.petitionType && (
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex items-start">
+              <svg
+                className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p className="text-sm text-blue-800 mr-2">
+                {formData.petitionType === 'Change' && t('form.changeHelp')}
+                {formData.petitionType === 'Support' && t('form.supportHelp')}
+                {formData.petitionType === 'Stop' && t('form.stopHelp')}
+                {formData.petitionType === 'Start' && t('form.startHelp')}
+                {formData.petitionType === 'Accountability' &&
+                  t('form.accountabilityHelp')}
+                {formData.petitionType === 'Awareness' &&
+                  t('form.awarenessHelp')}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Addressed To Type */}
@@ -920,8 +1132,8 @@ export default function CreatePetitionPage() {
           <option value="Government">{t('form.government')}</option>
           <option value="Company">{t('form.company')}</option>
           <option value="Organization">{t('form.organizationOption')}</option>
-          <option value="Individual">{t('form.individualOption')}</option>
           <option value="Community">{t('form.community')}</option>
+          <option value="Individual">{t('form.individualOption')}</option>
           <option value="Other">{t('form.other')}</option>
         </select>
       </div>
@@ -930,7 +1142,9 @@ export default function CreatePetitionPage() {
       {formData.addressedToType && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t('form.specificName', { type: formData.addressedToType })}
+            {t('form.specificName', {
+              type: t(`form.${formData.addressedToType.toLowerCase()}Type`),
+            })}
           </label>
           <input
             type="text"
@@ -940,7 +1154,7 @@ export default function CreatePetitionPage() {
               handleInputChange('addressedToSpecific', e.target.value)
             }
             placeholder={t('form.enterSpecificName', {
-              type: formData.addressedToType.toLowerCase(),
+              type: t(`form.${formData.addressedToType.toLowerCase()}Type`),
             })}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
           />
@@ -964,7 +1178,9 @@ export default function CreatePetitionPage() {
           <option value="">{t('form.selectCategory')}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.name}>
-              {category.name}
+              {t(
+                `categories.${category.name.toLowerCase().replace(/\s+/g, '')}`,
+              ) || category.name}
             </option>
           ))}
           <option value="Other">{t('form.other')}</option>
@@ -988,8 +1204,8 @@ export default function CreatePetitionPage() {
         </div>
       )}
 
-      {/* Subcategory */}
-      {formData.category &&
+      {/* Subcategory - COMMENTED OUT FOR NOW */}
+      {/* {formData.category &&
         formData.category !== 'Other' &&
         SUBCATEGORIES[formData.category] && (
           <div>
@@ -1011,10 +1227,10 @@ export default function CreatePetitionPage() {
               <option value="Other">{t('form.other')}</option>
             </select>
           </div>
-        )}
+        )} */}
 
-      {/* Custom Subcategory */}
-      {formData.subcategory === 'Other' && (
+      {/* Custom Subcategory - COMMENTED OUT FOR NOW */}
+      {/* {formData.subcategory === 'Other' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {t('form.customSubcategory')}
@@ -1028,7 +1244,7 @@ export default function CreatePetitionPage() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 
@@ -1069,7 +1285,7 @@ export default function CreatePetitionPage() {
               type="button"
               onClick={() => {
                 const textarea = document.querySelector(
-                  'textarea[placeholder*="Explain your cause"]'
+                  'textarea[placeholder*="Explain your cause"]',
                 ) as HTMLTextAreaElement;
                 if (!textarea) return;
 
@@ -1105,7 +1321,7 @@ export default function CreatePetitionPage() {
               type="button"
               onClick={() => {
                 const textarea = document.querySelector(
-                  'textarea[placeholder*="Explain your cause"]'
+                  'textarea[placeholder*="Explain your cause"]',
                 ) as HTMLTextAreaElement;
                 if (!textarea) return;
 
@@ -1224,13 +1440,48 @@ export default function CreatePetitionPage() {
             </button>
           </div>
         )}
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-          disabled={uploadingImage}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        />
+
+        {/* Custom File Upload Button */}
+        <div className="relative">
+          <input
+            type="file"
+            id="petition-image-upload"
+            accept="image/*"
+            onChange={handleImageUpload}
+            disabled={uploadingImage}
+            className="hidden"
+          />
+          <label
+            htmlFor="petition-image-upload"
+            className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+              uploadingImage
+                ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
+                : 'border-green-500 bg-green-50 hover:bg-green-100'
+            }`}
+          >
+            <svg
+              className={`w-5 h-5 ml-2 ${uploadingImage ? 'text-gray-400' : 'text-green-600'}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <span
+              className={`text-sm font-medium ${uploadingImage ? 'text-gray-500' : 'text-green-700'}`}
+            >
+              {formData.mediaUrls && formData.mediaUrls.length > 0
+                ? t('form.changeFile')
+                : t('form.chooseFile')}
+            </span>
+          </label>
+        </div>
+
         {uploadingImage && (
           <div className="flex items-center mt-2 text-sm text-blue-600">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
@@ -1268,7 +1519,7 @@ export default function CreatePetitionPage() {
               >
                 <iframe
                   src={`https://www.youtube.com/embed/${getYouTubeVideoId(
-                    formData.youtubeVideoUrl
+                    formData.youtubeVideoUrl,
                   )}`}
                   title="YouTube video player"
                   frameBorder="0"
@@ -1337,10 +1588,11 @@ export default function CreatePetitionPage() {
                 onChange={(e) =>
                   handleInputChange(
                     'targetSignatures',
-                    parseInt(e.target.value)
+                    parseInt(e.target.value),
                   )
                 }
                 className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500"
+                dir="ltr"
                 style={{
                   background: `linear-gradient(to right, #10b981 0%, #10b981 ${
                     ((formData.targetSignatures - 100) / (100000 - 100)) * 100
@@ -1349,11 +1601,41 @@ export default function CreatePetitionPage() {
                   }%, #e5e7eb 100%)`,
                 }}
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>100</span>
-                <span>25K</span>
-                <span>50K</span>
-                <span>100K</span>
+              {/* Tier markers - Positioned proportionally to their actual values */}
+              <div className="relative text-xs text-gray-500 mt-1" dir="ltr">
+                <div className="absolute" style={{ left: '0%' }}>
+                  100
+                </div>
+                <div
+                  className="absolute"
+                  style={{
+                    left: `${((10000 - 100) / (100000 - 100)) * 100}%`,
+                    transform: 'translateX(-50%)',
+                  }}
+                >
+                  10K
+                </div>
+                <div
+                  className="absolute"
+                  style={{
+                    left: `${((30000 - 100) / (100000 - 100)) * 100}%`,
+                    transform: 'translateX(-50%)',
+                  }}
+                >
+                  30K
+                </div>
+                <div
+                  className="absolute"
+                  style={{
+                    left: `${((75000 - 100) / (100000 - 100)) * 100}%`,
+                    transform: 'translateX(-50%)',
+                  }}
+                >
+                  75K
+                </div>
+                <div className="absolute" style={{ right: '0%' }}>
+                  100K
+                </div>
               </div>
             </div>
 
@@ -1364,8 +1646,11 @@ export default function CreatePetitionPage() {
                 {t('form.signatures')}
               </div>
               <div className="text-sm text-gray-600">
-                {tierInfo.name} Plan -{' '}
-                {price === 0 ? t('pricing.free') : `${price} MAD`}
+                {t('pricing.page.plan')}{' '}
+                {tierInfo.nameKey ? t(tierInfo.nameKey) : tierInfo.name} -{' '}
+                {price === 0
+                  ? t('pricing.free')
+                  : `${price} ${t('common.moroccanDirham')}`}
               </div>
             </div>
           </div>
@@ -1404,8 +1689,11 @@ export default function CreatePetitionPage() {
                   {t('form.signatures')}
                 </div>
                 <div className="text-sm text-gray-600">
-                  {tierInfo.name} Plan -{' '}
-                  {price === 0 ? t('pricing.free') : `${price} MAD`}
+                  {t('pricing.page.plan')}{' '}
+                  {tierInfo.nameKey ? t(tierInfo.nameKey) : tierInfo.name} -{' '}
+                  {price === 0
+                    ? t('pricing.free')
+                    : `${price} ${t('common.moroccanDirham')}`}
                 </div>
               </div>
             )}
@@ -1416,23 +1704,26 @@ export default function CreatePetitionPage() {
           {t('form.signatureGoalDesc')}
         </p>
 
-        {/* Pricing Information */}
-        {formData.targetSignatures && (
+        {/* Pricing Information - COMMENTED OUT FOR NOW (Redundant with display above) */}
+        {/* {formData.targetSignatures && (
           <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-medium text-blue-900">
-                  {tierInfo.name} Plan
+                  {t('pricing.page.plan')}{' '}
+                  {tierInfo.nameKey ? t(tierInfo.nameKey) : tierInfo.name}
                 </h4>
                 <p className="text-sm text-blue-700">
-                  Up to {tierInfo.maxSignatures.toLocaleString()} signatures
+                  {t('pricing.upTo', {
+                    count: tierInfo.maxSignatures.toLocaleString(),
+                  })}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-blue-900">
                   {price === 0
                     ? t('pricing.free')
-                    : `${formatCurrency(price)} MAD`}
+                    : `${formatCurrency(price)} ${t('common.moroccanDirham')}`}
                 </p>
                 {price > 0 && (
                   <p className="text-xs text-blue-600">
@@ -1442,23 +1733,23 @@ export default function CreatePetitionPage() {
               </div>
             </div>
 
-            {tierInfo.features && tierInfo.features.length > 0 && (
+            {tierInfo.featureKeys && tierInfo.featureKeys.length > 0 && (
               <div className="mt-3">
                 <p className="text-xs font-medium text-blue-800 mb-2">
                   {t('pricing.includes')}
                 </p>
                 <ul className="text-xs text-blue-700 space-y-1">
-                  {tierInfo.features.map((feature, index) => (
+                  {tierInfo.featureKeys.map((featureKey, index) => (
                     <li key={index} className="flex items-center">
                       <span className="w-1 h-1 bg-blue-400 rounded-full mr-2"></span>
-                      {feature}
+                      {t(featureKey)}
                     </li>
                   ))}
                 </ul>
               </div>
             )}
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Location */}
@@ -1466,24 +1757,137 @@ export default function CreatePetitionPage() {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           {t('form.geographicalScope')}
         </label>
-        <select
-          required
-          value={selectedLocation}
-          onChange={handleLocationChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-        >
-          <option value="">{t('form.selectLocation')}</option>
-          <option value="Kingdom of Morocco">Kingdom of Morocco</option>
-          <option disabled>──────────</option>
-          {locations
-            .find((loc) => loc.country === 'Morocco')
-            ?.cities.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
-          <option value="Other">Other</option>
-        </select>
+        <div className="relative">
+          <input
+            type="text"
+            required
+            value={selectedLocation}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedLocation(value);
+            }}
+            onFocus={() => {
+              // Show dropdown when focused
+              const dropdown = document.getElementById('city-dropdown');
+              if (dropdown) dropdown.classList.remove('hidden');
+            }}
+            onBlur={() => {
+              // Hide dropdown after a short delay to allow click
+              setTimeout(() => {
+                const dropdown = document.getElementById('city-dropdown');
+                if (dropdown) dropdown.classList.add('hidden');
+              }, 200);
+            }}
+            placeholder={t('form.selectLocation')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+          />
+
+          {/* Custom Dropdown */}
+          <div
+            id="city-dropdown"
+            className="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+          >
+            {/* Kingdom of Morocco */}
+            {(!selectedLocation ||
+              'Kingdom of Morocco'
+                .toLowerCase()
+                .includes(selectedLocation.toLowerCase()) ||
+              t('city.kingdomOfMorocco')
+                .toLowerCase()
+                .includes(selectedLocation.toLowerCase())) && (
+              <div
+                className="px-3 py-2 hover:bg-green-50 cursor-pointer"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setSelectedLocation('Kingdom of Morocco');
+                  handleLocationChange({
+                    target: { value: 'Kingdom of Morocco' },
+                  } as any);
+                  const dropdown = document.getElementById('city-dropdown');
+                  if (dropdown) dropdown.classList.add('hidden');
+                }}
+              >
+                {t('city.kingdomOfMorocco')}
+              </div>
+            )}
+
+            {/* Separator */}
+            {(!selectedLocation ||
+              'Kingdom of Morocco'
+                .toLowerCase()
+                .includes(selectedLocation.toLowerCase()) ||
+              t('city.kingdomOfMorocco')
+                .toLowerCase()
+                .includes(selectedLocation.toLowerCase())) && (
+              <div className="border-t border-gray-200"></div>
+            )}
+
+            {/* Cities */}
+            {locations
+              .find((loc) => loc.country === 'Morocco')
+              ?.cities.filter((city) => {
+                if (!selectedLocation) return true;
+                const cityKey = `city.${city.toLowerCase().replace(/\s+/g, '')}`;
+                return (
+                  city.toLowerCase().includes(selectedLocation.toLowerCase()) ||
+                  t(cityKey)
+                    .toLowerCase()
+                    .includes(selectedLocation.toLowerCase())
+                );
+              })
+              .map((city) => {
+                const cityKey = `city.${city.toLowerCase().replace(/\s+/g, '')}`;
+                return (
+                  <div
+                    key={city}
+                    className="px-3 py-2 hover:bg-green-50 cursor-pointer"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      setSelectedLocation(city);
+                      handleLocationChange({
+                        target: { value: city },
+                      } as any);
+                      const dropdown = document.getElementById('city-dropdown');
+                      if (dropdown) dropdown.classList.add('hidden');
+                    }}
+                  >
+                    {t(cityKey)}
+                  </div>
+                );
+              })}
+
+            {/* Separator */}
+            {(!selectedLocation ||
+              'Other'.toLowerCase().includes(selectedLocation.toLowerCase()) ||
+              t('city.other')
+                .toLowerCase()
+                .includes(selectedLocation.toLowerCase())) && (
+              <div className="border-t border-gray-200"></div>
+            )}
+
+            {/* Other */}
+            {(!selectedLocation ||
+              'Other'.toLowerCase().includes(selectedLocation.toLowerCase()) ||
+              t('city.other')
+                .toLowerCase()
+                .includes(selectedLocation.toLowerCase())) && (
+              <div
+                className="px-3 py-2 hover:bg-green-50 cursor-pointer"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setSelectedLocation('Other');
+                  handleLocationChange({
+                    target: { value: 'Other' },
+                  } as any);
+                  const dropdown = document.getElementById('city-dropdown');
+                  if (dropdown) dropdown.classList.add('hidden');
+                }}
+              >
+                {t('city.other')}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Custom Location */}
@@ -1558,7 +1962,13 @@ export default function CreatePetitionPage() {
           {t('review.publisherInfo')}
         </h4>
         <p>
-          <strong>{t('review.type')}</strong> {formData.publisherType}
+          <strong>{t('review.type')}</strong>{' '}
+          {formData.publisherType === 'Individual'
+            ? t('form.individual')
+            : formData.publisherType ===
+                'Association, Organization, Institution'
+              ? t('form.organization')
+              : formData.publisherType}
         </p>
         <p>
           <strong>{t('review.name')}</strong> {formData.publisherName}
@@ -1577,15 +1987,43 @@ export default function CreatePetitionPage() {
           {t('review.petitionDetails')}
         </h4>
         <p>
-          <strong>{t('review.type')}</strong> {formData.petitionType}
+          <strong>{t('review.type')}</strong>{' '}
+          {formData.petitionType === 'Change'
+            ? t('form.change')
+            : formData.petitionType === 'Support'
+              ? t('form.support')
+              : formData.petitionType === 'Stop'
+                ? t('form.stop')
+                : formData.petitionType === 'Start'
+                  ? t('form.start')
+                  : formData.petitionType === 'Accountability'
+                    ? t('form.accountability')
+                    : formData.petitionType === 'Awareness'
+                      ? t('form.awareness')
+                      : formData.petitionType}
         </p>
         <p>
-          <strong>{t('review.addressedTo')}</strong> {formData.addressedToType}{' '}
+          <strong>{t('review.addressedTo')}</strong>{' '}
+          {formData.addressedToType === 'Government'
+            ? t('form.government')
+            : formData.addressedToType === 'Company'
+              ? t('form.company')
+              : formData.addressedToType === 'Organization'
+                ? t('form.organizationOption')
+                : formData.addressedToType === 'Community'
+                  ? t('form.community')
+                  : formData.addressedToType === 'Individual'
+                    ? t('form.individualOption')
+                    : formData.addressedToType === 'Other'
+                      ? t('form.other')
+                      : formData.addressedToType}{' '}
           - {formData.addressedToSpecific}
         </p>
         <p>
           <strong>{t('review.category')}</strong>{' '}
-          {formData.category === 'Other' ? customCategory : formData.category}
+          {formData.category === 'Other'
+            ? customCategory
+            : t(`categories.${formData.category.toLowerCase()}`)}
         </p>
         {formData.subcategory && (
           <p>
@@ -1644,8 +2082,18 @@ export default function CreatePetitionPage() {
         <p>
           <strong>{t('review.location')}</strong>{' '}
           {formData.location?.city
-            ? `${formData.location.city}, ${formData.location.country}`
-            : formData.location?.country || t('review.notSpecified')}
+            ? `${
+                formData.location.city === 'Kingdom of Morocco'
+                  ? t('city.kingdomOfMorocco')
+                  : formData.location.city === 'Other'
+                    ? t('city.other')
+                    : t(
+                        `city.${formData.location.city.toLowerCase().replace(/\s+/g, '')}`,
+                      )
+              }, ${formData.location.country === 'Morocco' ? t('common.morocco') : formData.location.country}`
+            : formData.location?.country === 'Morocco'
+              ? t('common.morocco')
+              : formData.location?.country || t('review.notSpecified')}
         </p>
         {formData.tags && formData.tags.trim() && (
           <div>
@@ -1677,10 +2125,13 @@ export default function CreatePetitionPage() {
         </h4>
         <p className="text-green-700">
           <strong>{t('review.totalCost')}</strong>{' '}
-          {price === 0 ? t('review.free') : `${price} MAD`}
+          {price === 0
+            ? t('review.free')
+            : `${price} ${t('common.moroccanDirham')}`}
         </p>
         <p className="text-sm text-green-600 mt-1">
-          {t('review.tier')} {tier} | {t('review.plan')} {tierInfo.name}
+          {t('review.tier')} {tier} | {t('review.plan')}{' '}
+          {tierInfo.nameKey ? t(tierInfo.nameKey) : tierInfo.name}
         </p>
       </div>
     </div>
@@ -1715,7 +2166,7 @@ export default function CreatePetitionPage() {
       {showPayment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <PetitionPayment
+            <PayPalPayment
               formData={formData}
               onPaymentSuccess={handlePaymentSuccess}
               onCancel={handlePaymentCancel}
@@ -1764,7 +2215,10 @@ export default function CreatePetitionPage() {
 
       <Header />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div
+        className="mx-auto px-4 sm:px-6 lg:px-8 py-8"
+        style={{ maxWidth: '900px', width: '100%' }}
+      >
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex justify-between items-start">
@@ -1791,7 +2245,7 @@ export default function CreatePetitionPage() {
 
         {/* Progress Bar */}
         <div className="mb-8">
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="bg-white rounded-lg shadow-sm border p-6 w-full">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
                 {formSteps[currentStep].title}
@@ -1847,250 +2301,217 @@ export default function CreatePetitionPage() {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          {/* Main Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Petition Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form
-                onSubmit={handleSubmit}
-                onKeyDown={(e) => {
-                  // Prevent Enter key from submitting the form unless on review step
-                  // BUT allow Enter key in textareas for line breaks
-                  if (
-                    e.key === 'Enter' &&
-                    currentStep !== formSteps.length - 1 &&
-                    e.target instanceof HTMLElement &&
-                    e.target.tagName !== 'TEXTAREA'
-                  ) {
-                    e.preventDefault();
-                    console.log(
-                      '⚠️ Enter key blocked - not on review step (but allowed in textarea)'
-                    );
-                  }
-                }}
-                className="space-y-6"
-              >
-                {/* Render current step content */}
-                {currentStep === 0 && renderPublisherStep()}
-                {currentStep === 1 && renderPetitionDetailsStep()}
-                {currentStep === 2 && renderContentStep()}
-                {currentStep === 3 && renderMediaStep()}
-                {currentStep === 4 && renderLocationStep()}
-                {currentStep === 5 && renderReviewStep()}
-
-                {/* Navigation Buttons */}
-                <div className="flex justify-between pt-6 border-t">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={prevStep}
-                    disabled={currentStep === 0}
-                  >
-                    {t('form.previous')}
-                  </Button>
-
-                  {currentStep < formSteps.length - 1 ? (
-                    <Button
-                      type="button"
-                      onClick={nextStep}
-                      disabled={uploadingImage}
-                    >
-                      {uploadingImage ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          {t('form.uploadingImageButton')}
-                        </>
-                      ) : (
-                        t('form.next')
-                      )}
-                    </Button>
-                  ) : (
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                      onClick={(e) => {
-                        console.log('🔴 BUTTON CLICKED MANUALLY!');
-                        console.log('📍 Button type:', e.currentTarget.type);
-                        console.log('📍 Form element:', e.currentTarget.form);
-                        console.log('📍 Current step:', currentStep);
-                        console.log('📍 Loading state:', loading);
-
-                        // Set manual submission flag
-                        (window as any).MANUAL_SUBMISSION_ALLOWED = true;
-                        console.log('✅ Manual submission flag set!');
-
-                        // Clear the flag after a short delay to catch automatic submissions
-                        setTimeout(() => {
-                          (window as any).MANUAL_SUBMISSION_ALLOWED = false;
-                          console.log('🔒 Manual submission flag cleared');
-                        }, 1000);
-                      }}
-                    >
-                      {loading ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          {t('form.creatingPetition')}
-                        </>
-                      ) : price > 0 ? (
-                        `Proceed to Payment - ${formatCurrency(price)} MAD`
-                      ) : (
-                        t('form.createPetitionButton')
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Bottom Information Boxes - Accordion Style */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            {/* Pricing Info Accordion */}
-            <Card>
-              <CardHeader
-                className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"
-                onClick={() =>
-                  setOpenAccordion(
-                    openAccordion === 'pricing' ? null : 'pricing'
-                  )
+        {/* Main Form */}
+        <Card className="w-full" style={{ width: '100%', maxWidth: '100%' }}>
+          <CardHeader>
+            <CardTitle>{t('form.petitionDetails')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={handleSubmit}
+              onKeyDown={(e) => {
+                // Prevent Enter key from submitting the form unless on review step
+                // BUT allow Enter key in textareas for line breaks
+                if (
+                  e.key === 'Enter' &&
+                  currentStep !== formSteps.length - 1 &&
+                  e.target instanceof HTMLElement &&
+                  e.target.tagName !== 'TEXTAREA'
+                ) {
+                  e.preventDefault();
+                  console.log(
+                    '⚠️ Enter key blocked - not on review step (but allowed in textarea)',
+                  );
                 }
-              >
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center">
-                    {t('pricing.information')}
-                  </CardTitle>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg font-bold text-green-600">
-                      {price > 0 ? formatCurrency(price) : t('pricing.free')}
-                    </span>
+              }}
+              className="space-y-6"
+            >
+              {/* Error Message Display */}
+              {error && (
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+                  <div className="flex items-start">
                     <svg
-                      className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
-                        openAccordion === 'pricing' ? 'rotate-180' : ''
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      className="w-5 h-5 text-red-500 mt-0.5 me-3 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
                     >
                       <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
                       />
                     </svg>
-                  </div>
-                </div>
-              </CardHeader>
-              {openAccordion === 'pricing' && (
-                <CardContent className="pt-0">
-                  <div className="space-y-4">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-green-800">
-                          {tierInfo.name} Tier
-                        </span>
-                        <span className="text-lg font-bold text-green-600">
-                          {price > 0
-                            ? formatCurrency(price)
-                            : t('pricing.free')}
-                        </span>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-red-800 mb-1">
+                        {t('common.error')}
+                      </h3>
+                      <div className="text-sm text-red-700 whitespace-pre-line">
+                        {error}
                       </div>
-                      <p className="text-sm text-green-700 mb-3">
-                        Up to {formData.targetSignatures.toLocaleString()}{' '}
-                        signatures
-                      </p>
-                      <ul className="text-sm text-green-700 space-y-1">
-                        {tierInfo.features.map((feature, index) => (
-                          <li key={index} className="flex items-center">
-                            <svg
-                              className="w-4 h-4 mr-2 text-green-600"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
                     </div>
-
-                    {price > 0 && (
-                      <div className="text-sm text-gray-600">
-                        <p className="mb-2">{t('pricing.securePayment')}</p>
-                        <p>{t('pricing.moroccanDirham')}</p>
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setError('')}
+                      className="text-red-500 hover:text-red-700 ms-3"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
                   </div>
-                </CardContent>
-              )}
-            </Card>
-
-            {/* Tips Accordion */}
-            <Card>
-              <CardHeader
-                className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"
-                onClick={() =>
-                  setOpenAccordion(openAccordion === 'tips' ? null : 'tips')
-                }
-              >
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center">
-                    {t('tips.title')}
-                  </CardTitle>
-                  <svg
-                    className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
-                      openAccordion === 'tips' ? 'rotate-180' : ''
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
                 </div>
-              </CardHeader>
-              {openAccordion === 'tips' && (
-                <CardContent className="pt-0">
-                  <ul className="text-sm text-gray-600 space-y-3">
-                    <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      <span>{t('tips.clearTitle')}</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      <span>{t('tips.explainWhy')}</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      <span>{t('tips.realisticGoal')}</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      <span>{t('tips.addMedia')}</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      <span>{t('tips.shareWithFriends')}</span>
-                    </li>
-                  </ul>
-                </CardContent>
               )}
-            </Card>
-          </div>
+
+              {/* Render current step content */}
+              {currentStep === 0 && renderPublisherStep()}
+              {currentStep === 1 && renderPetitionDetailsStep()}
+              {currentStep === 2 && renderContentStep()}
+              {currentStep === 3 && renderMediaStep()}
+              {currentStep === 4 && renderLocationStep()}
+              {currentStep === 5 && renderReviewStep()}
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between pt-6 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={prevStep}
+                  disabled={currentStep === 0}
+                >
+                  {t('form.previous')}
+                </Button>
+
+                {currentStep < formSteps.length - 1 ? (
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                    disabled={uploadingImage}
+                  >
+                    {uploadingImage ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        {t('form.uploadingImageButton')}
+                      </>
+                    ) : (
+                      t('form.next')
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={(e) => {
+                      console.log('🔴 BUTTON CLICKED MANUALLY!');
+                      console.log('📍 Button type:', e.currentTarget.type);
+                      console.log('📍 Form element:', e.currentTarget.form);
+                      console.log('📍 Current step:', currentStep);
+                      console.log('📍 Loading state:', loading);
+
+                      // Set manual submission flag
+                      (window as any).MANUAL_SUBMISSION_ALLOWED = true;
+                      console.log('✅ Manual submission flag set!');
+
+                      // Clear the flag after a short delay to catch automatic submissions
+                      setTimeout(() => {
+                        (window as any).MANUAL_SUBMISSION_ALLOWED = false;
+                        console.log('🔒 Manual submission flag cleared');
+                      }, 1000);
+                    }}
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        {t('form.creatingPetition')}
+                      </>
+                    ) : price > 0 ? (
+                      `Proceed to Payment - ${formatCurrency(price)} ${t('common.moroccanDirham')}`
+                    ) : (
+                      t('form.createPetitionButton')
+                    )}
+                  </Button>
+                )}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Bottom Information Boxes - Accordion Style */}
+        <div className="mt-8">
+          <Card>
+            <CardHeader
+              className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+              onClick={() =>
+                setOpenAccordion(openAccordion === 'tips' ? null : 'tips')
+              }
+            >
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="flex items-center whitespace-nowrap">
+                  {t('tips.title')}
+                </CardTitle>
+                <svg
+                  className={`w-5 h-5 text-gray-500 transition-transform duration-200 flex-shrink-0 ${
+                    openAccordion === 'tips' ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </CardHeader>
+            {openAccordion === 'tips' && (
+              <CardContent className="pt-0">
+                <ul className="text-[16px]   text-gray-600 space-y-3">
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">✓ </span>
+                    <span className="mr-2"> {t('tips.clearTitle')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">✓ </span>
+                    <span className="mr-2">{t('tips.explainWhy')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">✓ </span>
+                    <span className="mr-2">{t('tips.realisticGoal')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">✓ </span>
+                    <span className="mr-2">{t('tips.addMedia')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">✓ </span>
+                    <span className="mr-2">{t('tips.shareWithFriends')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">✓ </span>
+                    <span className="mr-2">{t('tips.shareOnSocial')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-2">✓ </span>
+                    <span className="mr-2"> {t('tips.updatePetition')}</span>
+                  </li>
+                  <li className="flex items-start border-t border-gray-200 pt-3 mt-3">
+                    <span> {t('tips.successStory')}</span>
+                  </li>
+                </ul>
+              </CardContent>
+            )}
+          </Card>
         </div>
       </div>
 
