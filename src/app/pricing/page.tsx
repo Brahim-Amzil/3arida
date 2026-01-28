@@ -370,13 +370,10 @@ export default function PricingPage() {
               </div>
               <div className="flex-1 text-center">
                 <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">
-                  {t('pricing.enterprise.title', 'Expecting 100K+ signatures?')}
+                  {t('pricing.enterprise.title')}
                 </h3>
                 <p className="text-red-800 dark:text-red-200 mb-4">
-                  {t(
-                    'pricing.enterprise.description',
-                    'We offer custom enterprise plans with dedicated support, SLA guarantees, and volume pricing.',
-                  )}
+                  {t('pricing.enterprise.description')}
                 </p>
                 <Link href="/contact">
                   <Button className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
