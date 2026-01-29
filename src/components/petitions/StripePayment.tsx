@@ -38,6 +38,7 @@ function PaymentForm({
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const price = calculatePetitionPrice(formData.targetSignatures);
   const tier = calculatePricingTier(formData.targetSignatures);
@@ -47,6 +48,11 @@ function PaymentForm({
     e.preventDefault();
 
     if (!stripe || !elements) {
+      return;
+    }
+
+    if (!agreedToTerms) {
+      setError(t('payment.mustAgreeToTerms'));
       return;
     }
 
@@ -187,6 +193,34 @@ function PaymentForm({
             <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
+
+        {/* Terms Agreement Checkbox */}
+        <div className="mb-6">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+              required
+            />
+            <span className="text-sm text-gray-700">
+              {t('payment.agreeToTerms')}{' '}
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-600 hover:text-green-700 underline"
+              >
+                {t('payment.termsOfService')}
+              </a>{' '}
+              {t('payment.andAcknowledge')}{' '}
+              <span className="font-semibold">
+                {t('payment.noRefundPolicy')}
+              </span>
+            </span>
+          </label>
+        </div>
 
         {/* Action Buttons */}
         <div className="flex gap-3">
