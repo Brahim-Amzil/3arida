@@ -88,7 +88,19 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>{t('footer.copyright')}</p>
+          <p>
+            © 2026 3arida.{' '}
+            {locale === 'ar' ? 'جميع الحقوق محفوظة' : 'All rights reserved'}.{' '}
+            {locale === 'ar' ? 'تديره' : 'Operated by'}{' '}
+            <a
+              href="https://baskomedia.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-500 hover:text-green-400 font-medium"
+            >
+              BASKO•MEDIA
+            </a>
+          </p>
         </div>
       </div>
     </footer>
