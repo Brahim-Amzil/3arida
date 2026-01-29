@@ -997,6 +997,12 @@ const translations: Record<Locale, TranslationMessages> = {
     'payment.processing': 'جاري المعالجة...',
     'payment.pay': 'ادفع',
     'payment.securePaymentBadge': '🔒 دفع آمن ومشفر',
+    'payment.agreeToTerms': 'أوافق على',
+    'payment.termsOfService': 'شروط الخدمة',
+    'payment.andAcknowledge': 'وأقر بـ',
+    'payment.noRefundPolicy': 'سياسة عدم الاسترداد',
+    'payment.mustAgreeToTerms':
+      'يجب الموافقة على شروط الخدمة وسياسة عدم الاسترداد',
     'payment.payToCreate': 'ادفع لإنشاء عريضتك مع هدف {signatures} توقيع',
     'payment.petitionPlan': 'خطة العريضة:',
     'payment.petitionTitle': 'عنوان العريضة:',
@@ -2436,6 +2442,12 @@ const translations: Record<Locale, TranslationMessages> = {
     'payment.processing': 'Traitement...',
     'payment.pay': 'Payer',
     'payment.securePaymentBadge': '🔒 Paiement sécurisé et crypté',
+    'payment.agreeToTerms': "J'accepte les",
+    'payment.termsOfService': "Conditions d'utilisation",
+    'payment.andAcknowledge': 'et reconnais la',
+    'payment.noRefundPolicy': 'Politique de non-remboursement',
+    'payment.mustAgreeToTerms':
+      "Vous devez accepter les conditions d'utilisation et la politique de non-remboursement",
     'payment.payToCreate':
       'Payez pour créer votre pétition avec un objectif de {signatures} signatures',
     'payment.petitionPlan': 'Plan de pétition :',
