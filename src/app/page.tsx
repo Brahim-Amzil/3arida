@@ -27,7 +27,7 @@ export default function HomePage() {
         try {
           const featuredResult = await getPetitions(
             { sortBy: 'signatures', sortOrder: 'desc' },
-            { page: 1, limit: 3, total: 0, hasMore: false }
+            { page: 1, limit: 3, total: 0, hasMore: false },
           );
           setFeaturedPetitions(featuredResult.petitions || []);
         } catch (err) {
@@ -39,7 +39,7 @@ export default function HomePage() {
         try {
           const recentResult = await getPetitions(
             { sortBy: 'recent', sortOrder: 'desc' },
-            { page: 1, limit: 6, total: 0, hasMore: false }
+            { page: 1, limit: 6, total: 0, hasMore: false },
           );
           setRecentPetitions(recentResult.petitions || []);
         } catch (err) {
@@ -173,7 +173,7 @@ export default function HomePage() {
                 <Link
                   key={category.id}
                   href={`/petitions?category=${encodeURIComponent(
-                    category.name
+                    category.name,
                   )}`}
                   className="group"
                 >
@@ -360,7 +360,15 @@ export default function HomePage() {
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
             <p>
-              &copy; 2024 3arida. All rights reserved. Made with ❤️ for Morocco.
+              &copy; 2026 3arida. All rights reserved. Operated by{' '}
+              <a
+                href="https://baskomedia.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-500 hover:text-green-400 font-medium"
+              >
+                BASKO•MEDIA
+              </a>
             </p>
           </div>
         </div>
