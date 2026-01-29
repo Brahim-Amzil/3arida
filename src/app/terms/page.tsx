@@ -17,7 +17,7 @@ export default function TermsPage() {
             </h1>
 
             <div className="prose prose-lg max-w-none space-y-6 text-gray-700">
-              <p className="text-gray-600 mb-6">آخر تحديث: ديسمبر 2024</p>
+              <p className="text-gray-600 mb-6">آخر تحديث: يناير 2025</p>
 
               <section>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">
@@ -112,7 +112,76 @@ export default function TermsPage() {
 
               <section>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                  7. تعليق أو إنهاء الحساب
+                  7. التسعير وسياسة عدم الاسترداد
+                </h2>
+                <p className="font-semibold mb-3">أ. الشفافية في التسعير</p>
+                <ul className="list-disc pr-6 space-y-2 mb-4">
+                  <li>جميع الأسعار معروضة بوضوح قبل إتمام عملية الشراء</li>
+                  <li>
+                    الأسعار محددة بالدرهم المغربي (MAD) وتختلف حسب عدد التوقيعات
+                    المستهدفة
+                  </li>
+                  <li>لا توجد رسوم خفية أو تكاليف إضافية غير معلنة</li>
+                </ul>
+
+                <p className="font-semibold mb-3">ب. سياسة عدم الاسترداد</p>
+                <p className="mb-3">
+                  نطبق سياسة صارمة لعدم استرداد المبالغ المدفوعة للأسباب
+                  التالية:
+                </p>
+                <ul className="list-disc pr-6 space-y-2">
+                  <li>
+                    <strong>الخدمة الرقمية:</strong> تُعتبر الخدمة مقدمة بالكامل
+                    بمجرد مراجعة العريضة ونشرها على المنصة
+                  </li>
+                  <li>
+                    <strong>منع إساءة الاستخدام:</strong> لحماية المنصة من
+                    الاستخدام التعسفي والاحتيالي
+                  </li>
+                  <li>
+                    <strong>الموافقة المسبقة:</strong> بإتمام عملية الدفع، فإنك
+                    توافق صراحة على هذه السياسة
+                  </li>
+                </ul>
+                <p className="mt-4 text-sm bg-yellow-50 border border-yellow-200 rounded p-3">
+                  <strong>ملاحظة مهمة:</strong> لا يمكن استرداد المبالغ المدفوعة
+                  بعد نشر العريضة على المنصة، حتى في حالة عدم الوصول إلى الهدف
+                  المحدد من التوقيعات.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                  8. عدم جمع التبرعات
+                </h2>
+                <p className="mb-3">
+                  <strong>
+                    عريضة ليست منصة لجمع التبرعات أو التمويل الجماعي.
+                  </strong>
+                </p>
+                <ul className="list-disc pr-6 space-y-2">
+                  <li>
+                    لا نقوم بجمع أو إدارة أي تبرعات مالية لصالح العرائض أو
+                    القضايا المنشورة
+                  </li>
+                  <li>
+                    الرسوم المدفوعة هي مقابل خدمة استضافة ونشر العريضة على
+                    المنصة فقط
+                  </li>
+                  <li>
+                    أي محاولة لاستخدام المنصة لجمع الأموال أو التبرعات تعتبر
+                    مخالفة لشروط الخدمة
+                  </li>
+                  <li>
+                    إذا كنت تبحث عن جمع تبرعات، يرجى استخدام منصات متخصصة في
+                    التمويل الجماعي
+                  </li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                  9. تعليق أو إنهاء الحساب
                 </h2>
                 <p>يحق لإدارة المنصة:</p>
                 <ul className="list-disc pr-6 space-y-2">
@@ -124,7 +193,7 @@ export default function TermsPage() {
 
               <section>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                  8. إخلاء المسؤولية
+                  10. إخلاء المسؤولية
                 </h2>
                 <ul className="list-disc pr-6 space-y-2">
                   <li>
@@ -139,7 +208,7 @@ export default function TermsPage() {
 
               <section>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                  9. تعديل شروط الخدمة
+                  11. تعديل شروط الخدمة
                 </h2>
                 <p>
                   نحتفظ بالحق في تعديل شروط الخدمة هذه في أي وقت. سيتم نشر
@@ -150,7 +219,7 @@ export default function TermsPage() {
 
               <section>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                  10. القانون الواجب التطبيق
+                  12. القانون الواجب التطبيق
                 </h2>
                 <p>
                   تخضع شروط الخدمة هذه للقوانين المعمول بها في المملكة المغربية،
@@ -160,7 +229,7 @@ export default function TermsPage() {
 
               <section>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                  11. اتصل بنا
+                  13. اتصل بنا
                 </h2>
                 <p className="mb-4">
                   لأي استفسار بخصوص شروط الخدمة، يرجى التواصل معنا عبر:
