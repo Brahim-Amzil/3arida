@@ -1,32 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { headers } from 'next/headers';
 
-// Check if Stripe is configured
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2024-12-18.acacia',
+});
 
-const stripe = stripeSecretKey
-  ? new Stripe(stripeSecretKey, {
-      apiVersion: '2025-12-15.clover',
-    })
-  : null;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export async function POST(request: NextRequest) {
-  // Check if Stripe is configured
-  if (!stripe || !stripeSecretKey || !webhookSecret) {
-    return NextResponse.json(
-      {
-        error:
-          'Stripe webhook is not configured. Please set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET environment variables.',
-      },
-      { status: 503 }
-    );
-  }
   try {
     const body = await request.text();
-    const signature = request.headers.get('stripe-signature')!;
+    const signature = headers().get('stripe-signature');
+
+    if (!signature) {
+      console.error('No Stripe signature found');
+      return NextResponse.json({ error: 'No signature' }, { status: 400 });
+    }
 
     let event: Stripe.Event;
 
@@ -35,8 +25,8 @@ export async function POST(request: NextRequest) {
     } catch (err: any) {
       console.error('Webhook signature verification failed:', err.message);
       return NextResponse.json(
-        { error: 'Webhook signature verification failed' },
-        { status: 400 }
+        { error: `Webhook Error: ${err.message}` },
+        { status: 400 },
       );
     }
 
@@ -44,12 +34,20 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        await handlePaymentSuccess(paymentIntent);
+        console.log('✅ Payment succeeded:', paymentIntent.id);
+        console.log('   Amount:', paymentIntent.amount / 100, 'MAD');
+        console.log('   Metadata:', paymentIntent.metadata);
+
+        // Here you can update your database, send confirmation emails, etc.
+        // The petition should already be created by this point
         break;
 
       case 'payment_intent.payment_failed':
         const failedPayment = event.data.object as Stripe.PaymentIntent;
-        await handlePaymentFailure(failedPayment);
+        console.error('❌ Payment failed:', failedPayment.id);
+        console.error('   Error:', failedPayment.last_payment_error?.message);
+
+        // Handle failed payment - maybe send notification to user
         break;
 
       default:
@@ -60,58 +58,8 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Webhook error:', error);
     return NextResponse.json(
-      { error: 'Webhook processing failed' },
-      { status: 500 }
+      { error: error.message || 'Webhook handler failed' },
+      { status: 500 },
     );
-  }
-}
-
-async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
-  try {
-    const { petitionId, pricingTier } = paymentIntent.metadata;
-
-    if (!petitionId) {
-      console.error('No petitionId in payment metadata');
-      return;
-    }
-
-    // Update petition with payment success
-    const petitionRef = doc(db, 'petitions', petitionId);
-    await updateDoc(petitionRef, {
-      paymentStatus: 'paid',
-      amountPaid: paymentIntent.amount / 100, // Convert from cents
-      pricingTier: pricingTier,
-      hasQrUpgrade: true,
-      qrUpgradePaidAt: new Date(),
-      stripePaymentIntentId: paymentIntent.id,
-      updatedAt: new Date(),
-    });
-
-    console.log(`Payment successful for petition ${petitionId}`);
-  } catch (error) {
-    console.error('Error handling payment success:', error);
-  }
-}
-
-async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
-  try {
-    const { petitionId } = paymentIntent.metadata;
-
-    if (!petitionId) {
-      console.error('No petitionId in payment metadata');
-      return;
-    }
-
-    // Update petition with payment failure
-    const petitionRef = doc(db, 'petitions', petitionId);
-    await updateDoc(petitionRef, {
-      paymentStatus: 'unpaid',
-      stripePaymentIntentId: paymentIntent.id,
-      updatedAt: new Date(),
-    });
-
-    console.log(`Payment failed for petition ${petitionId}`);
-  } catch (error) {
-    console.error('Error handling payment failure:', error);
   }
 }

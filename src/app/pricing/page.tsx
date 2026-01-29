@@ -259,7 +259,7 @@ export default function PricingPage() {
                 >
                   {currentPlan.name}
                 </div>
-                <CardTitle className="text-5xl font-extrabold text-gray-900 mb-1">
+                <CardTitle className="text-3xl font-extrabold text-gray-900 mb-1">
                   {currentPlan.price}
                 </CardTitle>
                 <div className="text-lg text-gray-500 mb-6">

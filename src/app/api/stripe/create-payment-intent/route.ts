@@ -1,56 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-// Check if Stripe is configured
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const stripe = stripeSecretKey
-  ? new Stripe(stripeSecretKey, {
-      apiVersion: '2025-12-15.clover',
-    })
-  : null;
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2024-12-18.acacia',
+});
 
 export async function POST(request: NextRequest) {
-  // Check if Stripe is configured
-  if (!stripe || !stripeSecretKey) {
-    return NextResponse.json(
-      {
-        error:
-          'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
-      },
-      { status: 503 }
-    );
-  }
   try {
-    const {
-      amount,
-      currency = 'mad',
-      petitionId,
-      pricingTier,
-    } = await request.json();
+    const { amount, petitionTitle, targetSignatures } = await request.json();
 
-    // Validate required fields
-    if (!amount || !petitionId || !pricingTier) {
-      return NextResponse.json(
-        { error: 'Missing required fields: amount, petitionId, pricingTier' },
-        { status: 400 }
-      );
+    // Validate amount
+    if (!amount || amount <= 0) {
+      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
     }
 
-    // Convert amount to cents (Stripe expects amounts in smallest currency unit)
-    const amountInCents = Math.round(amount * 100);
-
     // Create payment intent
+    // Stripe expects amount in cents, but MAD doesn't use cents
+    // So we multiply by 100 for Stripe's format
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountInCents,
-      currency: currency.toLowerCase(),
+      amount: Math.round(amount * 100), // Convert to cents
+      currency: 'mad', // Moroccan Dirham
       metadata: {
-        petitionId,
-        pricingTier,
-        platform: '3arida',
+        petitionTitle: petitionTitle || 'Petition',
+        targetSignatures: targetSignatures?.toString() || '0',
       },
-      automatic_payment_methods: {
-        enabled: true,
-      },
+      description: `Petition: ${petitionTitle} (${targetSignatures} signatures)`,
     });
 
     return NextResponse.json({
@@ -58,14 +32,10 @@ export async function POST(request: NextRequest) {
       paymentIntentId: paymentIntent.id,
     });
   } catch (error: any) {
-    console.error('Stripe payment intent creation error:', error);
-
+    console.error('Error creating payment intent:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to create payment intent',
-        details: error.message,
-      },
-      { status: 500 }
+      { error: error.message || 'Failed to create payment intent' },
+      { status: 500 },
     );
   }
 }
