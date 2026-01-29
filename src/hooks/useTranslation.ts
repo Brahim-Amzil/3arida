@@ -1077,32 +1077,6 @@ const translations: Record<Locale, TranslationMessages> = {
       'نقدم خطط مؤسسات مخصصة مع دعم مخصص، وضمانات SLA، وأسعار حسب الحجم.',
     'pricing.enterprise.cta': 'اتصل بنا',
 
-    'payment.testCard': 'بطاقة اختبار (وضع التطوير)',
-    'payment.testCardNumber': 'رقم البطاقة: 4242 4242 4242 4242',
-    'payment.testExpiry': 'تاريخ الانتهاء: أي تاريخ مستقبلي (مثل 12/25)',
-    'payment.testCvc': 'رمز الأمان: أي 3 أرقام (مثل 123)',
-    'payment.secureProcessing': '🔒 دفع آمن معالج بواسطة PayPal',
-    'payment.backToReview': 'العودة إلى المراجعة',
-    'payment.loadingPaymentSystem': 'جاري تحميل نظام الدفع...',
-    'payment.paymentSystemError': '❌ خطأ في نظام الدفع',
-    'payment.paymentNotAvailable': 'نظام الدفع غير متاح',
-    'payment.goBack': 'العودة',
-    'payment.cardInformation': 'معلومات البطاقة',
-    'payment.cardValid': 'البطاقة صالحة',
-    'payment.processing': 'جاري المعالجة...',
-    'payment.paymentInfo': 'معلومات الدفع',
-    'payment.paypalSupportsCards':
-      'يدعم PayPal جميع بطاقات الائتمان والخصم الرئيسية',
-    'payment.paypalSupportsAccount':
-      'يمكنك الدفع باستخدام حساب PayPal الخاص بك',
-    'payment.securePayment': 'معاملات آمنة ومشفرة',
-    'payment.currencyDisclosure':
-      'السعر الثابت: {mad} درهم مغربي (حوالي ${usd} دولار أمريكي)',
-    'payment.currencyNote':
-      'يتم احتساب المبلغ النهائي وفق سعر الصرف المعتمد من PayPal. قد يختلف المبلغ المحمل قليلاً بناءً على سعر الصرف.',
-    'payment.noRefunds':
-      'نظرًا لطبيعة الخدمة الرقمية، لا يتم تقديم أي استرداد للمبالغ المدفوعة بعد إتمام عملية الدفع.',
-
     // Success Page
     'success.paymentSuccessful': 'تم إنشاء العريضة بنجاح!',
     'success.petitionCreated': 'تم إنشاء العريضة بنجاح!',
@@ -2553,31 +2527,6 @@ const translations: Record<Locale, TranslationMessages> = {
     'pricing.enterprise.description':
       'Nous proposons des plans entreprise personnalisés avec support dédié, garanties SLA et tarification au volume.',
     'pricing.enterprise.cta': 'Nous contacter',
-
-    'payment.testCard': 'Carte de test (mode développement)',
-    'payment.testCardNumber': 'Numéro de carte : 4242 4242 4242 4242',
-    'payment.testExpiry': "Date d'expiration : toute date future (ex. 12/25)",
-    'payment.testCvc': 'CVC : tout 3 chiffres (ex. 123)',
-    'payment.secureProcessing': '🔒 Paiement sécurisé traité par PayPal',
-    'payment.backToReview': 'Retour à la révision',
-    'payment.loadingPaymentSystem': 'Chargement du système de paiement...',
-    'payment.paymentSystemError': '❌ Erreur du système de paiement',
-    'payment.paymentNotAvailable': 'Système de paiement non disponible',
-    'payment.goBack': 'Retour',
-    'payment.cardInformation': 'Informations de carte',
-    'payment.cardValid': 'Carte valide',
-    'payment.processing': 'Traitement en cours...',
-    'payment.paymentInfo': 'Informations de paiement',
-    'payment.paypalSupportsCards':
-      'PayPal prend en charge toutes les principales cartes de crédit et de débit',
-    'payment.paypalSupportsAccount':
-      'Vous pouvez payer avec votre compte PayPal',
-    'payment.securePayment': 'Transactions sécurisées et cryptées',
-    'payment.currencyDisclosure': 'Prix fixe : {mad} MAD (environ ${usd} USD)',
-    'payment.currencyNote':
-      'Le montant final est calculé selon le taux de change adopté par PayPal. Le montant facturé peut varier légèrement en fonction du taux de change.',
-    'payment.noRefunds':
-      "En raison de la nature du service numérique, aucun remboursement n'est accordé après la finalisation du paiement.",
 
     // Success Page
     'success.paymentSuccessful': 'Pétition créée avec succès !',
