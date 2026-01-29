@@ -866,9 +866,9 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.validationErrors': 'يرجى تصحيح الأخطاء التالية',
 
     // Notification Alerts
-    'notification.approved.title': 'تمت الموافقة على العريضة!',
+    'notification.approved.title': ' تهانينا، تمت الموافقة على العريضة!  ',
     'notification.approved.message':
-      'تمت الموافقة على عريضتك من قبل فريق الإشراف وهي الآن مباشرة على المنصة.',
+      'تمت الموافقة على عريضتك من قبل فريق الإشراف وهي الآن معروضة على المنصة.',
     'notification.rejected.title': 'تم رفض العريضة',
     'notification.rejected.message': 'تم رفض عريضتك من قبل فريق الإشراف.',
     'notification.paused.title': 'تم إيقاف العريضة مؤقتاً',
@@ -985,12 +985,21 @@ const translations: Record<Locale, TranslationMessages> = {
 
     // Payment Modal
     'payment.completePayment': 'أكمل دفعتك',
-    'payment.payToCreate': 'ادفع لإنشاء عريضتك مع هدف {signatures} توقيع',
+    'payment.securePayment': 'دفع آمن',
     'payment.orderSummary': 'ملخص الطلب',
+    'payment.petition': 'العريضة',
+    'payment.signatureGoal': 'هدف التوقيعات',
+    'payment.plan': 'الخطة',
+    'payment.total': 'المجموع',
+    'payment.cardDetails': 'تفاصيل البطاقة',
+    'payment.testMode': 'وضع الاختبار',
+    'payment.testCard': 'بطاقة اختبار: 4242 4242 4242 4242',
+    'payment.processing': 'جاري المعالجة...',
+    'payment.pay': 'ادفع',
+    'payment.securePaymentBadge': '🔒 دفع آمن ومشفر',
+    'payment.payToCreate': 'ادفع لإنشاء عريضتك مع هدف {signatures} توقيع',
     'payment.petitionPlan': 'خطة العريضة:',
-    'payment.signatureGoal': 'هدف التوقيعات:',
     'payment.petitionTitle': 'عنوان العريضة:',
-    'payment.total': 'المجموع:',
     'payment.whatsIncluded': 'المميزات المشمولة',
 
     // Pricing Features
@@ -2441,13 +2450,22 @@ const translations: Record<Locale, TranslationMessages> = {
 
     // Payment Modal
     'payment.completePayment': 'Complétez votre paiement',
+    'payment.securePayment': 'Paiement sécurisé',
+    'payment.orderSummary': 'Résumé de la commande',
+    'payment.petition': 'Pétition',
+    'payment.signatureGoal': 'Objectif de signatures',
+    'payment.plan': 'Plan',
+    'payment.total': 'Total',
+    'payment.cardDetails': 'Détails de la carte',
+    'payment.testMode': 'Mode test',
+    'payment.testCard': 'Carte de test : 4242 4242 4242 4242',
+    'payment.processing': 'Traitement...',
+    'payment.pay': 'Payer',
+    'payment.securePaymentBadge': '🔒 Paiement sécurisé et crypté',
     'payment.payToCreate':
       'Payez pour créer votre pétition avec un objectif de {signatures} signatures',
-    'payment.orderSummary': 'Résumé de la commande',
     'payment.petitionPlan': 'Plan de pétition :',
-    'payment.signatureGoal': 'Objectif de signatures :',
     'payment.petitionTitle': 'Titre de la pétition :',
-    'payment.total': 'Total :',
     'payment.whatsIncluded': 'Fonctionnalités incluses',
 
     // Pricing Features

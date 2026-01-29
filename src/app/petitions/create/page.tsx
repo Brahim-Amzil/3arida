@@ -29,6 +29,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { isAuthenticated } from '@/lib/auth-mock';
 import PayPalPayment from '@/components/petitions/PayPalPayment';
+import StripePayment from '@/components/petitions/StripePayment';
 
 // Subcategories for each main category
 const SUBCATEGORIES: Record<string, string[]> = {
@@ -901,14 +902,9 @@ export default function CreatePetitionPage() {
     }
   };
 
-  const handlePaymentSuccess = (orderId: string, captureId: string) => {
-    console.log(
-      '✅ Payment successful - Order ID:',
-      orderId,
-      'Capture ID:',
-      captureId,
-    );
-    setPaymentIntentId(captureId); // Store capture ID as payment reference
+  const handlePaymentSuccess = (paymentIntentId: string) => {
+    console.log('✅ Payment successful - Payment Intent ID:', paymentIntentId);
+    setPaymentIntentId(paymentIntentId);
     setShowPayment(false);
 
     // Prepare form data with custom category and subcategory if "Other" is selected
@@ -925,7 +921,7 @@ export default function CreatePetitionPage() {
     };
 
     // Create petition after successful payment
-    createPetitionWithPayment(submissionData, captureId);
+    createPetitionWithPayment(submissionData, paymentIntentId);
   };
 
   const handlePaymentCancel = () => {
@@ -1545,7 +1541,7 @@ export default function CreatePetitionPage() {
     <div className="space-y-6">
       {/* Target Signatures */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-4">
+        <label className="block text-lg font-medium text-gray-700 mb-4">
           {t('form.targetSignatures')}
         </label>
 
@@ -2165,13 +2161,11 @@ export default function CreatePetitionPage() {
       {/* Payment Modal */}
       {showPayment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <PayPalPayment
-              formData={formData}
-              onPaymentSuccess={handlePaymentSuccess}
-              onCancel={handlePaymentCancel}
-            />
-          </div>
+          <StripePayment
+            formData={formData}
+            onPaymentSuccess={handlePaymentSuccess}
+            onCancel={handlePaymentCancel}
+          />
         </div>
       )}
 
