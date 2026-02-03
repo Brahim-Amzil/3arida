@@ -51,17 +51,12 @@ export default function AdminAppealsPage() {
       setLoading(true);
       setError('');
 
-      const response = await fetch(
-        `/api/appeals?userId=${user.uid}&userRole=moderator`
-      );
+      // Use client SDK directly instead of API route
+      const { getAppealsForUser } = await import('@/lib/appeals-service');
+      const fetchedAppeals = await getAppealsForUser(user.uid, 'moderator');
 
-      if (!response.ok) {
-        throw new Error(t('appeals.failedToLoad'));
-      }
-
-      const data = await response.json();
-      setAllAppeals(data.appeals || []);
-      setAppeals(data.appeals || []);
+      setAllAppeals(fetchedAppeals);
+      setAppeals(fetchedAppeals);
     } catch (err) {
       console.error('Error loading appeals:', err);
       setError(t('appeals.failedToLoad'));
@@ -85,7 +80,7 @@ export default function AdminAppealsPage() {
         (a) =>
           a.petitionTitle.toLowerCase().includes(searchLower) ||
           a.creatorName.toLowerCase().includes(searchLower) ||
-          a.id.toLowerCase().includes(searchLower)
+          a.id.toLowerCase().includes(searchLower),
       );
     }
 

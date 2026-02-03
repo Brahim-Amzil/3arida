@@ -169,25 +169,34 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/petitions?category=${encodeURIComponent(
-                    category.name,
-                  )}`}
-                  className="group"
-                >
-                  <div className="bg-gray-50 rounded-lg p-6 text-center hover:bg-gray-100 transition-colors">
-                    <div className="text-3xl mb-3">{category.icon}</div>
-                    <h3 className="font-semibold text-gray-900 mb-1">
-                      {category.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {category.petitionCount} {t('categories.petitions')}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+              {categories.map((category) => {
+                // Translate category name
+                const categoryKey = `categories.${category.name.toLowerCase().replace(/\s+/g, '')}`;
+                const translatedName =
+                  t(categoryKey) !== categoryKey
+                    ? t(categoryKey)
+                    : category.name;
+
+                return (
+                  <Link
+                    key={category.id}
+                    href={`/petitions?category=${encodeURIComponent(
+                      category.name,
+                    )}`}
+                    className="group"
+                  >
+                    <div className="bg-gray-50 rounded-lg p-6 text-center hover:bg-gray-100 transition-colors">
+                      <div className="text-3xl mb-3">{category.icon}</div>
+                      <h3 className="font-semibold text-gray-900 mb-1">
+                        {translatedName}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {category.petitionCount} {t('categories.petitions')}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -207,7 +216,10 @@ export default function HomePage() {
                 </p>
               </div>
               <Link href="/petitions">
-                <Button variant="outline">
+                <Button
+                  variant="outline"
+                  className="bg-blue-50 border-blue-200 text-lg text-blue-700 hover:bg-blue-100 hover:border-blue-300"
+                >
                   {t('petitions.viewAllPetitions')}
                 </Button>
               </Link>

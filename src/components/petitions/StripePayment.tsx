@@ -26,12 +26,14 @@ interface StripePaymentProps {
   formData: PetitionFormData;
   onPaymentSuccess: (paymentIntentId: string) => void;
   onCancel: () => void;
+  couponDiscount?: number;
 }
 
 function PaymentForm({
   formData,
   onPaymentSuccess,
   onCancel,
+  couponDiscount = 0,
 }: StripePaymentProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -39,8 +41,13 @@ function PaymentForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [termsError, setTermsError] = useState(false);
 
-  const price = calculatePetitionPrice(formData.targetSignatures);
+  const originalPrice = calculatePetitionPrice(formData.targetSignatures);
+  const price =
+    couponDiscount > 0
+      ? Math.round((originalPrice * (100 - couponDiscount)) / 100)
+      : originalPrice;
   const tier = calculatePricingTier(formData.targetSignatures);
   const tierInfo = PRICING_TIERS[tier];
 
@@ -52,10 +59,11 @@ function PaymentForm({
     }
 
     if (!agreedToTerms) {
-      setError(t('payment.mustAgreeToTerms'));
+      setTermsError(true);
       return;
     }
 
+    setTermsError(false);
     setLoading(true);
     setError('');
 
@@ -200,11 +208,21 @@ function PaymentForm({
             <input
               type="checkbox"
               checked={agreedToTerms}
-              onChange={(e) => setAgreedToTerms(e.target.checked)}
-              className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-              required
+              onChange={(e) => {
+                setAgreedToTerms(e.target.checked);
+                if (e.target.checked) {
+                  setTermsError(false);
+                }
+              }}
+              className={`mt-1 h-4 w-4 text-green-600 focus:ring-green-500 rounded ${
+                termsError
+                  ? 'border-red-500 ring-2 ring-red-500'
+                  : 'border-gray-300'
+              }`}
             />
-            <span className="text-sm text-gray-700">
+            <span
+              className={`text-sm ${termsError ? 'text-red-600' : 'text-gray-700'}`}
+            >
               {t('payment.agreeToTerms')}{' '}
               <a
                 href="/terms"
@@ -220,6 +238,18 @@ function PaymentForm({
               </span>
             </span>
           </label>
+          {termsError && (
+            <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {t('payment.mustAgreeToTerms')}
+            </p>
+          )}
         </div>
 
         {/* Action Buttons */}

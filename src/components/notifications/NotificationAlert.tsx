@@ -9,16 +9,17 @@ import {
   AlertCircle,
   Trash2,
 } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface NotificationAlertData {
   type:
-    | 'approved'
-    | 'rejected'
-    | 'paused'
-    | 'deleted'
-    | 'archived'
-    | 'deletion_approved'
-    | 'deletion_denied';
+  | 'approved'
+  | 'rejected'
+  | 'paused'
+  | 'deleted'
+  | 'archived'
+  | 'deletion_approved'
+  | 'deletion_denied';
   title: string;
   message: string;
   reason?: string;
@@ -34,6 +35,8 @@ export default function NotificationAlert({
   data,
   onClose,
 }: NotificationAlertProps) {
+  const { t } = useTranslation();
+
   const getAlertStyle = () => {
     switch (data.type) {
       case 'approved':
@@ -105,6 +108,26 @@ export default function NotificationAlert({
 
   const style = getAlertStyle();
 
+  // Get translated content if available, otherwise use data
+  const getContent = () => {
+    // List of types we added translations for
+    const translatedTypes = ['approved', 'rejected', 'paused', 'deleted', 'archived', 'deletion_approved', 'deletion_denied'];
+
+    if (translatedTypes.includes(data.type)) {
+      return {
+        title: t(`notifications.${data.type}.title`),
+        message: t(`notifications.${data.type}.message`)
+      };
+    }
+
+    return {
+      title: data.title,
+      message: data.message
+    };
+  };
+
+  const content = getContent();
+
   return (
     <div
       className={`relative rounded-lg border-2 ${style.bg} p-4 mb-6 shadow-md animate-in slide-in-from-top duration-300`}
@@ -119,9 +142,9 @@ export default function NotificationAlert({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <h3 className={`text-lg font-semibold ${style.titleColor} mb-1`}>
-            {data.title}
+            {content.title}
           </h3>
-          <p className={`text-sm ${style.textColor} mb-2`}>{data.message}</p>
+          <p className={`text-sm ${style.textColor} mb-2`}>{content.message}</p>
 
           {/* Reason (if provided) */}
           {data.reason && (

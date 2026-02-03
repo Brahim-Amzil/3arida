@@ -16,11 +16,13 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { uploadProfileImage, deleteProfileImage } from '@/lib/image-upload';
 import Image from 'next/image';
+import { useTranslation } from '@/hooks/useTranslation';
 
 function ProfilePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, userProfile } = useAuth();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -36,7 +38,7 @@ function ProfilePageContent() {
       ['account', 'profile', 'security', 'preferences'].includes(tabParam)
     ) {
       setActiveTab(
-        tabParam as 'account' | 'profile' | 'security' | 'preferences'
+        tabParam as 'account' | 'profile' | 'security' | 'preferences',
       );
     }
   }, [searchParams]);
@@ -75,7 +77,7 @@ function ProfilePageContent() {
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(
-    (userProfile as any)?.photoURL || user?.photoURL || null
+    (userProfile as any)?.photoURL || user?.photoURL || null,
   );
 
   // Update profile image when userProfile changes
@@ -132,13 +134,13 @@ function ProfilePageContent() {
     if (!user) return;
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError('New passwords do not match.');
+      setError(t('profileSettings.security.passwordMismatch'));
       setTimeout(() => setError(''), 3000);
       return;
     }
 
     if (passwordForm.newPassword.length < 6) {
-      setError('New password must be at least 6 characters long.');
+      setError(t('profileSettings.security.passwordTooShort'));
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -151,7 +153,7 @@ function ProfilePageContent() {
       // Re-authenticate user
       const credential = EmailAuthProvider.credential(
         user.email!,
-        passwordForm.currentPassword
+        passwordForm.currentPassword,
       );
       await reauthenticateWithCredential(user, credential);
 
@@ -167,9 +169,9 @@ function ProfilePageContent() {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       console.error('Error updating password:', err);
-      let errorMessage = 'Failed to update password.';
+      let errorMessage = t('profileSettings.security.updateFailed');
       if (err.code === 'auth/wrong-password') {
-        errorMessage = 'Current password is incorrect.';
+        errorMessage = t('profileSettings.security.wrongPassword');
       }
       setError(errorMessage);
     } finally {
@@ -178,7 +180,7 @@ function ProfilePageContent() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const fieldName = e.target.name;
     const fieldValue = e.target.value;
@@ -249,10 +251,10 @@ function ProfilePageContent() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-          <p className="mt-2 text-gray-600">
-            Manage your account settings and preferences.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {t('profileSettings.title')}
+          </h1>
+          <p className="mt-2 text-gray-600">{t('profileSettings.subtitle')}</p>
         </div>
 
         {/* Success/Error Message */}
@@ -264,7 +266,7 @@ function ProfilePageContent() {
                 : 'bg-red-50 border border-red-200 text-red-800'
             }`}
           >
-            {success ? 'Changes saved successfully!' : error}
+            {success ? t('profileSettings.changesSaved') : error}
           </div>
         )}
 
@@ -280,7 +282,7 @@ function ProfilePageContent() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Account Status
+                {t('profileSettings.tabs.account')}
               </button>
               <button
                 onClick={() => setActiveTab('profile')}
@@ -290,7 +292,7 @@ function ProfilePageContent() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Profile Information
+                {t('profileSettings.tabs.profile')}
               </button>
               <button
                 onClick={() => setActiveTab('security')}
@@ -300,7 +302,7 @@ function ProfilePageContent() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Security
+                {t('profileSettings.tabs.security')}
               </button>
               <button
                 onClick={() => setActiveTab('preferences')}
@@ -310,7 +312,7 @@ function ProfilePageContent() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Preferences
+                {t('profileSettings.tabs.preferences')}
               </button>
             </nav>
           </div>
@@ -321,7 +323,7 @@ function ProfilePageContent() {
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-6">
-                    Account Status Overview
+                    {t('profileSettings.account.title')}
                   </h3>
                   <div className="space-y-4">
                     {/* Account Type */}
@@ -344,15 +346,12 @@ function ProfilePageContent() {
                         </div>
                         <div>
                           <span className="text-sm font-medium text-gray-900">
-                            Account Type
+                            {t('profileSettings.account.type')}
                           </span>
-                          <p className="text-sm text-gray-500 capitalize">
-                            {userProfile?.role || 'user'} Account
-                          </p>
                         </div>
                       </div>
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 capitalize">
-                        {userProfile?.role || 'User'}
+                        {t(`role.${userProfile?.role || 'user'}`)}
                       </span>
                     </div>
 
@@ -376,12 +375,33 @@ function ProfilePageContent() {
                         </div>
                         <div>
                           <span className="text-sm font-medium text-gray-900">
-                            Email Verification
+                            {t('profileSettings.account.emailVerification')}
                           </span>
-                          <p className="text-sm text-gray-500">
+                          <p
+                            className={`text-sm flex items-center gap-1.5 ${
+                              user.emailVerified
+                                ? 'text-green-700'
+                                : 'text-gray-500'
+                            }`}
+                          >
+                            {user.emailVerified && (
+                              <svg
+                                className="w-4 h-4 text-green-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2.5}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
                             {user.emailVerified
-                              ? 'Your email is verified'
-                              : 'Please verify your email'}
+                              ? t('profileSettings.account.emailVerified')
+                              : t('profileSettings.account.emailUnverified')}
                           </p>
                         </div>
                       </div>
@@ -392,7 +412,9 @@ function ProfilePageContent() {
                             : 'bg-red-100 text-red-800'
                         }`}
                       >
-                        {user.emailVerified ? 'Verified' : 'Unverified'}
+                        {user.emailVerified
+                          ? t('profileSettings.account.verified')
+                          : t('profileSettings.account.unverified')}
                       </span>
                     </div>
 
@@ -416,12 +438,10 @@ function ProfilePageContent() {
                         </div>
                         <div>
                           <span className="text-sm font-medium text-gray-900">
-                            Phone Verification
+                            {t('profileSettings.account.phoneVerification')}
                           </span>
                           <p className="text-sm text-gray-500">
-                            {userProfile?.verifiedPhone
-                              ? 'Verify phone to create and sign petitions'
-                              : 'Verify phone to create and sign petitions'}
+                            {t('profileSettings.account.phoneMessage')}
                           </p>
                         </div>
                       </div>
@@ -432,7 +452,9 @@ function ProfilePageContent() {
                             : 'bg-yellow-100 text-yellow-800'
                         }`}
                       >
-                        {userProfile?.verifiedPhone ? 'Verified' : 'Pending'}
+                        {userProfile?.verifiedPhone
+                          ? t('profileSettings.account.verified')
+                          : t('profileSettings.account.pending')}
                       </span>
                     </div>
                   </div>
@@ -442,7 +464,7 @@ function ProfilePageContent() {
                 {!userProfile?.verifiedPhone && (
                   <div className="border-t border-gray-200 pt-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Action Required
+                      {t('profileSettings.account.actionRequired')}
                     </h3>
                     <div className="flex items-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <div className="w-5 h-5 mr-3 flex-shrink-0">
@@ -462,18 +484,17 @@ function ProfilePageContent() {
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-yellow-800">
-                          Phone Verification Required
+                          {t('profileSettings.account.phoneRequired')}
                         </p>
                         <p className="text-sm text-yellow-600">
-                          You must verify your phone number to create or sign
-                          petitions.
+                          {t('profileSettings.account.phoneRequiredMessage')}
                         </p>
                       </div>
                       <Button
                         onClick={() => setShowPhoneVerification(true)}
                         className="ml-4 bg-yellow-600 hover:bg-yellow-700 flex-shrink-0"
                       >
-                        Verify Phone
+                        {t('profileSettings.account.verifyPhone')}
                       </Button>
                     </div>
                   </div>
@@ -482,7 +503,7 @@ function ProfilePageContent() {
                 {/* Account Details */}
                 <div className="border-t border-gray-200 pt-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Account Details
+                    {t('profileSettings.account.details')}
                   </h3>
                   <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div className="flex items-center">
@@ -501,11 +522,11 @@ function ProfilePageContent() {
                       </svg>
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          Member Since
+                          {t('profileSettings.account.memberSince')}
                         </p>
                         <p className="text-sm text-gray-500">
                           {userProfile?.createdAt?.toLocaleDateString() ||
-                            'Recently'}
+                            t('profileSettings.account.recently')}
                         </p>
                       </div>
                     </div>
@@ -526,7 +547,7 @@ function ProfilePageContent() {
                       </svg>
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          Email Address
+                          {t('profileSettings.account.emailAddress')}
                         </p>
                         <p className="text-sm text-gray-500">
                           {formData.email}
@@ -544,7 +565,7 @@ function ProfilePageContent() {
                 {/* Profile Picture Section */}
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Profile Picture
+                    {t('profileSettings.profile.picture')}
                   </h3>
                   <div className="flex items-center space-x-6">
                     <div className="relative">
@@ -576,7 +597,9 @@ function ProfilePageContent() {
                         htmlFor="profile-image"
                         className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                       >
-                        {uploadingImage ? 'Uploading...' : 'Change Photo'}
+                        {uploadingImage
+                          ? t('profileSettings.profile.uploading')
+                          : t('profileSettings.profile.changePhoto')}
                       </label>
                       <input
                         id="profile-image"
@@ -587,7 +610,7 @@ function ProfilePageContent() {
                         className="hidden"
                       />
                       <p className="mt-2 text-xs text-gray-500">
-                        JPG, PNG or GIF. Max 5MB.
+                        {t('profileSettings.profile.imageHint')}
                       </p>
                     </div>
                   </div>
@@ -595,7 +618,7 @@ function ProfilePageContent() {
 
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Basic Information
+                    {t('profileSettings.profile.basicInfo')}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2">
@@ -603,7 +626,7 @@ function ProfilePageContent() {
                         htmlFor="name"
                         className="block text-sm font-medium text-gray-700 mb-2"
                       >
-                        Full Name
+                        {t('profileSettings.profile.fullName')}
                       </label>
                       <input
                         type="text"
@@ -621,7 +644,7 @@ function ProfilePageContent() {
                         htmlFor="email"
                         className="block text-sm font-medium text-gray-700 mb-2"
                       >
-                        Email Address
+                        {t('profileSettings.profile.emailAddress')}
                       </label>
                       <input
                         type="email"
@@ -632,7 +655,7 @@ function ProfilePageContent() {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
                       />
                       <p className="mt-1 text-sm text-gray-500">
-                        Email cannot be changed
+                        {t('profileSettings.profile.emailCannotChange')}
                       </p>
                     </div>
 
@@ -641,7 +664,7 @@ function ProfilePageContent() {
                         htmlFor="phone"
                         className="block text-sm font-medium text-gray-700 mb-2"
                       >
-                        Phone Number
+                        {t('profileSettings.profile.phoneNumber')}
                       </label>
                       <input
                         type="tel"
@@ -650,7 +673,8 @@ function ProfilePageContent() {
                         value={formData.phone}
                         onChange={handleChange}
                         placeholder="+212 6XX XXX XXX"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-right"
+                        dir="ltr"
                       />
                     </div>
                   </div>
@@ -658,14 +682,14 @@ function ProfilePageContent() {
 
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Additional Information
+                    {t('profileSettings.profile.additionalInfo')}
                   </h3>
                   <div>
                     <label
                       htmlFor="bio"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      Bio
+                      {t('profileSettings.profile.bio')}
                     </label>
                     <textarea
                       id="bio"
@@ -673,7 +697,7 @@ function ProfilePageContent() {
                       value={formData.bio}
                       onChange={handleChange}
                       rows={4}
-                      placeholder="Tell us about yourself..."
+                      placeholder={t('profileSettings.profile.bioPlaceholder')}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     />
                   </div>
@@ -681,7 +705,9 @@ function ProfilePageContent() {
 
                 <div className="flex justify-end">
                   <Button type="submit" disabled={loading}>
-                    {loading ? 'Saving...' : 'Save Changes'}
+                    {loading
+                      ? t('profileSettings.profile.saving')
+                      : t('profileSettings.profile.saveChanges')}
                   </Button>
                 </div>
               </form>
@@ -692,7 +718,7 @@ function ProfilePageContent() {
               <form onSubmit={handlePasswordUpdate} className="space-y-6">
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Change Password
+                    {t('profileSettings.security.changePassword')}
                   </h3>
                   <div className="space-y-6">
                     <div>
@@ -700,7 +726,7 @@ function ProfilePageContent() {
                         htmlFor="currentPassword"
                         className="block text-sm font-medium text-gray-700 mb-2"
                       >
-                        Current Password
+                        {t('profileSettings.security.currentPassword')}
                       </label>
                       <input
                         type="password"
@@ -722,7 +748,7 @@ function ProfilePageContent() {
                         htmlFor="newPassword"
                         className="block text-sm font-medium text-gray-700 mb-2"
                       >
-                        New Password
+                        {t('profileSettings.security.newPassword')}
                       </label>
                       <input
                         type="password"
@@ -745,7 +771,7 @@ function ProfilePageContent() {
                         htmlFor="confirmPassword"
                         className="block text-sm font-medium text-gray-700 mb-2"
                       >
-                        Confirm New Password
+                        {t('profileSettings.security.confirmPassword')}
                       </label>
                       <input
                         type="password"
@@ -767,7 +793,9 @@ function ProfilePageContent() {
 
                 <div className="flex justify-end">
                   <Button type="submit" disabled={loading}>
-                    {loading ? 'Updating...' : 'Update Password'}
+                    {loading
+                      ? t('profileSettings.security.updating')
+                      : t('profileSettings.security.updatePassword')}
                   </Button>
                 </div>
               </form>
@@ -778,30 +806,30 @@ function ProfilePageContent() {
               <div className="space-y-8">
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-6">
-                    Account Actions
+                    {t('profileSettings.preferences.accountActions')}
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div>
                         <h4 className="font-medium text-gray-900">
-                          Download Account Data
+                          {t('profileSettings.preferences.downloadData')}
                         </h4>
                         <p className="text-sm text-gray-600">
-                          Export your account information
+                          {t('profileSettings.preferences.downloadDataDesc')}
                         </p>
                       </div>
                       <Button variant="outline" size="sm">
-                        Download
+                        {t('profileSettings.preferences.download')}
                       </Button>
                     </div>
 
                     <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
                       <div>
                         <h4 className="font-medium text-red-900">
-                          Delete Account
+                          {t('profileSettings.preferences.deleteAccount')}
                         </h4>
                         <p className="text-sm text-red-700">
-                          Permanently delete your account and all data
+                          {t('profileSettings.preferences.deleteAccountDesc')}
                         </p>
                       </div>
                       <Button
@@ -809,7 +837,7 @@ function ProfilePageContent() {
                         size="sm"
                         className="text-red-600 border-red-300 hover:bg-red-100"
                       >
-                        Delete
+                        {t('profileSettings.preferences.delete')}
                       </Button>
                     </div>
                   </div>
@@ -834,7 +862,7 @@ function ProfilePageContent() {
                         {
                           userId: user.uid,
                           phoneNumber,
-                        }
+                        },
                       );
 
                       await updateDoc(userRef, {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAppealsForUserAdmin } from '@/lib/appeals-service-admin';
-import { AppealFilters, AppealStatus } from '@/types/appeal';
+import { AppealStatus } from '@/types/appeal';
 
 // Mark as dynamic route to allow searchParams
 export const dynamic = 'force-dynamic';
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID is required' },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const appeals = await getAppealsForUserAdmin(
       userId,
       userRole,
-      statusFilter || undefined
+      statusFilter || undefined,
     );
 
     return NextResponse.json(
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         appeals,
         total: appeals.length,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('Get appeals error:', error);
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
           process.env.NODE_ENV === 'development' ? errorMessage : undefined,
         stack: process.env.NODE_ENV === 'development' ? errorStack : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

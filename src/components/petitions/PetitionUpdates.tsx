@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Clock } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { UpgradeModal } from '@/components/ui/UpgradeModal';
 
 interface PetitionUpdate {
   id: string;
@@ -21,11 +22,13 @@ interface PetitionUpdate {
 interface PetitionUpdatesProps {
   petitionId: string;
   isCreator: boolean;
+  pricingTier?: string;
 }
 
 export default function PetitionUpdates({
   petitionId,
   isCreator,
+  pricingTier = 'free',
 }: PetitionUpdatesProps) {
   const { t, locale } = useTranslation();
   const isRTL = locale === 'ar';
@@ -38,6 +41,10 @@ export default function PetitionUpdates({
   const [editForm, setEditForm] = useState({ title: '', content: '' });
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Check if user can add updates based on tier
+  const canAddUpdates = pricingTier !== 'free';
 
   useEffect(() => {
     fetchUpdates();
@@ -268,12 +275,31 @@ export default function PetitionUpdates({
             </h2>
             {isCreator && !showAddForm && (
               <Button
-                onClick={() => setShowAddForm(true)}
+                onClick={() => {
+                  if (canAddUpdates) {
+                    setShowAddForm(true);
+                  } else {
+                    setShowUpgradeModal(true);
+                  }
+                }}
                 size="sm"
                 className="flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                {t('updates.postUpdate')}
+                {t('updates.addUpdate')}
+                {!canAddUpdates && (
+                  <svg
+                    className="w-4 h-4 ml-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
               </Button>
             )}
           </div>
@@ -549,6 +575,15 @@ export default function PetitionUpdates({
           )}
         </CardContent>
       </Card>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <UpgradeModal
+          feature="updates"
+          isOpen={true}
+          onClose={() => setShowUpgradeModal(false)}
+        />
+      )}
     </>
   );
 }

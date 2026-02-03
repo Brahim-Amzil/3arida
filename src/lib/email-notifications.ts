@@ -18,14 +18,30 @@ export async function sendWelcomeEmail(userName: string, userEmail: string) {
     return true;
   }
 
-  // Direct send (original method)
+  // Direct send
   try {
-    const response = await fetch('/api/email/welcome', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userName, userEmail }),
-    });
-    return response.ok;
+    // Check if we're on server or client
+    const isServer = typeof window === 'undefined';
+
+    if (isServer) {
+      // Server-side: call email service directly
+      const { sendEmail } = await import('./email-service');
+      const html = welcomeEmail(userName, userEmail);
+      const result = await sendEmail({
+        to: userEmail,
+        subject: 'مرحبا بك في 3arida - Welcome to 3arida',
+        html,
+      });
+      return result.success;
+    } else {
+      // Client-side: call API endpoint
+      const response = await fetch('/api/email/welcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userName, userEmail }),
+      });
+      return response.ok;
+    }
   } catch (error) {
     console.error('Failed to send welcome email:', error);
     return false;
@@ -36,15 +52,42 @@ export async function sendPetitionApprovedEmail(
   userName: string,
   userEmail: string,
   petitionTitle: string,
-  petitionId: string
+  petitionId: string,
 ) {
   try {
-    const response = await fetch('/api/email/petition-approved', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userName, userEmail, petitionTitle, petitionId }),
-    });
-    return response.ok;
+    // Check if we're on server or client
+    const isServer = typeof window === 'undefined';
+
+    if (isServer) {
+      // Server-side: call email service directly
+      const { sendEmail } = await import('./email-service');
+      const { petitionApprovedEmail } = await import('./email-templates');
+      const html = petitionApprovedEmail(
+        userName,
+        petitionTitle,
+        petitionId,
+        userEmail,
+      );
+      const result = await sendEmail({
+        to: userEmail,
+        subject: `✅ تمت الموافقة على عريضتك: ${petitionTitle}`,
+        html,
+      });
+      return result.success;
+    } else {
+      // Client-side: call API endpoint
+      const response = await fetch('/api/email/petition-approved', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userName,
+          userEmail,
+          petitionTitle,
+          petitionId,
+        }),
+      });
+      return response.ok;
+    }
   } catch (error) {
     console.error('Failed to send petition approved email:', error);
     return false;
@@ -55,15 +98,42 @@ export async function sendSignatureConfirmationEmail(
   userName: string,
   userEmail: string,
   petitionTitle: string,
-  petitionId: string
+  petitionId: string,
 ) {
   try {
-    const response = await fetch('/api/email/signature-confirmation', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userName, userEmail, petitionTitle, petitionId }),
-    });
-    return response.ok;
+    // Check if we're on server or client
+    const isServer = typeof window === 'undefined';
+
+    if (isServer) {
+      // Server-side: call email service directly
+      const { sendEmail } = await import('./email-service');
+      const { signatureConfirmationEmail } = await import('./email-templates');
+      const html = signatureConfirmationEmail(
+        userName,
+        petitionTitle,
+        petitionId,
+        userEmail,
+      );
+      const result = await sendEmail({
+        to: userEmail,
+        subject: `✍️ شكرا على توقيعك: ${petitionTitle}`,
+        html,
+      });
+      return result.success;
+    } else {
+      // Client-side: call API endpoint
+      const response = await fetch('/api/email/signature-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userName,
+          userEmail,
+          petitionTitle,
+          petitionId,
+        }),
+      });
+      return response.ok;
+    }
   } catch (error) {
     console.error('Failed to send signature confirmation email:', error);
     return false;
@@ -76,7 +146,7 @@ export async function sendPetitionUpdateEmail(
   petitionTitle: string,
   petitionId: string,
   updateTitle: string,
-  updateContent: string
+  updateContent: string,
 ) {
   try {
     const response = await fetch('/api/email/petition-update', {
@@ -105,7 +175,7 @@ export async function sendMilestoneEmail(
   petitionId: string,
   milestone: number,
   currentSignatures: number,
-  targetSignatures: number
+  targetSignatures: number,
 ) {
   try {
     const response = await fetch('/api/email/milestone', {
@@ -134,7 +204,7 @@ export async function sendBatchPetitionUpdateEmails(
   petitionTitle: string,
   petitionId: string,
   updateTitle: string,
-  updateContent: string
+  updateContent: string,
 ) {
   const results = await Promise.allSettled(
     signers.map((signer) =>
@@ -144,9 +214,9 @@ export async function sendBatchPetitionUpdateEmails(
         petitionTitle,
         petitionId,
         updateTitle,
-        updateContent
-      )
-    )
+        updateContent,
+      ),
+    ),
   );
 
   const successful = results.filter((r) => r.status === 'fulfilled').length;

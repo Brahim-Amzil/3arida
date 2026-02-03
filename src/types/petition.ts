@@ -41,6 +41,24 @@ export interface Petition {
   // Publisher information (from creation form)
   publisherType?: string;
   publisherName?: string;
+  socialMediaUrl?: string; // For influencers
+  channelData?: {
+    name: string;
+    image: string | null;
+    description: string | null;
+    platform: string;
+    url: string;
+  }; // Fetched channel preview data
+
+  // Manual influencer data (added by admin during review)
+  influencerInfo?: {
+    profilePhotoUrl: string;
+    channelName: string;
+    followerCount: string;
+    platform: string;
+    verified: boolean;
+    addedAt: Date;
+  };
 
   // Petition details (from creation form)
   petitionType?: string;
@@ -92,6 +110,14 @@ export interface PetitionFormData {
   publisherType?: string;
   publisherName?: string;
   officialDocument?: File;
+  socialMediaUrl?: string; // For influencers
+  channelData?: {
+    name: string;
+    image: string | null;
+    description: string | null;
+    platform: string;
+    url: string;
+  }; // Fetched channel preview data
 
   // Petition details
   petitionType?: string;

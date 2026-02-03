@@ -9,6 +9,17 @@ const reasonLabels: Record<string, string> = {
   report: 'الإبلاغ عن محتوى',
   partnership: 'شراكة أو تعاون',
   press: 'استفسار صحفي',
+  'influencer-coupon': 'طلب كوبون مؤثر',
+  other: 'أخرى',
+};
+
+const platformLabels: Record<string, string> = {
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  x: 'X (Twitter)',
+  facebook: 'Facebook',
+  snapchat: 'Snapchat',
   other: 'أخرى',
 };
 
@@ -23,13 +34,17 @@ export async function POST(request: NextRequest) {
       message,
       petitionCode,
       reportDetails,
+      platform,
+      accountUrl,
+      followerCount,
+      discountTier,
     } = body;
 
     // Validation
     if (!name || !email || !reason || !subject || !message) {
       return NextResponse.json(
         { error: 'جميع الحقول مطلوبة' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,8 +57,18 @@ export async function POST(request: NextRequest) {
     if (reason === 'report' && !reportDetails) {
       return NextResponse.json(
         { error: 'تفاصيل البلاغ مطلوبة' },
-        { status: 400 }
+        { status: 400 },
       );
+    }
+
+    // Additional validation for influencer coupon reason
+    if (reason === 'influencer-coupon') {
+      if (!platform || !accountUrl || !followerCount || !discountTier) {
+        return NextResponse.json(
+          { error: 'جميع معلومات المؤثر مطلوبة' },
+          { status: 400 },
+        );
+      }
     }
 
     // Check if Resend is configured
@@ -51,7 +76,7 @@ export async function POST(request: NextRequest) {
       console.error('Resend API key not configured');
       return NextResponse.json(
         { error: 'خدمة البريد الإلكتروني غير مكونة' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -60,7 +85,7 @@ export async function POST(request: NextRequest) {
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { error: 'البريد الإلكتروني غير صالح' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -176,6 +201,48 @@ export async function POST(request: NextRequest) {
                   : ''
               }
               
+              ${
+                reason === 'influencer-coupon'
+                  ? `
+              <div style="background-color: #f3e8ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #a855f7;">
+                <h3 style="color: #7c3aed; margin-top: 0;">🌟 معلومات المؤثر</h3>
+                
+                <div class="field">
+                  <span class="label">فئة الخصم المطلوبة:</span>
+                  <div class="value" style="background-color: white; font-size: 18px; font-weight: bold; color: #7c3aed;">
+                    ${discountTier}% خصم
+                  </div>
+                </div>
+                
+                <div class="field">
+                  <span class="label">المنصة:</span>
+                  <div class="value" style="background-color: white;">
+                    ${platformLabels[platform] || platform}
+                  </div>
+                </div>
+                
+                <div class="field">
+                  <span class="label">رابط الحساب / القناة:</span>
+                  <div class="value" style="background-color: white; direction: ltr; text-align: left;">
+                    <a href="${accountUrl}" target="_blank" style="color: #2563eb; text-decoration: none;">
+                      ${accountUrl}
+                    </a>
+                  </div>
+                </div>
+                
+                <div class="field">
+                  <span class="label">عدد المتابعين:</span>
+                  <div class="value" style="background-color: white; font-size: 16px; font-weight: bold;">
+                    ${followerCount}
+                  </div>
+                </div>
+                
+            
+              </div>
+              `
+                  : ''
+              }
+              
               <div class="field">
                 <span class="label">الرسالة:</span>
                 <div class="message-box">${message}</div>
@@ -196,14 +263,14 @@ export async function POST(request: NextRequest) {
 
     // Use verified domain for sender, configurable recipient
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'contact@3arida.ma';
-    const toEmail = process.env.CONTACT_EMAIL || '3aridapp@gmail.com';
+    const toEmail = process.env.CONTACT_EMAIL || 'contact@3arida.ma';
 
     console.log('Sending email from:', fromEmail, 'to:', toEmail);
 
     const emailResult = await resend.emails.send({
       from: `3arida Platform <${fromEmail}>`,
       to: toEmail,
-      subject: `[3arida Contact Form] [${reasonLabel}] ${subject}`,
+      subject: `[${reasonLabel}] ${subject}`,
       replyTo: email,
       html: emailHtml,
     });
@@ -215,7 +282,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { success: true, messageId: emailResult.data?.id },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('Contact form error:', error);
@@ -228,7 +295,7 @@ export async function POST(request: NextRequest) {
         details:
           process.env.NODE_ENV === 'development' ? errorMessage : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

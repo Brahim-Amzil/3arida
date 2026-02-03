@@ -25,6 +25,7 @@ const nextConfig = {
       'firebasestorage.googleapis.com',
       'storage.googleapis.com',
       'images.unsplash.com',
+      'lh3.googleusercontent.com', // Google profile images
     ],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,

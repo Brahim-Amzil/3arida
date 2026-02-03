@@ -20,6 +20,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'nav.register': 'إنشاء حساب',
     'nav.logout': 'تسجيل الخروج',
     'nav.pricing': 'الأسعار',
+    'nav.influencers': 'المؤثرون',
     'nav.about': 'حول المنصة',
 
     // Common
@@ -119,7 +120,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'dashboard.welcome': 'مرحبًا، {name}',
     'dashboard.welcomeBack': 'مرحبًا بعودتك، {name}!',
     'dashboard.manageSubtitle': 'إدارة عرائضك وتتبع تقدمها',
-    'dashboard.yourPetitions': 'عرائضك',
+    'dashboard.yourPetitions': 'عرائـضـي',
     'dashboard.mySignatures': 'توقيعاتي',
     'dashboard.appeals': 'الطعون',
     'dashboard.myCampaigns': 'حملاتي',
@@ -235,6 +236,7 @@ const translations: Record<Locale, TranslationMessages> = {
 
     // Petition Updates Component
     'updates.title': 'التحديثات',
+    'updates.addUpdate': 'إضافة تحديث',
     'updates.postUpdate': 'نشر تحديث',
     'updates.noUpdates': 'لا توجد تحديثات بعد',
     'updates.noUpdatesCreator': 'انشر أول تحديث لإبقاء المؤيدين على اطلاع',
@@ -444,6 +446,46 @@ const translations: Record<Locale, TranslationMessages> = {
     'about.cta.browsePetitions': 'تصفح العرائض',
     'about.contact.question': 'لديك أسئلة أو تحتاج دعم؟',
     'about.contact.link': 'اتصل بنا',
+
+    // Influencers Page
+    'influencers.title': 'انضم إلى برنامج المؤثرين',
+    'influencers.subtitle':
+      'نؤمن بقوة المؤثرين في الدفاع عن القضايا المهمة. انضم إلينا واحصل على خصومات حصرية لدعم القضايا التي تهمك.',
+    'influencers.startPetition': 'ابدأ عريضة',
+    'influencers.learnMore': 'اعرف المزيد',
+    'influencers.impact.title': 'تأثيرك يحدث فرقاً',
+    'influencers.impact.description':
+      'كمؤثر، لديك القدرة على تحريك الجماهير وإحداث تغيير حقيقي. نحن نوفر لك المنصة والأدوات والحوافز لتضخيم صوتك في القضايا التي تهمك.',
+    'influencers.discounts.title': 'خصومات حصرية للمؤثرين',
+    'influencers.discounts.subtitle':
+      'احصل على خصومات على جميع خطط العرائض بناءً على عدد متابعيك',
+    'influencers.followers': 'متابع',
+    'influencers.discount': 'خصم',
+    'influencers.onAllTiers': 'على جميع الخطط',
+    'influencers.clickToRequest': 'إضغط لطلب الكوبون',
+    'influencers.verificationNote':
+      '* يتطلب التحقق من عدد المتابعين عبر منصات التواصل الاجتماعي',
+    'influencers.petitionIdeas.title': 'أفكار عرائض جاهزة للتبني',
+    'influencers.petitionIdeas.subtitle':
+      'اختر من مجموعة متنوعة من القضايا المهمة أو ابدأ عريضة جديدة',
+    'influencers.targetSignatures': 'الهدف',
+    'influencers.adoptPetition': 'تبني العريضة',
+    'influencers.startNew': 'ابدأ جديدة',
+    'influencers.howItWorks.title': 'كيف يعمل البرنامج',
+    'influencers.step1.title': 'سجل كمؤثر',
+    'influencers.step1.description':
+      'أنشئ حسابك وتحقق من عدد متابعيك للحصول على الخصم المناسب',
+    'influencers.step2.title': 'اختر أو أنشئ عريضة',
+    'influencers.step2.description':
+      'تبنى إحدى العرائض الجاهزة أو أنشئ عريضة جديدة حول قضية تهمك',
+    'influencers.step3.title': 'شارك واحدث تأثيراً',
+    'influencers.step3.description':
+      'استخدم منصاتك لمشاركة العريضة وحشد الدعم للقضية',
+    'influencers.cta.title': 'مستعد لإحداث تأثير؟',
+    'influencers.cta.subtitle':
+      'انضم إلى مئات المؤثرين الذين يستخدمون عريضة لدعم القضايا المهمة',
+    'influencers.cta.startPetition': 'ابدأ عريضتك الآن',
+    'influencers.cta.contactUs': 'تواصل معنا',
 
     // Footer
     'footer.description': 'منصة العرائض الرقمية للمغرب.\nوصَّل صوتك.',
@@ -656,6 +698,40 @@ const translations: Record<Locale, TranslationMessages> = {
     'admin.maintenance.testFunctionality': '• اختبار الوظائف المتأثرة',
     'admin.maintenance.documentChanges': '• توثيق التغييرات المجراة',
 
+    // Contact Moderator Modal
+    'contactModerator.title': 'تواصل مع المشرف',
+    'contactModerator.status': 'الحالة',
+    'contactModerator.paused': 'متوقفة',
+    'contactModerator.rejected': 'مرفوضة',
+    'contactModerator.viewPetition': 'عرض العريضة',
+    'contactModerator.reasonFor': 'سبب',
+    'contactModerator.pause': 'الإيقاف',
+    'contactModerator.rejection': 'الرفض',
+    'contactModerator.resubmissionStatus': 'حالة إعادة التقديم',
+    'contactModerator.maxResubmissionReached':
+      'تم الوصول للحد الأقصى من محاولات إعادة التقديم (3/3). يرجى التواصل مع المشرفين للحصول على مساعدة إضافية.',
+    'contactModerator.resubmissionAttemptsRemaining':
+      'لديك {count} محاولة إعادة تقديم متبقية',
+    'contactModerator.appealSubmittedSuccess': 'تم إرسال الطعن بنجاح!',
+    'contactModerator.appealReviewMessage':
+      'سيقوم المشرف بمراجعة طعنك والرد خلال 24-48 ساعة. يمكنك عرض حالة طعنك في لوحة التحكم الخاصة بك.',
+    'contactModerator.yourMessage': 'رسالتك للمشرفين',
+    'contactModerator.messagePlaceholder':
+      'اشرح لماذا تعتقد أن هذه العريضة يجب أن يتم إلغاء إيقافها. قم بتضمين أي معلومات أو تصحيحات ذات صلة...',
+    'contactModerator.messageHelp':
+      'كن واضحًا ومحترمًا. قم بتضمين أي معلومات قد تساعد المشرفين في مراجعة عريضتك.',
+    'contactModerator.sending': 'جاري الإرسال...',
+    'contactModerator.sendMessage': 'إرسال الرسالة',
+    'contactModerator.cancel': 'إلغاء',
+    'contactModerator.whatHappensNext': 'ماذا سيحدث بعد ذلك؟',
+    'contactModerator.step1': 'سيتم إرسال رسالتك إلى فريق الإشراف',
+    'contactModerator.step2': 'سيقوم المشرف بمراجعة عريضتك وطعنك',
+    'contactModerator.step3':
+      'ستتلقى ردًا عبر البريد الإلكتروني في أقرب الآجال',
+    'contactModerator.step4':
+      'إذا تمت الموافقة، سيتم تحديث حالة عريضتك وفقًا لذلك',
+    'contactModerator.errorMessage': 'يرجى إدخال رسالة',
+
     // User Roles
     'admin.roles.admin': 'مدير',
     'admin.roles.moderator': 'مشرف',
@@ -729,9 +805,37 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.publishAs': 'نشر العريضة كـ *',
     'form.selectPublisherType': 'اختر نوع الناشر',
     'form.yourName': 'اسمك',
+    'form.influencerName': 'اسم المؤثر',
     'form.organizationName': 'اسم المنظمة/الجمعية/المؤسسة',
     'form.enterFullName': 'أدخل اسمك الكامل',
+    'form.enterInfluencerName': 'أدخل اسم المؤثر',
     'form.enterOrganizationName': 'أدخل اسم المنظمة/الجمعية/المؤسسة',
+    'form.socialMediaUrl': 'رابط أكبر حساب على وسائل التواصل الاجتماعي',
+    'form.enterSocialMediaUrl':
+      'أدخل رابط حسابك الأكبر (Instagram, TikTok, YouTube, إلخ)',
+    'form.socialMediaUrlHelp':
+      'مثال: https://instagram.com/username أو https://tiktok.com/@username',
+    'form.enterSocialMediaUrlError':
+      'يرجى إدخال رابط حسابك على وسائل التواصل الاجتماعي',
+    'form.invalidSocialMediaUrlError': 'يرجى إدخال رابط صحيح',
+
+    // Influencer Card
+    'influencer.verifiedFrom': 'تم التحقق من',
+    'influencer.visitChannel': 'زيارة القناة',
+    'influencer.loadingProfile': 'جاري تحميل الملف الشخصي...',
+    'influencer.failedToLoad': 'فشل في تحميل الملف الشخصي',
+    'influencer.tryAgain': 'حاول مرة أخرى',
+    'influencer.loadProfile': 'تحميل الملف الشخصي',
+    'influencer.followers': 'متابع',
+    'influencer.startedPetition': 'أطلق هذه العريضة',
+    'influencer.petitionStartedBy': 'تم إطلاق هذه العريضة بواسطة:',
+    'influencer.visitProfile': 'زيارة الصفحة',
+    'influencer.couponAlert.title': 'احصل على خصم المؤثرين!',
+    'influencer.couponAlert.description':
+      'كمؤثر، يمكنك الحصول على خصم يصل إلى 30٪. اطلب رمز القسيمة الآن!',
+    'influencer.couponAlert.button': 'طلب رمز القسيمة',
+    'influencer.couponAlert.orContinue': 'أو يمكنك المتابعة بدون كوبون',
+
     'form.officialDocument': 'الوثيقة الرسمية *',
     'form.officialDocumentDesc':
       'ارفع وثيقة رسمية عن المنظمة/الجمعية أو المؤسسة التي تمثلها  (PDF، DOC، DOCX، JPG، PNG). الحد الأقصى: 5 ميجابايت',
@@ -762,7 +866,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.petitionTitlePlaceholder': 'أدخل عنوانًا واضحًا ومقنعًا لعريضتك',
     'form.petitionDescription': 'وصف العريضة *',
     'form.petitionDescriptionPlaceholder':
-      'اشرح قضيتك، ولماذا هي مهمة، وما التغيير الذي تريد رؤيته. كن محددًا ومقنعًا.\n\nاضغط Enter لفواصل الأسطر. حدد النص واستخدم أزرار B و U للتنسيق.',
+      'اشرح قضيتك، ولماذا هي مهمة، وما التغيير الذي تريد رؤيته. كن محددًا ومقنعًا.\n\nإضغط Enter لفواصل الأسطر. حدد النص واستخدم أزرار B و U للتنسيق.',
     'form.petitionImage': 'صورة العريضة (اختياري)',
     'form.petitionImageDesc':
       'ارفع صورة لجعل عريضتك أكثر إقناعًا. الحد الأقصى: 5 ميجابايت',
@@ -789,6 +893,7 @@ const translations: Record<Locale, TranslationMessages> = {
 
     // Form Options
     'form.individual': '👤 فرد',
+    'form.influencer': '🌟 مؤثر',
     'form.organization': '🏢 جمعية، منظمة، مؤسسة',
     'form.change': '🔄 تغيير - طلب تغيير في سياسة أو ممارسة',
     'form.support': '✊ دعم - إظهار الدعم لقضية أو شخص',
@@ -896,6 +1001,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'review.pricingInfo': 'معلومات التسعير',
     'review.type': 'النوع:',
     'review.name': 'الاسم:',
+    'review.socialMedia': 'وسائل التواصل الاجتماعي:',
     'review.document': 'الوثيقة:',
     'review.addressedTo': 'موجهة إلى:',
     'review.category': 'الفئة:',
@@ -929,6 +1035,49 @@ const translations: Record<Locale, TranslationMessages> = {
     'pricing.tierName.pro': 'الاحترافية',
     'pricing.tierName.advanced': 'المتقدمة',
     'pricing.tierName.enterprise': 'المؤسسية',
+
+    // Upgrade prompts
+    'upgrade.signatures.title': 'تتبع إجمالي التوقيعات',
+    'upgrade.signatures.description':
+      'شاهد إجمالي التوقيعات عبر جميع عرائضك وتتبع مدى وصول حملتك الإجمالي.',
+    'upgrade.updates.title':
+      ' أبقِ المُوَقّعين على آطّلاع. أُنشر تحديثات لعريضتك وتفاعل مع داعميك طوال الحملة. ',
+    'upgrade.updates.description':
+      'إضافة التحديثات غير متاحة للعرائض المجانية. يرجى النقر أدناه للتغيير إلى خطة مدفوعة.',
+    'upgrade.appeals.title': 'قدم طعونًا',
+    'upgrade.appeals.description':
+      'استأنف العرائض المرفوضة واحصل على مراجعة ثانية من فريق الإشراف لدينا.',
+    'upgrade.startsAt': 'يبدأ من',
+    'upgrade.button': 'ترقية',
+    'upgrade.viewPlans': 'عرض جميع الخطط',
+    'upgrade.maybeLater': 'ربما لاحقًا',
+    'upgrade.oneTime': 'دفعة واحدة',
+
+    // Form - Image upload
+    'form.images': 'صور',
+    'form.addAnother': 'إضافة صورة أخرى',
+    'form.uploading': 'جاري الرفع...',
+    'form.upgradeForMore':
+      'إختر خُطّة مدفوعة حتى تتمكن من إضافة م  زيد من الصور',
+    'form.maxImagesReached': 'تم الوصول إلى الحد الأقصى للصور',
+    'form.imageLimit.title': 'حول حدود الصور',
+    'form.imageLimit.description':
+      'يمكنك رفع صورة واحدة مجانًا. اختر خطة مدفوعة (69 درهم+) لرفع ما يصل إلى 5 صور.',
+    'form.imageLimit.multipleWarning': 'لديك صور متعددة',
+    'form.imageLimit.selectTierNext':
+      'ستختار خطة التسعير في الخطوة التالية. الخطة المجانية تسمح بصورة واحدة فقط، والخطط المدفوعة تسمح بما يصل إلى 5 صور.',
+    'form.imageLimit.needMoreInfo':
+      'تريد إضافة المزيد من الصور؟ اختر هدف التوقيعات في الخطوة التالية لفتح ما يصل إلى 5 صور (69 درهم+).',
+
+    // Review - Image warnings
+    'review.imageLimit.warning': ' تنبيــه : صور متعددة مع خطة مجانية',
+    'review.imageLimit.freeTierLimit':
+      'لقد رفعت {count} صور، لكن الخطة المجانية تسمح بصورة واحدة فقط. سيتم استخدام الصورة الأولى فقط.',
+    'review.imageLimit.upgradeOrRemove':
+      'للاحتفاظ بجميع الصور، ارجع وحدد خطة مدفوعة (69 درهم+) أو احذف الصور الإضافية.',
+    'review.imagesUploaded': '{count} صور تم رفعها',
+    'review.editPhotos': 'انقر هنا لتعديل الصور',
+    'review.upgradeTier': 'انقر هنا لتغيير الخطة والاحتفاظ بجميع الصور',
 
     // Pricing Tier Features
     'pricing.tierFeature.upTo2500': 'حتى 2,500 توقيع',
@@ -999,10 +1148,10 @@ const translations: Record<Locale, TranslationMessages> = {
     'payment.securePaymentBadge': '🔒 دفع آمن ومشفر',
     'payment.agreeToTerms': 'أوافق على',
     'payment.termsOfService': 'شروط الخدمة',
-    'payment.andAcknowledge': 'وأقر بـ',
+    'payment.andAcknowledge': 'و أقر بـ',
     'payment.noRefundPolicy': 'سياسة عدم الاسترداد',
     'payment.mustAgreeToTerms':
-      'يجب الموافقة على شروط الخدمة وسياسة عدم الاسترداد',
+      'يجب الموافقة على شروط الخدمة و سياسة الإستخذام !',
     'payment.payToCreate': 'ادفع لإنشاء عريضتك مع هدف {signatures} توقيع',
     'payment.petitionPlan': 'خطة العريضة:',
     'payment.petitionTitle': 'عنوان العريضة:',
@@ -1092,7 +1241,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'success.needsPaymentMessage':
       'تم إنشاء عريضتك بنجاح. أكمل الدفع لإرسالها للمراجعة.',
     'success.publishedMessage':
-      'تم إنشاء عريضتك بنجاح!\nستكون متاحة للتوقيع بمجرد موافقة المشرفين خلال 24-48 ساعة.',
+      ' ستكون متاحة للتوقيع بمجرد موافقة المشرفين خلال 24-48 ساعة.\nحال الموافقة، ستتوصل بإشعار على المنصة و رسالة على بريدك الإيليكتروني. ',
     'success.completePayment': 'إكمال الدفع',
     'success.viewPetition': 'عرض العريضة',
     'success.browsePetitions': 'تصفح العرائض',
@@ -1210,7 +1359,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'petition.status': 'الحالة',
     'petition.updates': 'التحديثات',
     'petition.comments': 'التعليقات',
-    'petition.supporters': 'المؤيدون',
+    'petition.supporters': 'المُوقِّعون',
 
     // Profile Dropdown
     'profile.dashboard': 'لوحة التحكم',
@@ -1218,6 +1367,88 @@ const translations: Record<Locale, TranslationMessages> = {
     'profile.admin': 'الإدارة',
     'profile.settings': 'إعدادات الملف الشخصي',
     'profile.signOut': 'تسجيل الخروج',
+
+    // Profile Settings Page
+    'profileSettings.title': 'إعدادات الملف الشخصي',
+    'profileSettings.subtitle': 'إدارة إعدادات حسابك وتفضيلاتك',
+    'profileSettings.changesSaved': 'تم حفظ التغييرات بنجاح!',
+
+    // User Roles
+    'role.user': 'مستخدم',
+    'role.admin': 'مدير',
+    'role.moderator': 'مشرف',
+
+    // Tabs
+    'profileSettings.tabs.account': 'حالة الحساب',
+    'profileSettings.tabs.profile': 'معلومات الملف الشخصي',
+    'profileSettings.tabs.security': 'الأمان',
+    'profileSettings.tabs.preferences': 'التفضيلات',
+
+    // Account Status Tab
+    'profileSettings.account.title': 'نظرة عامة على حالة الحساب',
+    'profileSettings.account.type': 'نوع الحساب',
+    'profileSettings.account.typeValue': '{role}',
+    'profileSettings.account.emailVerification': 'التحقق من البريد الإلكتروني',
+    'profileSettings.account.emailVerified': 'تم التحقق من بريدك الإلكتروني',
+    'profileSettings.account.emailUnverified':
+      'يرجى التحقق من بريدك الإلكتروني',
+    'profileSettings.account.verified': 'تم التحقق',
+    'profileSettings.account.unverified': 'غير محقق',
+    'profileSettings.account.phoneVerification': 'التحقق من الهاتف',
+    'profileSettings.account.phoneMessage':
+      'تحقق من هاتفك لإنشاء العرائض والتوقيع عليها',
+    'profileSettings.account.pending': 'قيد الانتظار',
+    'profileSettings.account.actionRequired': 'إجراء مطلوب',
+    'profileSettings.account.phoneRequired': 'التحقق من الهاتف مطلوب',
+    'profileSettings.account.phoneRequiredMessage':
+      'يجب عليك التحقق من رقم هاتفك لإنشاء العرائض',
+    'profileSettings.account.verifyPhone': 'تحقق من الهاتف',
+    'profileSettings.account.details': 'تفاصيل الحساب',
+    'profileSettings.account.memberSince': 'عضو منذ',
+    'profileSettings.account.recently': 'مؤخراً',
+    'profileSettings.account.emailAddress': 'عنوان البريد الإلكتروني',
+
+    // Profile Information Tab
+    'profileSettings.profile.picture': 'صورة الملف الشخصي',
+    'profileSettings.profile.changePhoto': 'تغيير الصورة',
+    'profileSettings.profile.uploading': 'جاري الرفع...',
+    'profileSettings.profile.photoHint':
+      'JPG أو PNG أو GIF. الحد الأقصى 5 ميجابايت',
+    'profileSettings.profile.basicInfo': 'المعلومات الأساسية',
+    'profileSettings.profile.fullName': 'الاسم الكامل',
+    'profileSettings.profile.emailAddress': 'عنوان البريد الإلكتروني',
+    'profileSettings.profile.emailCannotChange':
+      'لا يمكن تغيير البريد الإلكتروني',
+    'profileSettings.profile.phoneNumber': 'رقم الهاتف',
+    'profileSettings.profile.additionalInfo': 'معلومات إضافية',
+    'profileSettings.profile.bio': 'نبذة',
+    'profileSettings.profile.bioPlaceholder': 'أخبرنا عن نفسك...',
+    'profileSettings.profile.saveChanges': 'حفظ التغييرات',
+    'profileSettings.profile.saving': 'جاري الحفظ...',
+
+    // Security Tab
+    'profileSettings.security.changePassword': 'تغيير كلمة المرور',
+    'profileSettings.security.currentPassword': 'كلمة المرور الحالية',
+    'profileSettings.security.newPassword': 'كلمة المرور الجديدة',
+    'profileSettings.security.confirmPassword': 'تأكيد كلمة المرور الجديدة',
+    'profileSettings.security.updatePassword': 'تحديث كلمة المرور',
+    'profileSettings.security.updating': 'جاري التحديث...',
+    'profileSettings.security.passwordMismatch':
+      'كلمات المرور الجديدة غير متطابقة',
+    'profileSettings.security.passwordTooShort':
+      'يجب أن تكون كلمة المرور الجديدة 6 أحرف على الأقل',
+    'profileSettings.security.wrongPassword': 'كلمة المرور الحالية غير صحيحة',
+    'profileSettings.security.updateFailed': 'فشل تحديث كلمة المرور',
+
+    // Preferences Tab
+    'profileSettings.preferences.accountActions': 'إجراءات الحساب',
+    'profileSettings.preferences.downloadData': 'تنزيل بيانات الحساب',
+    'profileSettings.preferences.downloadDataDesc': 'تصدير معلومات حسابك',
+    'profileSettings.preferences.download': 'تنزيل',
+    'profileSettings.preferences.deleteAccount': 'حذف الحساب',
+    'profileSettings.preferences.deleteAccountDesc':
+      'حذف حسابك وجميع البيانات نهائياً',
+    'profileSettings.preferences.delete': 'حذف',
 
     // Buttons and Actions
     'button.getStarted': 'إبدأ الآن',
@@ -1442,6 +1673,23 @@ const translations: Record<Locale, TranslationMessages> = {
     'notifications.minutesAgo': 'منذ {count} دقيقة',
     'notifications.hoursAgo': 'منذ {count} ساعة',
     'notifications.daysAgo': 'منذ {count} يوم',
+    'notifications.approved.title': 'تم قبول العريضة 🎉📝',
+    'notifications.approved.message':
+      'تمت الموافقة على العريضة وهي الآن متاحة للعموم.',
+    'notifications.rejected.title': 'تم رفض العريضة',
+    'notifications.rejected.message':
+      'نأسف، تم رفض العريضة لمخالفتها المعايير.',
+    'notifications.paused.title': 'تم إيقاف العريضة مؤقتاً',
+    'notifications.paused.message': 'تم تعليق العريضة للمراجعة.',
+    'notifications.deleted.title': 'تم حذف العريضة',
+    'notifications.deleted.message': 'تم حذف العريضة نهائياً.',
+    'notifications.archived.title': 'تم أرشفة العريضة',
+    'notifications.archived.message': 'تم نقل العريضة إلى الأرشيف.',
+    'notifications.deletion_approved.title': 'تمت الموافقة على الحذف',
+    'notifications.deletion_approved.message':
+      'تمت الموافقة على طلب حذف العريضة.',
+    'notifications.deletion_denied.title': 'تم رفض الحذف',
+    'notifications.deletion_denied.message': 'تم رفض طلب حذف العريضة.',
   },
   fr: {
     // Navigation
@@ -1673,6 +1921,7 @@ const translations: Record<Locale, TranslationMessages> = {
 
     // Petition Updates Component
     'updates.title': 'Mises à jour',
+    'updates.addUpdate': 'Ajouter une mise à jour',
     'updates.postUpdate': 'Publier une mise à jour',
     'updates.noUpdates': 'Aucune mise à jour pour le moment',
     'updates.noUpdatesCreator':
@@ -1848,6 +2097,47 @@ const translations: Record<Locale, TranslationMessages> = {
     'about.cta.browsePetitions': 'Parcourir les pétitions',
     'about.contact.question': "Vous avez des questions ou besoin d'aide ?",
     'about.contact.link': 'Contactez-nous',
+
+    // Influencers Page
+    'influencers.title': 'Rejoignez le Programme Influenceurs',
+    'influencers.subtitle':
+      'Nous croyons au pouvoir des influenceurs pour défendre les causes importantes. Rejoignez-nous et obtenez des réductions exclusives pour soutenir les causes qui vous tiennent à cœur.',
+    'influencers.startPetition': 'Créer une pétition',
+    'influencers.learnMore': 'En savoir plus',
+    'influencers.impact.title': 'Votre impact fait la différence',
+    'influencers.impact.description':
+      "En tant qu'influenceur, vous avez le pouvoir de mobiliser les foules et de créer un véritable changement. Nous vous fournissons la plateforme, les outils et les incitations pour amplifier votre voix sur les questions qui vous importent.",
+    'influencers.discounts.title':
+      'Réductions exclusives pour les influenceurs',
+    'influencers.discounts.subtitle':
+      "Obtenez des réductions sur tous les plans de pétitions basées sur votre nombre d'abonnés",
+    'influencers.followers': 'abonnés',
+    'influencers.discount': 'réduction',
+    'influencers.onAllTiers': 'sur tous les plans',
+    'influencers.clickToRequest': 'Cliquez pour demander le coupon',
+    'influencers.verificationNote':
+      "* Nécessite une vérification du nombre d'abonnés via les plateformes de médias sociaux",
+    'influencers.petitionIdeas.title': 'Idées de pétitions prêtes à adopter',
+    'influencers.petitionIdeas.subtitle':
+      'Choisissez parmi une variété de causes importantes ou créez une nouvelle pétition',
+    'influencers.targetSignatures': 'Objectif',
+    'influencers.adoptPetition': 'Adopter la pétition',
+    'influencers.startNew': 'Créer nouvelle',
+    'influencers.howItWorks.title': 'Comment fonctionne le programme',
+    'influencers.step1.title': 'Inscrivez-vous comme influenceur',
+    'influencers.step1.description':
+      "Créez votre compte et vérifiez votre nombre d'abonnés pour obtenir la réduction appropriée",
+    'influencers.step2.title': 'Choisissez ou créez une pétition',
+    'influencers.step2.description':
+      "Adoptez l'une des pétitions prêtes ou créez une nouvelle pétition sur une cause qui vous importe",
+    'influencers.step3.title': 'Partagez et créez un impact',
+    'influencers.step3.description':
+      'Utilisez vos plateformes pour partager la pétition et mobiliser le soutien pour la cause',
+    'influencers.cta.title': 'Prêt à créer un impact ?',
+    'influencers.cta.subtitle':
+      "Rejoignez des centaines d'influenceurs qui utilisent 3arida pour soutenir les causes importantes",
+    'influencers.cta.startPetition': 'Créez votre pétition maintenant',
+    'influencers.cta.contactUs': 'Contactez-nous',
 
     // Footer
     'footer.description':
@@ -2156,10 +2446,38 @@ const translations: Record<Locale, TranslationMessages> = {
     'form.publishAs': 'Publier une pétition en tant que *',
     'form.selectPublisherType': "Sélectionner le type d'éditeur",
     'form.yourName': 'Votre nom',
+    'form.influencerName': "Nom de l'influenceur",
     'form.organizationName': "Nom de l'organisation/association/institution",
     'form.enterFullName': 'Entrez votre nom complet',
+    'form.enterInfluencerName': "Entrez le nom de l'influenceur",
     'form.enterOrganizationName':
       "Entrez le nom de l'organisation/association/institution",
+    'form.socialMediaUrl': 'Lien du plus grand compte sur les réseaux sociaux',
+    'form.enterSocialMediaUrl':
+      'Entrez le lien de votre plus grand compte (Instagram, TikTok, YouTube, etc.)',
+    'form.socialMediaUrlHelp':
+      'Exemple: https://instagram.com/username ou https://tiktok.com/@username',
+    'form.enterSocialMediaUrlError':
+      'Veuillez entrer le lien de votre compte sur les réseaux sociaux',
+    'form.invalidSocialMediaUrlError': 'Veuillez entrer un lien valide',
+
+    // Influencer Card
+    'influencer.verifiedFrom': 'Vérifié depuis',
+    'influencer.visitChannel': 'Visiter la chaîne',
+    'influencer.loadingProfile': 'Chargement du profil...',
+    'influencer.failedToLoad': 'Échec du chargement du profil',
+    'influencer.tryAgain': 'Réessayer',
+    'influencer.loadProfile': 'Charger le profil',
+    'influencer.followers': 'abonnés',
+    'influencer.startedPetition': 'A lancé cette pétition',
+    'influencer.petitionStartedBy': 'Cette pétition a été lancée par:',
+    'influencer.visitProfile': 'Visiter le profil',
+    'influencer.couponAlert.title': 'Obtenez votre réduction influenceur!',
+    'influencer.couponAlert.description':
+      "En tant qu'influenceur, vous pouvez obtenir jusqu'à 30% de réduction. Demandez votre code promo maintenant!",
+    'influencer.couponAlert.button': 'Demander un code promo',
+    'influencer.couponAlert.orContinue': 'Ou vous pouvez continuer sans coupon',
+
     'form.officialDocument': 'Document officiel *',
     'form.officialDocumentDesc':
       'Téléchargez un document officiel (PDF, DOC, DOCX, JPG, PNG). Taille max : 5MB',
@@ -2218,6 +2536,7 @@ const translations: Record<Locale, TranslationMessages> = {
 
     // Form Options
     'form.individual': '👤 Individu',
+    'form.influencer': '🌟 Influenceur',
     'form.organization': '🏢 Association, Organisation, Institution',
     'form.change':
       '🔄 Changement - Demander un changement de politique ou de pratique',
@@ -2340,6 +2659,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'review.pricingInfo': 'Informations de tarification',
     'review.type': 'Type :',
     'review.name': 'Nom :',
+    'review.socialMedia': 'Réseaux sociaux :',
     'review.document': 'Document :',
     'review.addressedTo': 'Adressé à :',
     'review.category': 'Catégorie :',
@@ -2374,6 +2694,49 @@ const translations: Record<Locale, TranslationMessages> = {
     'pricing.tierName.pro': 'Pro',
     'pricing.tierName.advanced': 'Avancée',
     'pricing.tierName.enterprise': 'Entreprise',
+
+    // Upgrade prompts
+    'upgrade.signatures.title': 'Suivez votre impact total',
+    'upgrade.signatures.description':
+      'Consultez le total des signatures sur toutes vos pétitions et suivez la portée globale de votre campagne.',
+    'upgrade.updates.title': 'Tenez les signataires informés',
+    'upgrade.updates.description':
+      "L'ajout de mises à jour n'est pas disponible pour les pétitions gratuites. Veuillez cliquer ci-dessous pour passer à un plan payant. Les plans commencent à 69 dirhams marocains.",
+    'upgrade.appeals.title': 'Soumettez des appels',
+    'upgrade.appeals.description':
+      'Faites appel des pétitions rejetées et obtenez un second examen de notre équipe de modération.',
+    'upgrade.startsAt': 'À partir de',
+    'upgrade.button': 'Mettre à niveau',
+    'upgrade.viewPlans': 'Voir tous les plans',
+    'upgrade.maybeLater': 'Peut-être plus tard',
+    'upgrade.oneTime': 'Paiement unique',
+
+    // Form - Image upload
+    'form.images': 'images',
+    'form.addAnother': 'Ajouter une autre image',
+    'form.uploading': 'Téléchargement...',
+    'form.upgradeForMore': "Mettre à niveau pour plus d'images",
+    'form.maxImagesReached': "Limite d'images atteinte",
+    'form.imageLimit.title': "À propos des limites d'images",
+    'form.imageLimit.description':
+      "Vous pouvez télécharger 1 image gratuitement. Choisissez un plan payant (69 MAD+) pour télécharger jusqu'à 5 images.",
+    'form.imageLimit.multipleWarning': 'Vous avez plusieurs images',
+    'form.imageLimit.selectTierNext':
+      "Vous choisirez votre plan tarifaire à l'étape suivante. Le plan gratuit permet 1 seule image, les plans payants permettent jusqu'à 5 images.",
+    'form.imageLimit.needMoreInfo':
+      "Vous voulez ajouter plus d'images ? Sélectionnez votre objectif de signatures à l'étape suivante pour débloquer jusqu'à 5 images (69 MAD+).",
+
+    // Review - Image warnings
+    'review.imageLimit.warning':
+      '⚠️ Attention : Plusieurs images avec plan gratuit',
+    'review.imageLimit.freeTierLimit':
+      "Vous avez téléchargé {count} images, mais le plan gratuit ne permet qu'1 seule image. Seule la première image sera utilisée.",
+    'review.imageLimit.upgradeOrRemove':
+      'Pour conserver toutes les images, revenez en arrière et sélectionnez un plan payant (69 MAD+) ou supprimez les images supplémentaires.',
+    'review.imagesUploaded': '{count} images téléchargées',
+    'review.editPhotos': 'Cliquez ici pour modifier les photos',
+    'review.upgradeTier':
+      'Cliquez ici pour changer de plan et conserver toutes les photos',
 
     // Pricing Tier Features
     'pricing.tierFeature.upTo2500': "Jusqu'à 2 500 signatures",
@@ -2688,6 +3051,93 @@ const translations: Record<Locale, TranslationMessages> = {
     'profile.settings': 'Paramètres du profil',
     'profile.signOut': 'Déconnexion',
 
+    // Profile Settings Page
+    'profileSettings.title': 'Paramètres du profil',
+    'profileSettings.subtitle':
+      'Gérez les paramètres et préférences de votre compte',
+    'profileSettings.changesSaved': 'Modifications enregistrées avec succès!',
+
+    // User Roles
+    'role.user': 'Utilisateur',
+    'role.admin': 'Administrateur',
+    'role.moderator': 'Modérateur',
+
+    // Tabs
+    'profileSettings.tabs.account': 'État du compte',
+    'profileSettings.tabs.profile': 'Informations du profil',
+    'profileSettings.tabs.security': 'Sécurité',
+    'profileSettings.tabs.preferences': 'Préférences',
+
+    // Account Status Tab
+    'profileSettings.account.title': "Aperçu de l'état du compte",
+    'profileSettings.account.type': 'Type de compte',
+    'profileSettings.account.typeValue': '{role}',
+    'profileSettings.account.emailVerification': "Vérification de l'email",
+    'profileSettings.account.emailVerified': 'Votre email est vérifié',
+    'profileSettings.account.emailUnverified': 'Veuillez vérifier votre email',
+    'profileSettings.account.verified': 'Vérifié',
+    'profileSettings.account.unverified': 'Non vérifié',
+    'profileSettings.account.phoneVerification': 'Vérification du téléphone',
+    'profileSettings.account.phoneMessage':
+      'Vérifiez votre téléphone pour créer et signer des pétitions',
+    'profileSettings.account.pending': 'En attente',
+    'profileSettings.account.actionRequired': 'Action requise',
+    'profileSettings.account.phoneRequired':
+      'Vérification du téléphone requise',
+    'profileSettings.account.phoneRequiredMessage':
+      'Vous devez vérifier votre numéro de téléphone pour créer des pétitions',
+    'profileSettings.account.verifyPhone': 'Vérifier le téléphone',
+    'profileSettings.account.details': 'Détails du compte',
+    'profileSettings.account.memberSince': 'Membre depuis',
+    'profileSettings.account.recently': 'Récemment',
+    'profileSettings.account.emailAddress': 'Adresse email',
+
+    // Profile Information Tab
+    'profileSettings.profile.picture': 'Photo de profil',
+    'profileSettings.profile.changePhoto': 'Changer la photo',
+    'profileSettings.profile.uploading': 'Téléchargement...',
+    'profileSettings.profile.photoHint': 'JPG, PNG ou GIF. Max 5MB',
+    'profileSettings.profile.basicInfo': 'Informations de base',
+    'profileSettings.profile.fullName': 'Nom complet',
+    'profileSettings.profile.emailAddress': 'Adresse email',
+    'profileSettings.profile.emailCannotChange':
+      "L'email ne peut pas être modifié",
+    'profileSettings.profile.phoneNumber': 'Numéro de téléphone',
+    'profileSettings.profile.additionalInfo': 'Informations supplémentaires',
+    'profileSettings.profile.bio': 'Biographie',
+    'profileSettings.profile.bioPlaceholder': 'Parlez-nous de vous...',
+    'profileSettings.profile.saveChanges': 'Enregistrer les modifications',
+    'profileSettings.profile.saving': 'Enregistrement...',
+
+    // Security Tab
+    'profileSettings.security.changePassword': 'Changer le mot de passe',
+    'profileSettings.security.currentPassword': 'Mot de passe actuel',
+    'profileSettings.security.newPassword': 'Nouveau mot de passe',
+    'profileSettings.security.confirmPassword':
+      'Confirmer le nouveau mot de passe',
+    'profileSettings.security.updatePassword': 'Mettre à jour le mot de passe',
+    'profileSettings.security.updating': 'Mise à jour...',
+    'profileSettings.security.passwordMismatch':
+      'Les nouveaux mots de passe ne correspondent pas',
+    'profileSettings.security.passwordTooShort':
+      'Le nouveau mot de passe doit contenir au moins 6 caractères',
+    'profileSettings.security.wrongPassword':
+      'Le mot de passe actuel est incorrect',
+    'profileSettings.security.updateFailed':
+      'Échec de la mise à jour du mot de passe',
+
+    // Preferences Tab
+    'profileSettings.preferences.accountActions': 'Actions du compte',
+    'profileSettings.preferences.downloadData':
+      'Télécharger les données du compte',
+    'profileSettings.preferences.downloadDataDesc':
+      'Exporter les informations de votre compte',
+    'profileSettings.preferences.download': 'Télécharger',
+    'profileSettings.preferences.deleteAccount': 'Supprimer le compte',
+    'profileSettings.preferences.deleteAccountDesc':
+      'Supprimer définitivement votre compte et toutes les données',
+    'profileSettings.preferences.delete': 'Supprimer',
+
     // Buttons and Actions
     'button.getStarted': 'Commencer',
     'button.signIn': 'Se connecter',
@@ -2986,6 +3436,25 @@ const translations: Record<Locale, TranslationMessages> = {
       'Êtes-vous sûr de vouloir supprimer ce commentaire ? Les réponses resteront visibles.',
     'supporters.deleting': 'Suppression...',
     'supporters.replyDeleted': '[Réponse supprimée]',
+    'notifications.approved.title': 'Pétition approuvée 🎉📝',
+    'notifications.approved.message':
+      'La pétition a été approuvée et est maintenant publique.',
+    'notifications.rejected.title': 'Pétition rejetée',
+    'notifications.rejected.message':
+      'Désolé, la pétition a été rejetée pour violation des règles.',
+    'notifications.paused.title': 'Pétition mise en pause',
+    'notifications.paused.message': 'La pétition a été suspendue pour examen.',
+    'notifications.deleted.title': 'Pétition supprimée',
+    'notifications.deleted.message':
+      'La pétition a été définitivement supprimée.',
+    'notifications.archived.title': 'Pétition archivée',
+    'notifications.archived.message': 'La pétition a été archivée.',
+    'notifications.deletion_approved.title': 'Suppression approuvée',
+    'notifications.deletion_approved.message':
+      'La demande de suppression a été approuvée.',
+    'notifications.deletion_denied.title': 'Suppression refusée',
+    'notifications.deletion_denied.message':
+      'La demande de suppression a été refusée.',
   },
 };
 

@@ -12,7 +12,25 @@ const contactReasons = [
   { value: 'report', label: 'الإبلاغ عن محتوى' },
   { value: 'partnership', label: 'شراكة أو تعاون' },
   { value: 'press', label: 'استفسار صحفي' },
+  { value: 'influencer-coupon', label: 'طلب كوبون مؤثر' },
   { value: 'other', label: 'أخرى' },
+];
+
+const socialPlatforms = [
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'tiktok', label: 'TikTok' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'x', label: 'X (Twitter)' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'snapchat', label: 'Snapchat' },
+  { value: 'other', label: 'أخرى' },
+];
+
+const discountTiers = [
+  { value: '10', label: '10% خصم (30K-50K متابع)' },
+  { value: '15', label: '15% خصم (50K-100K متابع)' },
+  { value: '20', label: '20% خصم (100K-500K متابع)' },
+  { value: '30', label: '30% خصم (500K+ متابع)' },
 ];
 
 export default function ContactPage() {
@@ -24,6 +42,11 @@ export default function ContactPage() {
     message: '',
     petitionCode: '',
     reportDetails: '',
+    // Influencer coupon fields
+    platform: '',
+    accountUrl: '',
+    followerCount: '',
+    discountTier: '',
   });
   const [status, setStatus] = useState<
     'idle' | 'loading' | 'success' | 'error'
@@ -33,6 +56,22 @@ export default function ContactPage() {
   const [petitionData, setPetitionData] = useState<any>(null);
   const [petitionLoading, setPetitionLoading] = useState(false);
   const [petitionError, setPetitionError] = useState('');
+
+  // Check URL parameters on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reason = params.get('reason');
+    const tier = params.get('tier');
+
+    if (reason === 'influencer-coupon') {
+      setFormData((prev) => ({
+        ...prev,
+        reason: 'influencer-coupon',
+        discountTier: tier || '',
+        subject: 'طلب كوبون خصم للمؤثرين',
+      }));
+    }
+  }, []);
 
   // Fetch petition data when code changes
   const fetchPetition = async (code: string) => {
@@ -102,6 +141,10 @@ export default function ContactPage() {
         message: '',
         petitionCode: '',
         reportDetails: '',
+        platform: '',
+        accountUrl: '',
+        followerCount: '',
+        discountTier: '',
       });
       setPetitionData(null);
     } catch (error) {
@@ -188,6 +231,10 @@ export default function ContactPage() {
                         reason: e.target.value,
                         petitionCode: '',
                         reportDetails: '',
+                        platform: '',
+                        accountUrl: '',
+                        followerCount: '',
+                        discountTier: '',
                       })
                     }
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -343,6 +390,153 @@ export default function ContactPage() {
                     <p className="mt-2 text-sm text-gray-500">
                       💡 يرجى تضمين رابط العريضة أو المحتوى المبلغ عنه إن أمكن
                     </p>
+                  </div>
+                )}
+
+                {/* Influencer Coupon Fields - Show only when reason is 'influencer-coupon' */}
+                {formData.reason === 'influencer-coupon' && (
+                  <div className="space-y-6 bg-gradient-to-br from-purple-50 to-blue-50 p-6 rounded-lg border-2 border-purple-200">
+                    <div className="flex items-center gap-2 text-purple-900 mb-4">
+                      <span className="text-2xl">🌟</span>
+                      <h3 className="text-lg font-bold">
+                        طلب كوبون خصم للمؤثرين
+                      </h3>
+                    </div>
+
+                    <p className="text-sm text-gray-700 mb-4">
+                      املأ المعلومات التالية للتحقق من حسابك والحصول على كوبون
+                      الخصم الخاص بك
+                    </p>
+
+                    {/* Discount Tier */}
+                    <div>
+                      <label
+                        htmlFor="discountTier"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        فئة الخصم *
+                      </label>
+                      <select
+                        id="discountTier"
+                        required
+                        value={formData.discountTier}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            discountTier: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                      >
+                        <option value="">اختر فئة الخصم</option>
+                        {discountTiers.map((tier) => (
+                          <option key={tier.value} value={tier.value}>
+                            {tier.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Platform */}
+                    <div>
+                      <label
+                        htmlFor="platform"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        المنصة *
+                      </label>
+                      <select
+                        id="platform"
+                        required
+                        value={formData.platform}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            platform: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                      >
+                        <option value="">اختر المنصة</option>
+                        {socialPlatforms.map((platform) => (
+                          <option key={platform.value} value={platform.value}>
+                            {platform.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Account URL */}
+                    <div>
+                      <label
+                        htmlFor="accountUrl"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        رابط الحساب / القناة *
+                      </label>
+                      <input
+                        type="url"
+                        id="accountUrl"
+                        required
+                        value={formData.accountUrl}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            accountUrl: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="https://instagram.com/username"
+                        dir="ltr"
+                      />
+                      <p className="mt-2 text-xs text-gray-600">
+                        💡 الرجاء إدخال الرابط الكامل لحسابك أو قناتك
+                      </p>
+                    </div>
+
+                    {/* Follower Count */}
+                    <div>
+                      <label
+                        htmlFor="followerCount"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        عدد المتابعين *
+                      </label>
+                      <input
+                        type="text"
+                        id="followerCount"
+                        required
+                        value={formData.followerCount}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            followerCount: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="مثال: 50,000"
+                      />
+                      <p className="mt-2 text-xs text-gray-600">
+                        💡 سنقوم بالتحقق من عدد المتابعين قبل إرسال الكوبون
+                      </p>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-lg border border-purple-200">
+                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <span>⏱️</span>
+                        <span>ماذا بعد؟</span>
+                      </h4>
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        <li>✅ سنقوم بمراجعة حسابك والتحقق من عدد المتابعين</li>
+                        <li>
+                          ✅ سنرسل لك كود الكوبون عبر البريد الإلكتروني خلال
+                          دقائق{' '}
+                        </li>
+                        <li>
+                          ✅ استخدم الكوبون عند إنشاء عريضتك للحصول على الخصم
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 )}
 

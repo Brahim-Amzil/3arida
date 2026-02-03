@@ -45,7 +45,7 @@ export default function PetitionManagement({
       setShowDeleteConfirm(false);
     } catch (error) {
       console.error('Error deleting petition:', error);
-      alert('Failed to delete petition. Please try again.');
+      alert('فشل في حذف العريضة. يرجى المحاولة مرة أخرى.');
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ export default function PetitionManagement({
       setShowArchiveConfirm(false);
     } catch (error) {
       console.error('Error archiving petition:', error);
-      alert('Failed to archive petition. Please try again.');
+      alert('فشل في أرشفة العريضة. يرجى المحاولة مرة أخرى.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export default function PetitionManagement({
 
   const handleRequestDeletion = async () => {
     if (!deletionReason.trim()) {
-      alert('Please provide a reason for deletion');
+      alert('يرجى تقديم سبب للحذف');
       return;
     }
 
@@ -75,10 +75,10 @@ export default function PetitionManagement({
       await onRequestDeletion(deletionReason);
       setShowRequestDeletion(false);
       setDeletionReason('');
-      alert('Deletion request submitted. An admin will review it shortly.');
+      alert('تم تقديم طلب الحذف. سيقوم المسؤول بمراجعته قريباً.');
     } catch (error) {
       console.error('Error requesting deletion:', error);
-      alert('Failed to submit deletion request. Please try again.');
+      alert('فشل في تقديم طلب الحذف. يرجى المحاولة مرة أخرى.');
     } finally {
       setLoading(false);
     }
@@ -98,16 +98,15 @@ export default function PetitionManagement({
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Delete Petition?
+                  هل تريد حذف العريضة؟
                 </h3>
                 <p className="text-sm text-gray-600">
-                  This action cannot be undone
+                  لا يمكن التراجع عن هذا الإجراء
                 </p>
               </div>
             </div>
             <p className="text-gray-700 mb-6">
-              Are you sure you want to permanently delete this petition? All
-              signatures, comments, and data will be removed from public view.
+              هل أنت متأكد أنك تريد حذف هذه العريضة نهائياً؟ ستتم إزالة جميع التوقيعات والتعليقات والبيانات من العرض العام.
             </p>
             <div className="flex gap-3 justify-end">
               <Button
@@ -115,14 +114,14 @@ export default function PetitionManagement({
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={loading}
               >
-                Cancel
+                إلغاء
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={loading}
               >
-                {loading ? 'Deleting...' : 'Delete Petition'}
+                {loading ? 'جاري الحذف...' : 'حذف العريضة'}
               </Button>
             </div>
           </div>
@@ -139,17 +138,15 @@ export default function PetitionManagement({
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Archive Petition?
+                  أرشفة العريضة؟
                 </h3>
                 <p className="text-sm text-gray-600">
-                  You can restore it later
+                  يمكنك استعادتها لاحقاً
                 </p>
               </div>
             </div>
             <p className="text-gray-700 mb-6">
-              Archiving will hide this petition from public view, but you can
-              restore it anytime from your dashboard. All data will be
-              preserved.
+              الأرشفة ستخفي هذه العريضة من العرض العام، ولكن يمكنك استعادتها في أي وقت من لوحة التحكم الخاصة بك. سيتم الاحتفاظ بجميع البيانات.
             </p>
             <div className="flex gap-3 justify-end">
               <Button
@@ -157,14 +154,14 @@ export default function PetitionManagement({
                 onClick={() => setShowArchiveConfirm(false)}
                 disabled={loading}
               >
-                Cancel
+                إلغاء
               </Button>
               <Button
                 className="bg-yellow-600 hover:bg-yellow-700"
                 onClick={handleArchive}
                 disabled={loading}
               >
-                {loading ? 'Archiving...' : 'Archive Petition'}
+                {loading ? 'جاري الأرشفة...' : 'أرشفة العريضة'}
               </Button>
             </div>
           </div>
@@ -181,21 +178,20 @@ export default function PetitionManagement({
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Request Deletion
+                  طلب الحذف
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Admin will review your request
+                  سيقوم المسؤول بمراجعة طلبك
                 </p>
               </div>
             </div>
             <p className="text-gray-700 mb-4">
-              Your petition has significant support. Please explain why you want
-              to delete it, and an admin will review your request.
+              عريضتك تحظى بدعم كبير. يرجى توضيح سبب رغبتك في حذفها، وسيقوم المسؤول بمراجعة طلبك.
             </p>
             <textarea
               value={deletionReason}
               onChange={(e) => setDeletionReason(e.target.value)}
-              placeholder="Reason for deletion request..."
+              placeholder="سبب طلب الحذف..."
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none mb-4"
               disabled={loading}
@@ -209,14 +205,14 @@ export default function PetitionManagement({
                 }}
                 disabled={loading}
               >
-                Cancel
+                إلغاء
               </Button>
               <Button
                 className="bg-orange-600 hover:bg-orange-700"
                 onClick={handleRequestDeletion}
                 disabled={loading || !deletionReason.trim()}
               >
-                {loading ? 'Submitting...' : 'Submit Request'}
+                {loading ? 'جاري الإرسال...' : 'إرسال الطلب'}
               </Button>
             </div>
           </div>
@@ -228,12 +224,12 @@ export default function PetitionManagement({
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-orange-600" />
-            Petition Management
+            إدارة العريضة
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-gray-700 mb-4">
-            As the creator, you can manage this petition.
+            بصفتك المنشئ، يمكنك إدارة هذه العريضة.
           </p>
 
           {userCanDelete ? (
@@ -244,11 +240,10 @@ export default function PetitionManagement({
                 className="w-full flex items-center justify-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
-                Delete Petition
+                حذف العريضة
               </Button>
               <p className="text-xs text-gray-600">
-                You can delete this petition because it has ≤10 signatures, is
-                pending approval, or was created within 24 hours.
+                يمكنك حذف هذه العريضة لأنها تحتوي على 10 توقيعات أو أقل، أو أنها قيد الانتظار، أو تم إنشاؤها خلال 24 ساعة.
               </p>
             </>
           ) : (
@@ -258,7 +253,7 @@ export default function PetitionManagement({
                 onClick={() => setShowArchiveConfirm(true)}
               >
                 <Archive className="w-4 h-4" />
-                Archive Petition
+                أرشفة العريضة
               </Button>
               <Button
                 variant="outline"
@@ -266,11 +261,10 @@ export default function PetitionManagement({
                 className="w-full flex items-center justify-center gap-2 border-orange-300 text-orange-700 hover:bg-orange-100"
               >
                 <AlertCircle className="w-4 h-4" />
-                Request Deletion
+                طلب الحذف
               </Button>
               <p className="text-xs text-gray-600">
-                This petition has significant support. You can archive it or
-                request admin approval for deletion.
+                هذه العريضة تحظى بدعم كبير. يمكنك أرشفتها أو طلب موافقة المسؤول لحذفها.
               </p>
             </>
           )}

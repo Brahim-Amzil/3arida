@@ -14,6 +14,8 @@ import PetitionManagement from '@/components/petitions/PetitionManagement';
 import PetitionUpdates from '@/components/petitions/PetitionUpdates';
 import PetitionSupporters from '@/components/petitions/PetitionSupporters';
 import ContactModeratorModal from '@/components/moderation/ContactModeratorModal';
+import ContactButtons from '@/components/moderation/ContactButtons';
+import { InfluencerBanner } from '@/components/petitions/InfluencerBanner';
 import { useRealtimePetition } from '@/hooks/useRealtimePetition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,6 +36,7 @@ import {
   getPetitionStatusLabel,
 } from '@/lib/petition-utils';
 import PetitionAdminActions from '@/components/admin/PetitionAdminActions';
+import { InfluencerInfoForm } from '@/components/admin/InfluencerInfoForm';
 import { Petition, User } from '@/types/petition';
 import { notifyPetitionStatusChange } from '@/lib/notifications';
 import { Check, X, Pause, Play, Archive, Trash2 } from 'lucide-react';
@@ -69,6 +72,7 @@ export default function PetitionDetailPage() {
   const [hasUserSigned, setHasUserSigned] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [showSecurityInfo, setShowSecurityInfo] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   // Check if current user is admin/moderator
   const isAdmin =
@@ -395,6 +399,8 @@ export default function PetitionDetailPage() {
           petition.creatorId,
           petition.title,
           newStatus,
+          undefined, // moderatorNotes
+          'ar', // locale
         );
       } catch (notifError) {
         console.warn(
@@ -525,13 +531,13 @@ export default function PetitionDetailPage() {
                 </svg>
               </div>
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Petition Not Found
+                لم يتم العثور على العريضة
               </h2>
               <p className="text-gray-600 mb-6">
-                {error || 'The petition you are looking for does not exist.'}
+                {error || 'العريضة التي تبحث عنها غير موجودة.'}
               </p>
               <Button asChild>
-                <Link href="/petitions">Browse Petitions</Link>
+                <Link href="/petitions">تصفح العرائض</Link>
               </Button>
             </CardContent>
           </Card>
@@ -697,41 +703,78 @@ export default function PetitionDetailPage() {
                   </span>
                 </div>
 
+                {/* Influencer Banner - Show if petition is from influencer and has manual info */}
+                {petition.publisherType === 'Influencer' &&
+                  petition.influencerInfo &&
+                  petition.influencerInfo.verified && (
+                    <div className="mt-10 mb-6">
+                      <InfluencerBanner
+                        profilePhotoUrl={
+                          petition.influencerInfo.profilePhotoUrl
+                        }
+                        channelName={petition.influencerInfo.channelName}
+                        followerCount={petition.influencerInfo.followerCount}
+                        platform={petition.influencerInfo.platform}
+                        socialMediaUrl={petition.socialMediaUrl || '#'}
+                      />
+                    </div>
+                  )}
+
                 {/* 2. Petition Media (Images only - videos appear after description) */}
                 {petition.mediaUrls && petition.mediaUrls.length > 0 && (
-                  <div className="mb-6 space-y-4">
-                    {/* Images and Videos from mediaUrls */}
-                    {petition.mediaUrls.map((url, index) => {
-                      const isVideo =
-                        url.includes('.mp4') ||
-                        url.includes('.webm') ||
-                        url.includes('.ogg') ||
-                        url.includes('video');
+                  <div className="mb-6">
+                    {(() => {
+                      // Filter out videos - they appear after description
+                      const images = petition.mediaUrls.filter(
+                        (url) =>
+                          !url.includes('.mp4') &&
+                          !url.includes('.webm') &&
+                          !url.includes('.ogg') &&
+                          !url.includes('video'),
+                      );
 
-                      return isVideo ? (
-                        <video
-                          key={index}
-                          controls
-                          className="w-full rounded-lg"
-                        >
-                          <source src={url} type="video/mp4" />
-                          Your browser does not support the video tag.
-                        </video>
-                      ) : (
-                        <div
-                          key={index}
-                          className="relative w-full h-80 bg-gray-100 rounded-lg overflow-hidden"
-                        >
-                          <Image
-                            src={url}
-                            alt={petition.title}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
-                          />
+                      if (images.length === 0) return null;
+
+                      return (
+                        <div className="space-y-3">
+                          {/* Main Image */}
+                          <div className="relative w-full h-80 bg-gray-100 rounded-lg overflow-hidden">
+                            <Image
+                              src={images[selectedImageIndex]}
+                              alt={petition.title}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
+                            />
+                          </div>
+
+                          {/* Thumbnail Strip - Only show if multiple images */}
+                          {images.length > 1 && (
+                            <div className="flex gap-2 overflow-x-auto pb-2">
+                              {images.map((url, index) => (
+                                <button
+                                  key={index}
+                                  onClick={() => setSelectedImageIndex(index)}
+                                  className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden transition-all ${
+                                    index === selectedImageIndex
+                                      ? 'ring-2 ring-green-500 opacity-100'
+                                      : 'opacity-60 hover:opacity-80'
+                                  }`}
+                                >
+                                  <Image
+                                    src={url}
+                                    alt={`${petition.title} - Image ${index + 1}`}
+                                    fill
+                                    className="object-cover"
+                                    sizes="80px"
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       );
-                    })}
+                    })()}
                   </div>
                 )}
 
@@ -744,11 +787,11 @@ export default function PetitionDetailPage() {
                       </div>
                       <div className="ml-3 flex-1">
                         <h3 className="text-sm font-medium text-red-800">
-                          Petition Rejected
+                          تم رفض العريضة
                         </h3>
                         <p className="mt-1 text-sm text-red-700">
-                          This petition has been rejected by our moderation team
-                          and cannot accept signatures.
+                          تم رفض هذه العريضة من قبل فريق المشرفين ولا يمكنها
+                          قبول توقيعات.
                         </p>
                         {/* Show rejection reason from moderationNotes or latest resubmission history */}
                         {(petition.moderationNotes ||
@@ -756,7 +799,7 @@ export default function PetitionDetailPage() {
                             petition.resubmissionHistory.length > 0)) && (
                           <div className="mt-2 p-2 bg-red-100 rounded">
                             <p className="text-sm font-medium text-red-800">
-                              Reason:
+                              السبب:
                             </p>
                             <p className="text-sm text-red-700">
                               {petition.moderationNotes ||
@@ -765,7 +808,7 @@ export default function PetitionDetailPage() {
                                   ? petition.resubmissionHistory[
                                       petition.resubmissionHistory.length - 1
                                     ].reason
-                                  : 'No reason provided')}
+                                  : 'لا يوجد سبب')}
                             </p>
                           </div>
                         )}
@@ -781,9 +824,9 @@ export default function PetitionDetailPage() {
                                 }
                                 className="bg-blue-600 hover:bg-blue-700"
                               >
-                                Edit & Resubmit (
-                                {3 - (petition.resubmissionCount || 0)} attempts
-                                left)
+                                تعديل وإعادة إرسال (
+                                {3 - (petition.resubmissionCount || 0)} محاولات
+                                متبقية)
                               </Button>
                             </div>
                           )}
@@ -792,42 +835,27 @@ export default function PetitionDetailPage() {
                           (petition.resubmissionCount || 0) >= 3 && (
                             <div className="mt-3">
                               <p className="text-sm text-red-600 font-medium">
-                                Maximum resubmission attempts reached (3/3)
+                                تم الوصول إلى الحد الأقصى لمحاولات إعادة الإرسال
+                                (3/3)
                               </p>
                               <Button
                                 size="sm"
                                 onClick={() => setShowContactModerator(true)}
                                 className="mt-2 bg-orange-600 hover:bg-orange-700"
                               >
-                                Contact Moderator
+                                تواصل مع فريق الدعــم{' '}
                               </Button>
                             </div>
                           )}
                         {/* Contact Moderator button for all creators with rejected petitions */}
                         {user && petition.creatorId === user.uid && (
-                          <div className="mt-3">
-                            <Button
-                              size="sm"
-                              onClick={() => setShowContactModerator(true)}
-                              variant="outline"
-                              className="border-red-300 text-red-700 hover:bg-red-50"
-                            >
-                              <svg
-                                className="w-4 h-4 mr-2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                                />
-                              </svg>
-                              Contact Moderator
-                            </Button>
-                          </div>
+                          <ContactButtons
+                            petition={petition}
+                            onContactModerator={() =>
+                              setShowContactModerator(true)
+                            }
+                            variant="rejected"
+                          />
                         )}
                       </div>
                     </div>
@@ -843,17 +871,17 @@ export default function PetitionDetailPage() {
                       </div>
                       <div className="ml-3 flex-1">
                         <h3 className="text-sm font-medium text-orange-800">
-                          Petition Temporarily Paused
+                          تم إيقاف العريضة مؤقتاً
                         </h3>
                         <p className="mt-1 text-sm text-orange-700">
-                          This petition is currently paused and cannot accept
-                          new signatures at this time. It may be under review or
-                          temporarily suspended by moderators.
+                          تم إيقاف هذه العريضة مؤقتاً ولا يمكنها قبول توقيعات
+                          جديدة في الوقت الحالي. قد تكون قيد المراجعة أو تم
+                          تعليقها مؤقتاً من قبل المشرفين.
                         </p>
                         {petition.moderationNotes && (
                           <div className="mt-2 p-2 bg-orange-100 rounded">
                             <p className="text-sm font-medium text-orange-800">
-                              Reason:
+                              السبب:
                             </p>
                             <p className="text-sm text-orange-700">
                               {petition.moderationNotes}
@@ -862,29 +890,13 @@ export default function PetitionDetailPage() {
                         )}
                         {/* Contact Moderator button for creators with paused petitions */}
                         {user && petition.creatorId === user.uid && (
-                          <div className="mt-3">
-                            <Button
-                              size="sm"
-                              onClick={() => setShowContactModerator(true)}
-                              variant="outline"
-                              className="border-orange-300 text-orange-700 hover:bg-orange-50"
-                            >
-                              <svg
-                                className="w-4 h-4 mr-2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                                />
-                              </svg>
-                              Contact Moderator
-                            </Button>
-                          </div>
+                          <ContactButtons
+                            petition={petition}
+                            onContactModerator={() =>
+                              setShowContactModerator(true)
+                            }
+                            variant="paused"
+                          />
                         )}
                       </div>
                     </div>
@@ -1493,14 +1505,40 @@ export default function PetitionDetailPage() {
                             {creator.bio}
                           </p>
                         ) : (
-                          <p className="text-gray-500 italic">
-                            {user && petition.creatorId === user.uid
-                              ? t('publisher.noBioYet')
-                              : t('publisher.userNoBio').replace(
-                                  '{name}',
-                                  creator?.name || t('publisher.thisUser'),
-                                )}
-                          </p>
+                          <div className="flex items-center justify-between gap-4">
+                            <p className="text-gray-500 italic">
+                              {user && petition.creatorId === user.uid
+                                ? t('publisher.noBioYet')
+                                : t('publisher.userNoBio').replace(
+                                    '{name}',
+                                    creator?.name || t('publisher.thisUser'),
+                                  )}
+                            </p>
+                            {user && petition.creatorId === user.uid && (
+                              <Link href="/profile?tab=profile">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex items-center gap-2 flex-shrink-0"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
+                                  </svg>
+                                  {t('publisher.editBio')}
+                                </Button>
+                              </Link>
+                            )}
+                          </div>
                         )}
                       </div>
 
@@ -1830,6 +1868,14 @@ export default function PetitionDetailPage() {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Influencer Info Form - Show for admin when petition is from influencer */}
+            {isAdmin && petition.publisherType === 'Influencer' && (
+              <InfluencerInfoForm
+                petitionId={petition.id}
+                existingInfo={petition.influencerInfo}
+              />
             )}
 
             {/* Petition QR Code */}

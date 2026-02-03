@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAppealAdmin } from '@/lib/appeals-service-admin';
-// import { sendEmail } from '@/lib/email-service';
-// import { appealCreatedEmail } from '@/lib/email-templates';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +10,7 @@ export async function POST(request: NextRequest) {
     if (!petitionId || !message || !userId || !userName || !userEmail) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -20,52 +18,75 @@ export async function POST(request: NextRequest) {
     if (!message.trim()) {
       return NextResponse.json(
         { error: 'Appeal message cannot be empty' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Create appeal using Admin SDK
-    const appealId = await createAppealAdmin(
-      petitionId,
-      userId,
-      userName,
-      userEmail,
-      message
-    );
+    // Get petition data
+    const petitionRef = adminDb.collection('petitions').doc(petitionId);
+    const petitionSnap = await petitionRef.get();
 
-    // TODO: Send email notification to moderators
-    // const moderatorEmail = process.env.CONTACT_EMAIL || '3aridapp@gmail.com';
-    // await sendEmail({
-    //   to: moderatorEmail,
-    //   subject: `[3arida Appeals] New Appeal Request - ${petitionId}`,
-    //   html: `New appeal from ${userName} for petition ${petitionId}`,
-    // });
+    if (!petitionSnap.exists) {
+      return NextResponse.json(
+        { error: 'Petition not found' },
+        { status: 404 },
+      );
+    }
+
+    const petitionData = petitionSnap.data();
+
+    // Create appeal document
+    const now = new Date();
+    const appealData = {
+      petitionId,
+      petitionTitle: petitionData?.title || 'Unknown Petition',
+      creatorId: userId,
+      creatorName: userName,
+      creatorEmail: userEmail,
+      status: 'pending',
+      messages: [
+        {
+          id: `msg_${Date.now()}`,
+          senderId: userId,
+          senderName: userName,
+          senderRole: 'creator',
+          content: message.trim(),
+          createdAt: now,
+          isInternal: false,
+        },
+      ],
+      statusHistory: [
+        {
+          status: 'pending',
+          changedBy: userId,
+          changedAt: now,
+        },
+      ],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const docRef = await adminDb.collection('appeals').add(appealData);
 
     return NextResponse.json(
       {
         success: true,
-        appealId,
+        appealId: docRef.id,
         message: 'Appeal created successfully',
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error('Create appeal error:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
-    const errorCode = (error as any)?.code;
 
     return NextResponse.json(
       {
         error: 'Failed to create appeal',
         details: errorMessage,
-        code: errorCode,
-        stack:
-          process.env.NODE_ENV === 'development'
-            ? (error as any)?.stack
-            : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
