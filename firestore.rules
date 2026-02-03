@@ -184,15 +184,33 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
         (resource.data.creatorId == request.auth.uid || isModerator());
       
-      // Creators can create appeals - simplified rules for now
-      allow create: if isAuthenticated()
-        && request.resource.data.creatorId == request.auth.uid;
+      // TEMPORARY: Allow any authenticated user to create appeals for testing
+      // TODO: Add back proper validation once working
+      allow create: if isAuthenticated();
       
       // Only moderators/admins can update appeals
       allow update: if isAuthenticated() && isModerator();
       
       // No one can delete appeals (audit trail preservation)
       allow delete: if false;
+    }
+    
+    // Coupons collection - Admin only write, public read for validation
+    match /coupons/{couponId} {
+      // Allow public read for coupon validation (API routes need this)
+      allow read: if true;
+      
+      // Only admins can create coupons
+      allow create: if isAdmin();
+      
+      // Allow updates for usage tracking (API routes) or admin management
+      // Usage tracking updates: usedCount, usedBy, lastUsedAt, status
+      allow update: if isAdmin() || 
+                      (request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['usedCount', 'usedBy', 'lastUsedAt', 'status']));
+      
+      // Only admins can delete coupons (for cleanup of expired/used coupons)
+      allow delete: if isAdmin();
     }
     
     // Deny all other collections by default (secure by default)

@@ -205,7 +205,7 @@ export default function WhatsAppPhoneVerification({
               <p className="text-sm text-gray-600">الخطوات:</p>
               <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
                 <li>افتح واتساب (يجب أن يكون مفتوحاً تلقائياً)</li>
-                <li>اضغط على "إرسال" للرسالة المعدة مسبقاً</li>
+                <li>إضغط على "إرسال" للرسالة المعدة مسبقاً</li>
                 <li>ارجع إلى هذه الصفحة - سيتم التحقق تلقائياً</li>
               </ol>
             </div>

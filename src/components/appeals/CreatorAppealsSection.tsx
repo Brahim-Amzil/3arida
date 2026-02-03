@@ -42,19 +42,12 @@ export default function CreatorAppealsSection() {
       setLoading(true);
       setError('');
 
-      const response = await fetch(
-        `/api/appeals?userId=${user.uid}&userRole=user`
-      );
+      // Use client SDK directly instead of API route
+      const { getAppealsForUser } = await import('@/lib/appeals-service');
+      const fetchedAppeals = await getAppealsForUser(user.uid, 'user');
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Appeals API error:', errorData);
-        throw new Error(errorData.error || 'Failed to load appeals');
-      }
-
-      const data = await response.json();
-      setAllAppeals(data.appeals || []);
-      setAppeals(data.appeals || []);
+      setAllAppeals(fetchedAppeals);
+      setAppeals(fetchedAppeals);
     } catch (err) {
       console.error('Error loading appeals:', err);
       // Gracefully handle errors - just show empty state

@@ -10,8 +10,13 @@ import MySignaturesSection from '@/components/dashboard/MySignaturesSection';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { getUserPetitions } from '@/lib/petitions';
-import { Petition } from '@/types/petition';
+import { Petition, PricingTier } from '@/types/petition';
 import { useTranslation } from '@/hooks/useTranslation';
+import {
+  canViewTotalSignatures,
+  canAccessAppeals,
+} from '@/lib/tier-restrictions';
+import { UpgradeModal, LockIcon } from '@/components/ui/UpgradeModal';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -29,6 +34,33 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<
     'petitions' | 'appeals' | 'signatures'
   >('petitions');
+  const [upgradeModalFeature, setUpgradeModalFeature] = useState<
+    'signatures' | 'updates' | 'appeals' | null
+  >(null);
+  const [appealsCount, setAppealsCount] = useState<number>(0);
+
+  // Get user's highest tier from their petitions
+  const userHighestTier: PricingTier = React.useMemo(() => {
+    if (petitions.length === 0) return 'free';
+
+    const tierOrder: PricingTier[] = [
+      'free',
+      'basic',
+      'premium',
+      'advanced',
+      'enterprise',
+    ];
+    const tiers = petitions.map((p) => p.pricingTier);
+
+    let highestTier: PricingTier = 'free';
+    tiers.forEach((tier) => {
+      if (tierOrder.indexOf(tier) > tierOrder.indexOf(highestTier)) {
+        highestTier = tier;
+      }
+    });
+
+    return highestTier;
+  }, [petitions]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -41,6 +73,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user) {
       loadUserPetitions();
+      loadAppealsCount();
     }
   }, [user]);
 
@@ -57,6 +90,19 @@ export default function DashboardPage() {
       setError('Failed to load your petitions. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAppealsCount = async () => {
+    if (!user) return;
+
+    try {
+      const { getAppealsForUser } = await import('@/lib/appeals-service');
+      const appeals = await getAppealsForUser(user.uid, 'user');
+      setAppealsCount(appeals.length);
+    } catch (err) {
+      console.error('Error loading appeals count:', err);
+      // Silently fail - just keep count at 0
     }
   };
 
@@ -78,13 +124,13 @@ export default function DashboardPage() {
   // Calculate stats
   const totalSignatures = petitions.reduce(
     (sum, petition) => sum + petition.currentSignatures,
-    0
+    0,
   );
   const activePetitions = petitions.filter(
-    (p) => p.status === 'approved'
+    (p) => p.status === 'approved',
   ).length;
   const pendingPetitions = petitions.filter(
-    (p) => p.status === 'pending'
+    (p) => p.status === 'pending',
   ).length;
 
   // Filter petitions based on status
@@ -107,7 +153,7 @@ export default function DashboardPage() {
     rejected: petitions.filter((p) => p.status === 'rejected').length,
     paused: petitions.filter((p) => p.status === 'paused').length,
     deleted: petitions.filter(
-      (p) => p.status === 'deleted' || p.deletedAt !== undefined
+      (p) => p.status === 'deleted' || p.deletedAt !== undefined,
     ).length,
   };
 
@@ -230,7 +276,18 @@ export default function DashboardPage() {
           </div>
 
           {/* Total Signatures */}
-          <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+          <div
+            className={`bg-white rounded-lg p-3 border border-gray-200 shadow-sm ${
+              !canViewTotalSignatures(userHighestTier)
+                ? 'cursor-pointer hover:border-yellow-400 transition-colors relative'
+                : ''
+            }`}
+            onClick={() => {
+              if (!canViewTotalSignatures(userHighestTier)) {
+                setUpgradeModalFeature('signatures');
+              }
+            }}
+          >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg
@@ -253,15 +310,38 @@ export default function DashboardPage() {
                   />
                 </svg>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900 leading-none">
-                  {totalSignatures.toLocaleString()}
-                </p>
-                <p className="text-xs text-gray-600 mt-0.5">
-                  {t('dashboard.stats.totalSignatures')}
-                </p>
+              <div className="flex-1">
+                {canViewTotalSignatures(userHighestTier) ? (
+                  <>
+                    <p className="text-2xl font-bold text-gray-900 leading-none">
+                      {totalSignatures.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      {t('dashboard.stats.totalSignatures')}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <p className="text-2xl font-bold text-gray-400 leading-none">
+                        •••
+                      </p>
+                      <LockIcon className="w-4 h-4 text-yellow-600" />
+                    </div>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      {t('dashboard.stats.totalSignatures')}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
+            {!canViewTotalSignatures(userHighestTier) && (
+              <div className="absolute top-2 right-2">
+                <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                  <LockIcon className="w-3 h-3 text-gray-800" />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -311,9 +391,15 @@ export default function DashboardPage() {
                 </div>
               </button>
               <button
-                onClick={() => setActiveTab('appeals')}
+                onClick={() => {
+                  if (!canAccessAppeals(userHighestTier)) {
+                    setUpgradeModalFeature('appeals');
+                  } else {
+                    setActiveTab('appeals');
+                  }
+                }}
                 className={`
-                  py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors
+                  py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors relative
                   ${
                     activeTab === 'appeals'
                       ? 'border-green-600 text-green-600'
@@ -321,7 +407,17 @@ export default function DashboardPage() {
                   }
                 `}
               >
-                {t('dashboard.appeals')}
+                <div className="flex items-center gap-2">
+                  {t('dashboard.appeals')}
+                  {!canAccessAppeals(userHighestTier) && (
+                    <LockIcon className="w-4 h-4 text-yellow-600" />
+                  )}
+                  {canAccessAppeals(userHighestTier) && appealsCount > 0 && (
+                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-600 rounded-full">
+                      {appealsCount}
+                    </span>
+                  )}
+                </div>
               </button>
             </nav>
           </div>
@@ -335,10 +431,21 @@ export default function DashboardPage() {
         )}
 
         {/* Appeals Section */}
-        {activeTab === 'appeals' && user && (
-          <div className="mb-8">
-            <CreatorAppealsSection />
-          </div>
+        {activeTab === 'appeals' &&
+          user &&
+          canAccessAppeals(userHighestTier) && (
+            <div className="mb-8">
+              <CreatorAppealsSection />
+            </div>
+          )}
+
+        {/* Upgrade Modal */}
+        {upgradeModalFeature && (
+          <UpgradeModal
+            feature={upgradeModalFeature}
+            isOpen={true}
+            onClose={() => setUpgradeModalFeature(null)}
+          />
         )}
 
         {/* User Petitions */}

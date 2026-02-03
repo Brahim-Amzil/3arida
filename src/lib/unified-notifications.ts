@@ -13,7 +13,7 @@ async function sendPushNotification(
   userId: string,
   title: string,
   body: string,
-  data?: Record<string, string>
+  data?: Record<string, string>,
 ): Promise<boolean> {
   try {
     // Get user's FCM token from Firestore
@@ -84,14 +84,14 @@ export async function notifySignatureConfirmation(
   userName: string,
   userEmail: string,
   petitionTitle: string,
-  petitionId: string
+  petitionId: string,
 ) {
   console.log('📧 Sending signature confirmation email to:', userEmail);
   await sendSignatureConfirmationEmail(
     userName,
     userEmail,
     petitionTitle,
-    petitionId
+    petitionId,
   );
 }
 
@@ -103,20 +103,30 @@ export async function notifyPetitionApproved(
   userId: string,
   userName: string,
   petitionTitle: string,
-  petitionId: string
+  petitionId: string,
+  locale: 'ar' | 'fr' = 'ar',
 ) {
   console.log('🔔 Sending push notification for petition approval');
 
-  await sendPushNotification(
-    userId,
-    '✅ تمت الموافقة على عريضتك',
-    `عريضتك "${petitionTitle}" الآن متاحة للتوقيع`,
-    {
-      type: 'petition_approved',
-      petitionId,
-      url: `/petitions/${petitionId}`,
-    }
-  );
+  // Translation messages
+  const translations = {
+    ar: {
+      title: '✅ تمت الموافقة على عريضتك',
+      message: `عريضتك "${petitionTitle}" الآن متاحة للتوقيع`,
+    },
+    fr: {
+      title: '✅ Votre pétition a été approuvée',
+      message: `Votre pétition "${petitionTitle}" est maintenant disponible pour signature`,
+    },
+  };
+
+  const t = translations[locale];
+
+  await sendPushNotification(userId, t.title, t.message, {
+    type: 'petition_approved',
+    petitionId,
+    url: `/petitions/${petitionId}`,
+  });
 }
 
 /**
@@ -127,7 +137,7 @@ export async function notifyPetitionUpdate(
   signerIds: string[],
   petitionTitle: string,
   petitionId: string,
-  updateTitle: string
+  updateTitle: string,
 ) {
   console.log(`🔔 Sending push notifications to ${signerIds.length} signers`);
 
@@ -140,8 +150,8 @@ export async function notifyPetitionUpdate(
         type: 'petition_update',
         petitionId,
         url: `/petitions/${petitionId}`,
-      }
-    )
+      },
+    ),
   );
 
   await Promise.allSettled(promises);
@@ -156,7 +166,7 @@ export async function notifyMilestone(
   petitionTitle: string,
   petitionId: string,
   milestone: number,
-  currentSignatures: number
+  currentSignatures: number,
 ) {
   console.log(`🔔 Sending milestone notification: ${milestone}%`);
 
@@ -169,7 +179,7 @@ export async function notifyMilestone(
       petitionId,
       milestone: milestone.toString(),
       url: `/petitions/${petitionId}`,
-    }
+    },
   );
 }
 
@@ -181,7 +191,7 @@ export async function notifyComment(
   userId: string,
   petitionTitle: string,
   petitionId: string,
-  commenterName: string
+  commenterName: string,
 ) {
   console.log('🔔 Sending comment notification');
 
@@ -193,7 +203,7 @@ export async function notifyComment(
       type: 'comment',
       petitionId,
       url: `/petitions/${petitionId}#comments`,
-    }
+    },
   );
 }
 

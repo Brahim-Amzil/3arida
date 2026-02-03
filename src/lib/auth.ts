@@ -45,14 +45,14 @@ export const useAuth = () => {
 
 // Register new user with email and password
 export const registerWithEmail = async (
-  userData: RegisterData
+  userData: RegisterData,
 ): Promise<UserCredential> => {
   try {
     // Create user account
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       userData.email,
-      userData.password
+      userData.password,
     );
 
     // Update Firebase Auth profile
@@ -75,6 +75,18 @@ export const registerWithEmail = async (
       // Don't throw - allow registration to proceed
     }
 
+    // Send welcome email (async, don't block registration)
+    // Wrapped in setTimeout to ensure it runs after registration completes
+    setTimeout(async () => {
+      try {
+        const { sendWelcomeEmail } = await import('./email-notifications');
+        await sendWelcomeEmail(userData.name, userData.email);
+        console.log('✅ Welcome email sent');
+      } catch (emailError) {
+        console.warn('⚠️ Could not send welcome email:', emailError);
+      }
+    }, 0);
+
     return userCredential;
   } catch (error: any) {
     console.error('Registration error:', error);
@@ -84,13 +96,13 @@ export const registerWithEmail = async (
 
 // Login with email and password
 export const loginWithEmail = async (
-  loginData: LoginData
+  loginData: LoginData,
 ): Promise<UserCredential> => {
   try {
     const userCredential = await signInWithEmailAndPassword(
       auth,
       loginData.email,
-      loginData.password
+      loginData.password,
     );
 
     // Check if user is active
@@ -103,7 +115,7 @@ export const loginWithEmail = async (
         // Sign out immediately
         await signOut(auth);
         throw new Error(
-          'Your account has been deactivated. Please contact support.'
+          'Your account has been deactivated. Please contact support.',
         );
       }
     }
@@ -137,7 +149,7 @@ export const loginWithGoogle = async (): Promise<UserCredential> => {
         // Sign out immediately
         await signOut(auth);
         throw new Error(
-          'Your account has been deactivated. Please contact support.'
+          'Your account has been deactivated. Please contact support.',
         );
       }
     }
@@ -154,7 +166,7 @@ export const loginWithGoogle = async (): Promise<UserCredential> => {
 
 // Phone verification for petition signing
 export const verifyPhoneForSigning = async (
-  phoneNumber: string
+  phoneNumber: string,
 ): Promise<ConfirmationResult> => {
   try {
     // Format phone number for Morocco (+212)
@@ -169,14 +181,14 @@ export const verifyPhoneForSigning = async (
         callback: () => {
           console.log('reCAPTCHA solved');
         },
-      }
+      },
     );
 
     // Send OTP
     const confirmationResult = await signInWithPhoneNumber(
       auth,
       formattedPhone,
-      recaptchaVerifier
+      recaptchaVerifier,
     );
     return confirmationResult;
   } catch (error: any) {
@@ -188,7 +200,7 @@ export const verifyPhoneForSigning = async (
 // Verify OTP for petition signing
 export const verifyOTPForSigning = async (
   confirmationResult: ConfirmationResult,
-  otp: string
+  otp: string,
 ): Promise<UserCredential> => {
   try {
     const result = await confirmationResult.confirm(otp);
@@ -231,7 +243,7 @@ export const resetPassword = async (email: string): Promise<void> => {
 
 // Send email verification
 export const sendVerificationEmail = async (
-  user?: FirebaseUser
+  user?: FirebaseUser,
 ): Promise<void> => {
   try {
     const currentUser = user || auth.currentUser;
@@ -251,7 +263,7 @@ const createUserProfile = async (
   additionalData: {
     name: string;
     email: string;
-  }
+  },
 ) => {
   try {
     const userRef = doc(db, 'users', user.uid);

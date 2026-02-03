@@ -1,6 +1,25 @@
 # 3arida Documentation Index
 
+**Last Updated:** February 3, 2026  
 Complete index of all project documentation organized by category.
+
+---
+
+## 📊 PROGRESS TRACKING (START HERE)
+
+### Current Status Files
+
+- **[PROJECT-STATUS-FEB-2026.md](PROJECT-STATUS-FEB-2026.md)** ⭐ - Current platform status (96% complete)
+- **[CURRENT-PROJECT-STATUS.md](CURRENT-PROJECT-STATUS.md)** - Historical progress overview
+- **[MVP-LAUNCH-TASKS.md](MVP-LAUNCH-TASKS.md)** - Launch checklist and remaining tasks
+- **[PENDING-FEATURES.md](PENDING-FEATURES.md)** - Future features and enhancements
+
+### Recent Session Summaries
+
+- **[SESSION-FEB-3-2026-APPEALS-TIER-RESTRICTIONS.md](SESSION-FEB-3-2026-APPEALS-TIER-RESTRICTIONS.md)** ⭐ - Latest (Feb 3, 2026)
+- **[DOCUMENTATION-UPDATE-FEB-3-2026.md](DOCUMENTATION-UPDATE-FEB-3-2026.md)** - Documentation update summary
+
+---
 
 ## 📁 Documentation Folders
 

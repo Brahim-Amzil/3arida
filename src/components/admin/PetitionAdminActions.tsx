@@ -32,7 +32,7 @@ export default function PetitionAdminActions({
   const updatePetitionStatus = async (
     action: 'approve' | 'reject' | 'pause' | 'delete',
     requiresConfirmation = false,
-    requiresReason = false
+    requiresReason = false,
   ) => {
     if (requiresConfirmation) {
       if (!confirm(t(`admin.confirm.${action}`))) {
@@ -180,7 +180,8 @@ export default function PetitionAdminActions({
           petition.creatorId,
           petition.title,
           updateData.status,
-          notes
+          notes,
+          'ar', // locale - always use Arabic
         );
       } catch (notificationError) {
         console.error('Error sending notification:', notificationError);

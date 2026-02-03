@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
@@ -26,10 +27,17 @@ import {
   generateImagePath,
   deleteImage,
 } from '@/lib/storage';
+import { getMaxImages } from '@/lib/tier-restrictions';
+import { UpgradeModal } from '@/components/ui/UpgradeModal';
 import { useTranslation } from '@/hooks/useTranslation';
 import { isAuthenticated } from '@/lib/auth-mock';
 import PayPalPayment from '@/components/petitions/PayPalPayment';
 import StripePayment from '@/components/petitions/StripePayment';
+import { useChannelPreview, ChannelPreview } from '@/hooks/useChannelPreview';
+import {
+  InfluencerCard,
+  InfluencerCardSkeleton,
+} from '@/components/ui/InfluencerCard';
 
 // Subcategories for each main category
 const SUBCATEGORIES: Record<string, string[]> = {
@@ -98,8 +106,98 @@ const SUBCATEGORIES: Record<string, string[]> = {
   ],
 };
 
+// Template data for pre-filling forms (matches influencers page)
+const PETITION_TEMPLATES: Record<
+  string,
+  {
+    title: string;
+    description: string;
+    category: string;
+    subcategory: string;
+    petitionType: string;
+    addressedToType: string;
+    addressedToSpecific: string;
+    targetSignatures: number;
+    tags: string;
+  }
+> = {
+  '1': {
+    title: 'حماية الغابات المغربية من التصحر',
+    description:
+      'مبادرة لحماية الغابات المغربية وزراعة مليون شجرة جديدة لمكافحة التصحر والحفاظ على التنوع البيولوجي.\n\nنطالب بـ:\n- برنامج شامل لزراعة الأشجار\n- حماية الغابات الموجودة من القطع الجائر\n- توعية المجتمعات المحلية\n- استثمار في الطاقات المتجددة\n- سياسات بيئية صارمة',
+    category: 'Environment',
+    subcategory: 'Climate Change',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الانتقال الطاقي والتنمية المستدامة',
+    targetSignatures: 10000,
+    tags: 'البيئة, الغابات, التصحر, الأشجار, المغرب',
+  },
+  '2': {
+    title: 'توفير الإنترنت المجاني في المدارس الريفية',
+    description:
+      'ضمان وصول جميع الطلاب للتعليم الرقمي من خلال توفير الإنترنت المجاني في المدارس الريفية.\n\nأهدافنا:\n- إنترنت مجاني في جميع المدارس الريفية\n- أجهزة كمبيوتر وتابلت للطلاب\n- تدريب المعلمين على التكنولوجيا\n- منصات تعليمية رقمية\n- تقليل الفجوة الرقمية',
+    category: 'Education',
+    subcategory: 'Educational Access',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة التربية الوطنية والتعليم الأولي والرياضة',
+    targetSignatures: 5000,
+    tags: 'التعليم, الإنترنت, المدارس الريفية, التكنولوجيا',
+  },
+  '3': {
+    title: 'تحسين خدمات الصحة النفسية للشباب',
+    description:
+      'توفير الدعم النفسي المجاني للشباب المغربي وتحسين خدمات الصحة النفسية.\n\nمطالبنا:\n- مراكز صحة نفسية مجانية\n- خط ساخن للدعم النفسي\n- برامج توعية في المدارس والجامعات\n- تدريب المختصين\n- إزالة وصمة العار حول الصحة النفسية',
+    category: 'Healthcare',
+    subcategory: 'Mental Health',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الصحة والحماية الاجتماعية',
+    targetSignatures: 7500,
+    tags: 'الصحة النفسية, الشباب, الدعم النفسي, الصحة',
+  },
+  '4': {
+    title: 'دعم حقوق الأشخاص ذوي الإعاقة',
+    description:
+      'تحسين إمكانية الوصول في الأماكن العامة ودعم حقوق الأشخاص ذوي الإعاقة.\n\nنطالب بـ:\n- مباني عامة قابلة للوصول\n- وسائل نقل مجهزة للإعاقة\n- فرص عمل متكافئة\n- تعليم شامل ومتاح\n- خدمات صحية متخصصة',
+    category: 'Social Justice',
+    subcategory: 'Disability Rights',
+    petitionType: 'Support',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة التضامن والإدماج الاجتماعي والأسرة',
+    targetSignatures: 3000,
+    tags: 'حقوق الإعاقة, إمكانية الوصول, العدالة الاجتماعية',
+  },
+  '5': {
+    title: 'تطوير النقل العمومي في المدن الكبرى',
+    description:
+      'نظام نقل عمومي صديق للبيئة وفعال في المدن المغربية الكبرى.\n\nمشروعنا يشمل:\n- حافلات كهربائية حديثة\n- شبكة مترو في المدن الكبرى\n- محطات ذكية ومريحة\n- تطبيق موحد للنقل\n- أسعار معقولة للجميع',
+    category: 'Infrastructure',
+    subcategory: 'Transportation',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة التجهيز والنقل واللوجستيك والماء',
+    targetSignatures: 15000,
+    tags: 'النقل العمومي, البيئة, المدن, المواصلات',
+  },
+  '6': {
+    title: 'الحفاظ على التراث الثقافي المغربي',
+    description:
+      'حماية المواقع التاريخية والتراث الشعبي المغربي للأجيال القادمة.\n\nأهدافنا:\n- ترميم المواقع التاريخية\n- توثيق التراث الشعبي\n- برامج تعليمية عن التراث\n- دعم الحرفيين التقليديين\n- تطوير السياحة الثقافية',
+    category: 'Culture',
+    subcategory: 'Cultural Heritage',
+    petitionType: 'Support',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الشباب والثقافة والتواصل',
+    targetSignatures: 2500,
+    tags: 'التراث, الثقافة المغربية, التاريخ, الحرف التقليدية',
+  },
+};
+
 export default function CreatePetitionPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     user,
     userProfile,
@@ -107,16 +205,24 @@ export default function CreatePetitionPage() {
     loading: authLoading,
   } = useAuth();
   const { t } = useTranslation();
+  const {
+    fetchPreview,
+    loading: channelLoading,
+    error: channelError,
+  } = useChannelPreview();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   // MVP: Phone verification state disabled
   // const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [formData, setFormData] = useState<PetitionFormData>({
     publisherType: '',
     publisherName: '',
     officialDocument: undefined,
+    socialMediaUrl: '',
+    channelData: undefined,
     petitionType: '',
     addressedToType: '',
     addressedToSpecific: '',
@@ -146,6 +252,11 @@ export default function CreatePetitionPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [showPayment, setShowPayment] = useState(false);
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponError, setCouponError] = useState('');
 
   // Accordion state - only one section can be open at a time
   const [openAccordion, setOpenAccordion] = useState<'pricing' | 'tips' | null>(
@@ -406,6 +517,33 @@ export default function CreatePetitionPage() {
     loadCategories();
   }, []);
 
+  // Load template data from URL parameters
+  useEffect(() => {
+    const templateId = searchParams.get('template');
+    if (templateId && PETITION_TEMPLATES[templateId]) {
+      const template = PETITION_TEMPLATES[templateId];
+      console.log('🎯 Loading petition template:', templateId, template);
+
+      setFormData((prev) => ({
+        ...prev,
+        title: template.title,
+        description: template.description,
+        category: template.category,
+        subcategory: template.subcategory,
+        petitionType: template.petitionType,
+        addressedToType: template.addressedToType,
+        addressedToSpecific: template.addressedToSpecific,
+        targetSignatures: template.targetSignatures,
+        tags: template.tags,
+      }));
+
+      // Navigate to content step (step 2) since basic info is pre-filled
+      setCurrentStep(2);
+
+      console.log('✅ Template loaded and navigated to content step');
+    }
+  }, [searchParams]);
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -507,6 +645,56 @@ export default function CreatePetitionPage() {
     return match ? match[1] : null;
   };
 
+  // URL validation helper
+  const isValidUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Coupon validation function - calls API to validate against Firestore
+  const validateCoupon = async (code: string) => {
+    try {
+      const response = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.valid) {
+        setCouponDiscount(data.discount);
+        setCouponCode(code.toUpperCase().trim()); // Store the validated coupon code
+        setCouponError('');
+        console.log('✅ Coupon validated:', code, 'Discount:', data.discount);
+        return true;
+      } else {
+        setCouponDiscount(0);
+        setCouponError(data.error || 'كود الكوبون غير صالح');
+        console.log('❌ Coupon validation failed:', data.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error validating coupon:', error);
+      setCouponDiscount(0);
+      setCouponError('حدث خطأ في التحقق من الكوبون');
+      return false;
+    }
+  };
+
+  const applyCoupon = async () => {
+    if (couponCode.trim()) {
+      const isValid = await validateCoupon(couponCode.trim());
+      if (isValid) {
+        console.log('🎟️ Coupon applied successfully:', couponCode.trim());
+      }
+    }
+  };
+
   // Step navigation functions
   const nextStep = () => {
     if (currentStep < formSteps.length - 1) {
@@ -529,6 +717,31 @@ export default function CreatePetitionPage() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Get current tier - default to free if no target signatures set yet
+    const currentTier =
+      formData.targetSignatures > 0
+        ? calculatePricingTier(formData.targetSignatures)
+        : 'free';
+    const maxImages = getMaxImages(currentTier);
+
+    // Check if user has reached their image limit
+    if (formData.mediaUrls.length >= maxImages) {
+      // If no tier selected yet (targetSignatures = 0 or default 1000), show info about upgrading
+      if (formData.targetSignatures <= 1000) {
+        setError(t('form.imageLimit.needMoreInfo'));
+        return;
+      }
+
+      if (currentTier === 'free') {
+        // Show upgrade modal for free users
+        setShowUpgradeModal(true);
+        return;
+      } else {
+        setError(`Maximum ${maxImages} images allowed for your tier.`);
+        return;
+      }
+    }
 
     console.log('📤 Starting image upload for file:', file.name);
     setUploadingImage(true);
@@ -555,9 +768,9 @@ export default function CreatePetitionPage() {
       setFormData((prev) => {
         const updated = {
           ...prev,
-          mediaUrls: [imageUrl],
+          mediaUrls: [...prev.mediaUrls, imageUrl], // Add to array instead of replacing
         };
-        console.log('✅ Updating formData.mediaUrls to:', [imageUrl]);
+        console.log('✅ Updating formData.mediaUrls to:', updated.mediaUrls);
         console.log('📊 Full updated formData:', updated);
         return updated;
       });
@@ -571,21 +784,19 @@ export default function CreatePetitionPage() {
     }
   };
 
-  const removeImage = async () => {
-    // Delete the image from Firebase Storage if it exists
-    if (formData.mediaUrls.length > 0) {
-      try {
-        await deleteImage(formData.mediaUrls[0]);
-        console.log('✅ Image deleted from storage');
-      } catch (err) {
-        console.error('❌ Error deleting image from storage:', err);
-        // Continue anyway as the form state should still be updated
-      }
+  const removeImage = async (imageUrl: string, index: number) => {
+    // Delete the image from Firebase Storage
+    try {
+      await deleteImage(imageUrl);
+      console.log('✅ Image deleted from storage');
+    } catch (err) {
+      console.error('❌ Error deleting image from storage:', err);
+      // Continue anyway as the form state should still be updated
     }
 
     setFormData((prev) => ({
       ...prev,
-      mediaUrls: [],
+      mediaUrls: prev.mediaUrls.filter((_, i) => i !== index),
     }));
   };
 
@@ -699,6 +910,27 @@ export default function CreatePetitionPage() {
         step: 0,
         field: 'officialDocument',
         message: t('form.uploadDocumentError'),
+      });
+    }
+    if (
+      formData.publisherType === 'Influencer' &&
+      !formData.socialMediaUrl?.trim()
+    ) {
+      validationErrors.push({
+        step: 0,
+        field: 'socialMediaUrl',
+        message: t('form.enterSocialMediaUrlError'),
+      });
+    }
+    if (
+      formData.publisherType === 'Influencer' &&
+      formData.socialMediaUrl?.trim() &&
+      !isValidUrl(formData.socialMediaUrl)
+    ) {
+      validationErrors.push({
+        step: 0,
+        field: 'socialMediaUrl',
+        message: t('form.invalidSocialMediaUrlError'),
       });
     }
 
@@ -824,6 +1056,30 @@ export default function CreatePetitionPage() {
           : formData.subcategory,
     };
 
+    // ENFORCE IMAGE LIMIT: Trim mediaUrls based on tier
+    const currentTier = calculatePricingTier(formData.targetSignatures);
+    const maxImages = getMaxImages(currentTier);
+    if (submissionData.mediaUrls.length > maxImages) {
+      console.log(
+        `⚠️ Trimming images from ${submissionData.mediaUrls.length} to ${maxImages} for ${currentTier} tier`,
+      );
+
+      // Delete extra images from Firebase Storage
+      const extraImages = submissionData.mediaUrls.slice(maxImages);
+      for (const imageUrl of extraImages) {
+        try {
+          await deleteImage(imageUrl);
+          console.log('🗑️ Deleted extra image:', imageUrl);
+        } catch (err) {
+          console.error('Error deleting extra image:', err);
+        }
+      }
+
+      // Keep only allowed number of images
+      submissionData.mediaUrls = submissionData.mediaUrls.slice(0, maxImages);
+      console.log('✅ Images trimmed to:', submissionData.mediaUrls);
+    }
+
     console.log('✅ Form data prepared for submission');
 
     // Check if payment is required
@@ -878,6 +1134,42 @@ export default function CreatePetitionPage() {
         } catch (updateError) {
           console.error('❌ Error updating petition status:', updateError);
           // Don't fail the whole process if status update fails
+        }
+
+        // Mark coupon as used if one was applied
+        if (couponCode && couponDiscount > 0) {
+          console.log('🎟️ Attempting to mark coupon as used...');
+          console.log('  - Coupon Code:', couponCode);
+          console.log('  - Discount:', couponDiscount);
+          console.log('  - User ID:', user!.uid);
+
+          try {
+            const response = await fetch('/api/coupons/use', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                code: couponCode,
+                userId: user!.uid,
+              }),
+            });
+
+            const data = await response.json();
+            console.log('  - API Response:', response.status, data);
+
+            if (response.ok) {
+              console.log('✅ Coupon marked as used successfully');
+            } else {
+              console.error('❌ Failed to mark coupon as used:', data.error);
+              // Don't fail the whole process if coupon tracking fails
+            }
+          } catch (couponError) {
+            console.error('❌ Error marking coupon as used:', couponError);
+            // Don't fail the whole process if coupon tracking fails
+          }
+        } else {
+          console.log('ℹ️ No coupon to mark as used');
+          console.log('  - Coupon Code:', couponCode);
+          console.log('  - Discount:', couponDiscount);
         }
       }
 
@@ -945,17 +1237,58 @@ export default function CreatePetitionPage() {
             if (e.target.value !== formData.publisherType) {
               handleInputChange('publisherName', '');
               handleInputChange('officialDocument', undefined);
+              handleInputChange('socialMediaUrl', '');
             }
           }}
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
         >
           <option value="">{t('form.selectPublisherType')}</option>
           <option value="Individual">{t('form.individual')}</option>
+          <option value="Influencer">{t('form.influencer')}</option>
           <option value="Association, Organization, Institution">
             {t('form.organization')}
           </option>
         </select>
       </div>
+
+      {/* Influencer Coupon Request Alert */}
+      {formData.publisherType === 'Influencer' && (
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-300 rounded-lg p-4">
+          <div className="flex items-center gap-4">
+            <span className="text-2xl">🌟</span>
+            <div className="flex-1">
+              <h3 className="font-semibold text-purple-900 mb-1">
+                {t('influencer.couponAlert.title')}
+              </h3>
+              <p className="text-sm text-purple-700 mb-1">
+                {t('influencer.couponAlert.description')}
+              </p>
+              <p className="text-xs text-purple-600 italic">
+                {t('influencer.couponAlert.orContinue')}
+              </p>
+            </div>
+            <Link
+              href="/contact?reason=influencer-coupon"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors text-sm whitespace-nowrap"
+            >
+              {t('influencer.couponAlert.button')}
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Publisher Name - Conditional */}
       {formData.publisherType && (
@@ -963,7 +1296,9 @@ export default function CreatePetitionPage() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {formData.publisherType === 'Individual'
               ? t('form.yourName')
-              : t('form.organizationName')}{' '}
+              : formData.publisherType === 'Influencer'
+                ? t('form.influencerName')
+                : t('form.organizationName')}{' '}
             *
           </label>
           <input
@@ -974,7 +1309,9 @@ export default function CreatePetitionPage() {
             placeholder={
               formData.publisherType === 'Individual'
                 ? t('form.enterFullName')
-                : t('form.enterOrganizationName')
+                : formData.publisherType === 'Influencer'
+                  ? t('form.enterInfluencerName')
+                  : t('form.enterOrganizationName')
             }
             maxLength={100}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
@@ -985,6 +1322,110 @@ export default function CreatePetitionPage() {
               max: 100,
             })}
           </p>
+        </div>
+      )}
+
+      {/* Social Media URL - For Influencers Only */}
+      {formData.publisherType === 'Influencer' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {t('form.socialMediaUrl')} *
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="url"
+              required
+              value={formData.socialMediaUrl || ''}
+              onChange={async (e) => {
+                const url = e.target.value;
+                handleInputChange('socialMediaUrl', url);
+
+                // Clear previous channel data when URL changes
+                if (formData.channelData) {
+                  handleInputChange('channelData', undefined);
+                }
+
+                // Auto-fetch preview when URL looks complete
+                if (url && url.includes('.') && url.length > 10) {
+                  try {
+                    const channelData = await fetchPreview(url);
+                    if (channelData) {
+                      handleInputChange('channelData', channelData);
+                    }
+                  } catch (error) {
+                    console.log('Preview fetch failed:', error);
+                  }
+                }
+              }}
+              placeholder={t('form.enterSocialMediaUrl')}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+            />
+            {formData.socialMediaUrl &&
+              !formData.channelData &&
+              !channelLoading && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (formData.socialMediaUrl) {
+                      const channelData = await fetchPreview(
+                        formData.socialMediaUrl,
+                      );
+                      if (channelData) {
+                        handleInputChange('channelData', channelData);
+                      }
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                >
+                  {t('influencer.loadProfile') || 'Load Profile'}
+                </button>
+              )}
+          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            {t('form.socialMediaUrlHelp')}
+          </p>
+
+          {/* Channel Loading State */}
+          {channelLoading && (
+            <div className="mt-3">
+              <InfluencerCardSkeleton />
+              <p className="text-sm text-blue-600 mt-2">
+                {t('influencer.loadingProfile')}
+              </p>
+            </div>
+          )}
+
+          {/* Channel Error State */}
+          {channelError && (
+            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">
+                {t('influencer.failedToLoad')}: {channelError}
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (formData.socialMediaUrl) {
+                    const channelData = await fetchPreview(
+                      formData.socialMediaUrl,
+                    );
+                    if (channelData) {
+                      handleInputChange('channelData', channelData);
+                    }
+                  }
+                }}
+                className="text-sm text-red-600 hover:text-red-800 underline mt-1"
+              >
+                {t('influencer.tryAgain')}
+              </button>
+            </div>
+          )}
+
+          {/* Channel Preview Card */}
+          {formData.channelData && (
+            <div className="mt-3">
+              <InfluencerCard channelData={formData.channelData} />
+            </div>
+          )}
         </div>
       )}
 
@@ -1401,62 +1842,23 @@ export default function CreatePetitionPage() {
     </div>
   );
 
-  const renderMediaStep = () => (
-    <div className="space-y-6">
-      {/* Petition Image */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t('form.petitionImage')}
-        </label>
-        {formData.mediaUrls && formData.mediaUrls.length > 0 && (
-          <div className="mb-4 relative">
-            <img
-              src={formData.mediaUrls[0]}
-              alt="Petition preview"
-              className="w-full h-48 object-cover rounded-lg border"
-            />
-            <button
-              type="button"
-              onClick={removeImage}
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        )}
+  const renderMediaStep = () => {
+    // Default to free tier (1 image) until user selects target signatures
+    const currentTier =
+      formData.targetSignatures > 0
+        ? calculatePricingTier(formData.targetSignatures)
+        : 'free';
+    const maxImages = getMaxImages(currentTier);
+    const canAddMore = formData.mediaUrls.length < maxImages;
+    const hasExtraImages = formData.mediaUrls.length > 1;
 
-        {/* Custom File Upload Button */}
-        <div className="relative">
-          <input
-            type="file"
-            id="petition-image-upload"
-            accept="image/*"
-            onChange={handleImageUpload}
-            disabled={uploadingImage}
-            className="hidden"
-          />
-          <label
-            htmlFor="petition-image-upload"
-            className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-              uploadingImage
-                ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
-                : 'border-green-500 bg-green-50 hover:bg-green-100'
-            }`}
-          >
+    return (
+      <div className="space-y-6">
+        {/* Info Message about Image Limits */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
             <svg
-              className={`w-5 h-5 ml-2 ${uploadingImage ? 'text-gray-400' : 'text-green-600'}`}
+              className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -1465,77 +1867,248 @@ export default function CreatePetitionPage() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span
-              className={`text-sm font-medium ${uploadingImage ? 'text-gray-500' : 'text-green-700'}`}
-            >
-              {formData.mediaUrls && formData.mediaUrls.length > 0
-                ? t('form.changeFile')
-                : t('form.chooseFile')}
-            </span>
-          </label>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-blue-900 mb-1">
+                {t('form.imageLimit.title')}
+              </p>
+              <p className="text-sm text-blue-700">
+                {t('form.imageLimit.description')}
+              </p>
+            </div>
+          </div>
         </div>
 
-        {uploadingImage && (
-          <div className="flex items-center mt-2 text-sm text-blue-600">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-            {t('form.uploadingImage')}
+        {/* Petition Images */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              {t('form.petitionImage')}
+            </label>
+            <span className="text-sm text-gray-500">
+              {formData.mediaUrls.length} / {maxImages} {t('form.images')}
+            </span>
           </div>
-        )}
-        <p className="text-sm text-gray-500 mt-1">
-          {t('form.petitionImageDesc')}
-        </p>
-      </div>
 
-      {/* YouTube Video */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t('form.addVideo')}
-        </label>
-        <input
-          type="url"
-          value={formData.youtubeVideoUrl || ''}
-          onChange={(e) => handleInputChange('youtubeVideoUrl', e.target.value)}
-          placeholder={t('form.youtubeUrlPlaceholder')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-        />
-        <p className="text-sm text-gray-500 mt-1">
-          {t('form.youtubeVideoDesc')}
-        </p>
+          {/* Image Grid */}
+          {formData.mediaUrls && formData.mediaUrls.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+              {formData.mediaUrls.map((url, index) => {
+                const isExcluded = index > 0 && currentTier === 'free';
+                return (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Petition image ${index + 1}`}
+                      className={`w-full h-32 object-cover rounded-lg border transition-all ${
+                        isExcluded ? 'opacity-40 grayscale' : ''
+                      }`}
+                    />
 
-        {/* YouTube Video Preview */}
-        {formData.youtubeVideoUrl && (
-          <div className="mt-4">
-            {isValidYouTubeUrl(formData.youtubeVideoUrl) ? (
-              <div
-                className="relative w-full"
-                style={{ paddingBottom: '56.25%' }}
+                    {/* Red X overlay for excluded images */}
+                    {isExcluded && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg">
+                        <div className="bg-red-500 rounded-full p-2">
+                          <svg
+                            className="w-8 h-8 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={3}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => removeImage(url, index)}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                    <div
+                      className={`absolute bottom-2 left-2 text-white text-xs px-2 py-1 rounded ${
+                        isExcluded ? 'bg-red-600' : 'bg-black bg-opacity-60'
+                      }`}
+                    >
+                      {index + 1}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Warning if user has multiple images but hasn't selected tier yet */}
+          {hasExtraImages && formData.targetSignatures === 0 && (
+            <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <svg
+                  className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-yellow-900 mb-1">
+                    {t('form.imageLimit.multipleWarning')}
+                  </p>
+                  <p className="text-sm text-yellow-700">
+                    {t('form.imageLimit.selectTierNext')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Custom File Upload Button */}
+          <div className="relative">
+            <input
+              type="file"
+              id="petition-image-upload"
+              accept="image/*"
+              onChange={handleImageUpload}
+              disabled={uploadingImage || !canAddMore}
+              className="hidden"
+            />
+            <label
+              htmlFor="petition-image-upload"
+              className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed rounded-lg transition-colors ${
+                uploadingImage || !canAddMore
+                  ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
+                  : 'border-green-500 bg-green-50 hover:bg-green-100 cursor-pointer'
+              }`}
+            >
+              <svg
+                className={`w-5 h-5 ml-2 ${uploadingImage || !canAddMore ? 'text-gray-400' : 'text-green-600'}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <iframe
-                  src={`https://www.youtube.com/embed/${getYouTubeVideoId(
-                    formData.youtubeVideoUrl,
-                  )}`}
-                  title="YouTube video player"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute top-0 left-0 w-full h-full rounded-lg"
-                ></iframe>
-              </div>
-            ) : (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm">
-                  {t('form.validYouTubeUrl')}
-                </p>
-              </div>
-            )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <span
+                className={`text-sm font-semibold ${uploadingImage || !canAddMore ? 'text-gray-700' : 'text-green-700'}`}
+              >
+                {uploadingImage
+                  ? t('form.uploading')
+                  : !canAddMore
+                    ? currentTier === 'free'
+                      ? t('form.upgradeForMore')
+                      : t('form.maxImagesReached')
+                    : formData.mediaUrls.length > 0
+                      ? t('form.addAnother')
+                      : t('form.chooseFile')}
+              </span>
+              {!canAddMore && currentTier === 'free' && (
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+            </label>
           </div>
-        )}
+
+          {uploadingImage && (
+            <div className="flex items-center mt-2 text-sm text-blue-600">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+              {t('form.uploadingImage')}
+            </div>
+          )}
+          <p className="text-sm text-gray-500 mt-1">
+            {t('form.petitionImageDesc')}
+          </p>
+        </div>
+
+        {/* YouTube Video */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {t('form.addVideo')}
+          </label>
+          <input
+            type="url"
+            value={formData.youtubeVideoUrl || ''}
+            onChange={(e) =>
+              handleInputChange('youtubeVideoUrl', e.target.value)
+            }
+            placeholder={t('form.youtubeUrlPlaceholder')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+          />
+          <p className="text-sm text-gray-500 mt-1">
+            {t('form.youtubeVideoDesc')}
+          </p>
+
+          {/* YouTube Video Preview */}
+          {formData.youtubeVideoUrl && (
+            <div className="mt-4">
+              {isValidYouTubeUrl(formData.youtubeVideoUrl) ? (
+                <div
+                  className="relative w-full"
+                  style={{ paddingBottom: '56.25%' }}
+                >
+                  <iframe
+                    src={`https://www.youtube.com/embed/${getYouTubeVideoId(
+                      formData.youtubeVideoUrl,
+                    )}`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute top-0 left-0 w-full h-full rounded-lg"
+                  ></iframe>
+                </div>
+              ) : (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">
+                    {t('form.validYouTubeUrl')}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderLocationStep = () => (
     <div className="space-y-6">
@@ -1943,195 +2516,438 @@ export default function CreatePetitionPage() {
     </div>
   );
 
-  const renderReviewStep = () => (
-    <div className="space-y-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-blue-800 mb-2">
-          {t('review.title')}
-        </h3>
-        <p className="text-blue-700">{t('review.subtitle')}</p>
-      </div>
+  const renderReviewStep = () => {
+    // Calculate pricing info inside the function
+    const price = calculatePetitionPrice(formData.targetSignatures);
+    const tier = calculatePricingTier(formData.targetSignatures);
+    const tierInfo = PRICING_TIERS[tier];
 
-      {/* Publisher Information */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <h4 className="font-semibold text-gray-800 mb-2">
-          {t('review.publisherInfo')}
-        </h4>
-        <p>
-          <strong>{t('review.type')}</strong>{' '}
-          {formData.publisherType === 'Individual'
-            ? t('form.individual')
-            : formData.publisherType ===
-                'Association, Organization, Institution'
-              ? t('form.organization')
-              : formData.publisherType}
-        </p>
-        <p>
-          <strong>{t('review.name')}</strong> {formData.publisherName}
-        </p>
-        {formData.officialDocument && (
-          <p>
-            <strong>{t('review.document')}</strong>{' '}
-            {formData.officialDocument.name}
-          </p>
-        )}
-      </div>
-
-      {/* Petition Details */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <h4 className="font-semibold text-gray-800 mb-2">
-          {t('review.petitionDetails')}
-        </h4>
-        <p>
-          <strong>{t('review.type')}</strong>{' '}
-          {formData.petitionType === 'Change'
-            ? t('form.change')
-            : formData.petitionType === 'Support'
-              ? t('form.support')
-              : formData.petitionType === 'Stop'
-                ? t('form.stop')
-                : formData.petitionType === 'Start'
-                  ? t('form.start')
-                  : formData.petitionType === 'Accountability'
-                    ? t('form.accountability')
-                    : formData.petitionType === 'Awareness'
-                      ? t('form.awareness')
-                      : formData.petitionType}
-        </p>
-        <p>
-          <strong>{t('review.addressedTo')}</strong>{' '}
-          {formData.addressedToType === 'Government'
-            ? t('form.government')
-            : formData.addressedToType === 'Company'
-              ? t('form.company')
-              : formData.addressedToType === 'Organization'
-                ? t('form.organizationOption')
-                : formData.addressedToType === 'Community'
-                  ? t('form.community')
-                  : formData.addressedToType === 'Individual'
-                    ? t('form.individualOption')
-                    : formData.addressedToType === 'Other'
-                      ? t('form.other')
-                      : formData.addressedToType}{' '}
-          - {formData.addressedToSpecific}
-        </p>
-        <p>
-          <strong>{t('review.category')}</strong>{' '}
-          {formData.category === 'Other'
-            ? customCategory
-            : t(`categories.${formData.category.toLowerCase()}`)}
-        </p>
-        {formData.subcategory && (
-          <p>
-            <strong>{t('review.subcategory')}</strong>{' '}
-            {formData.subcategory === 'Other'
-              ? customSubcategory
-              : formData.subcategory}
-          </p>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <h4 className="font-semibold text-gray-800 mb-2">
-          {t('review.content')}
-        </h4>
-        <p>
-          <strong>{t('review.petitionTitle')}</strong> {formData.title}
-        </p>
-        <div className="mt-2">
-          <strong>{t('review.description')}</strong>
-          <p className="mt-1 text-gray-700">{formData.description}</p>
+    return (
+      <div className="space-y-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">
+            {t('review.title')}
+          </h3>
+          <p className="text-blue-700">{t('review.subtitle')}</p>
         </div>
-      </div>
 
-      {/* Media */}
-      {((formData.mediaUrls && formData.mediaUrls.length > 0) ||
-        formData.youtubeVideoUrl) && (
+        {/* Publisher Information */}
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <h4 className="font-semibold text-gray-800 mb-2">
-            {t('review.media')}
+            {t('review.publisherInfo')}
           </h4>
-          {formData.mediaUrls && formData.mediaUrls.length > 0 && (
-            <div className="mb-2">
-              <p className="mb-2">{t('review.imageUploaded')}</p>
-              <img
-                src={formData.mediaUrls[0]}
-                alt="Petition preview"
-                className="w-full max-w-md h-32 object-cover rounded-lg border"
-              />
+          <p>
+            <strong>{t('review.type')}</strong>{' '}
+            {formData.publisherType === 'Individual'
+              ? t('form.individual')
+              : formData.publisherType === 'Influencer'
+                ? t('form.influencer')
+                : formData.publisherType ===
+                    'Association, Organization, Institution'
+                  ? t('form.organization')
+                  : formData.publisherType}
+          </p>
+          <p>
+            <strong>{t('review.name')}</strong> {formData.publisherName}
+          </p>
+          {formData.publisherType === 'Influencer' && formData.channelData && (
+            <div>
+              <p className="font-semibold text-gray-700 mb-2">
+                {t('review.socialMedia')}
+              </p>
+              <InfluencerCard channelData={formData.channelData} size="small" />
             </div>
           )}
-          {formData.youtubeVideoUrl && <p>{t('review.youtubeAdded')}</p>}
-        </div>
-      )}
-
-      {/* Location & Targeting */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <h4 className="font-semibold text-gray-800 mb-2">
-          {t('review.locationTargeting')}
-        </h4>
-        <p>
-          <strong>{t('review.targetSignatures')}</strong>{' '}
-          {formData.targetSignatures?.toLocaleString()}
-        </p>
-        <p>
-          <strong>{t('review.location')}</strong>{' '}
-          {formData.location?.city
-            ? `${
-                formData.location.city === 'Kingdom of Morocco'
-                  ? t('city.kingdomOfMorocco')
-                  : formData.location.city === 'Other'
-                    ? t('city.other')
-                    : t(
-                        `city.${formData.location.city.toLowerCase().replace(/\s+/g, '')}`,
-                      )
-              }, ${formData.location.country === 'Morocco' ? t('common.morocco') : formData.location.country}`
-            : formData.location?.country === 'Morocco'
-              ? t('common.morocco')
-              : formData.location?.country || t('review.notSpecified')}
-        </p>
-        {formData.tags && formData.tags.trim() && (
-          <div>
-            <p className="font-semibold text-gray-700 mb-2">
-              {t('review.tags')}
+          {formData.publisherType === 'Influencer' &&
+            formData.socialMediaUrl &&
+            !formData.channelData && (
+              <p>
+                <strong>{t('review.socialMedia')}</strong>{' '}
+                <a
+                  href={formData.socialMediaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  {formData.socialMediaUrl}
+                </a>
+              </p>
+            )}
+          {formData.officialDocument && (
+            <p>
+              <strong>{t('review.document')}</strong>{' '}
+              {formData.officialDocument.name}
             </p>
-            <div className="flex flex-wrap gap-2">
-              {formData.tags
-                .split(',')
-                .map((tag: string) => tag.trim())
-                .filter((tag: string) => tag.length > 0)
-                .map((tag: string, index: number) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700"
-                  >
-                    #{tag}
-                  </span>
-                ))}
+          )}
+        </div>
+
+        {/* Petition Details */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h4 className="font-semibold text-gray-800 mb-2">
+            {t('review.petitionDetails')}
+          </h4>
+          <p>
+            <strong>{t('review.type')}</strong>{' '}
+            {formData.petitionType === 'Change'
+              ? t('form.change')
+              : formData.petitionType === 'Support'
+                ? t('form.support')
+                : formData.petitionType === 'Stop'
+                  ? t('form.stop')
+                  : formData.petitionType === 'Start'
+                    ? t('form.start')
+                    : formData.petitionType === 'Accountability'
+                      ? t('form.accountability')
+                      : formData.petitionType === 'Awareness'
+                        ? t('form.awareness')
+                        : formData.petitionType}
+          </p>
+          <p>
+            <strong>{t('review.addressedTo')}</strong>{' '}
+            {formData.addressedToType === 'Government'
+              ? t('form.government')
+              : formData.addressedToType === 'Company'
+                ? t('form.company')
+                : formData.addressedToType === 'Organization'
+                  ? t('form.organizationOption')
+                  : formData.addressedToType === 'Community'
+                    ? t('form.community')
+                    : formData.addressedToType === 'Individual'
+                      ? t('form.individualOption')
+                      : formData.addressedToType === 'Other'
+                        ? t('form.other')
+                        : formData.addressedToType}{' '}
+            - {formData.addressedToSpecific}
+          </p>
+          <p>
+            <strong>{t('review.category')}</strong>{' '}
+            {formData.category === 'Other'
+              ? customCategory
+              : t(`categories.${formData.category.toLowerCase()}`)}
+          </p>
+          {formData.subcategory && (
+            <p>
+              <strong>{t('review.subcategory')}</strong>{' '}
+              {formData.subcategory === 'Other'
+                ? customSubcategory
+                : formData.subcategory}
+            </p>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h4 className="font-semibold text-gray-800 mb-2">
+            {t('review.content')}
+          </h4>
+          <p>
+            <strong>{t('review.petitionTitle')}</strong> {formData.title}
+          </p>
+          <div className="mt-2">
+            <strong>{t('review.description')}</strong>
+            <p className="mt-1 text-gray-700">{formData.description}</p>
+          </div>
+        </div>
+
+        {/* Media */}
+        {((formData.mediaUrls && formData.mediaUrls.length > 0) ||
+          formData.youtubeVideoUrl) && (
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <h4 className="font-semibold text-gray-800 mb-2">
+              {t('review.media')}
+            </h4>
+
+            {/* Warning if multiple images but free tier */}
+            {formData.mediaUrls &&
+              formData.mediaUrls.length > 1 &&
+              calculatePricingTier(formData.targetSignatures) === 'free' && (
+                <div className="mb-4 bg-red-50 border border-red-300 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <svg
+                      className="w-5 h-5 text-red-700 flex-shrink-0 mt-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="text-[18px] font-semibold text-red-900 mb-1">
+                        {t('review.imageLimit.warning')}
+                      </p>
+                      <p className="text-[16px] text-blue-800 mb-2">
+                        {t('review.imageLimit.freeTierLimit').replace(
+                          '{count}',
+                          formData.mediaUrls.length.toString(),
+                        )}
+                      </p>
+                      <p className="text-[16px] text-blue-800">
+                        {t('review.imageLimit.upgradeOrRemove')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            {formData.mediaUrls && formData.mediaUrls.length > 0 && (
+              <div className="mb-2">
+                <p className="mb-2">
+                  {formData.mediaUrls.length === 1
+                    ? t('review.imageUploaded')
+                    : t('review.imagesUploaded').replace(
+                        '{count}',
+                        formData.mediaUrls.length.toString(),
+                      )}
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {formData.mediaUrls.map((url, index) => {
+                    const isExcluded =
+                      index > 0 &&
+                      calculatePricingTier(formData.targetSignatures) ===
+                        'free';
+                    return (
+                      <div key={index} className="relative">
+                        <img
+                          src={url}
+                          alt={`Petition image ${index + 1}`}
+                          className={`w-full h-24 object-cover rounded-lg border transition-all ${
+                            isExcluded ? 'opacity-40 grayscale' : ''
+                          }`}
+                        />
+
+                        {/* Red X overlay for excluded images */}
+                        {isExcluded && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg">
+                            <div className="bg-red-500 rounded-full p-2">
+                              <svg
+                                className="w-6 h-6 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={3}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+
+                        <div
+                          className={`absolute bottom-1 left-1 text-white text-xs px-1.5 py-0.5 rounded ${
+                            isExcluded ? 'bg-red-600' : 'bg-black bg-opacity-60'
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Edit Photos Button - Show when free tier has multiple images */}
+                {formData.mediaUrls.length > 1 &&
+                  calculatePricingTier(formData.targetSignatures) ===
+                    'free' && (
+                    <div className="mt-4 space-y-3">
+                      {/* Red button - Edit Photos */}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(3)} // Step 3 is Media step
+                        className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                          />
+                        </svg>
+                        {t('review.editPhotos')}
+                      </button>
+
+                      {/* Green button - Upgrade Tier */}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(4)} // Step 4 is Location & Targeting (where target signatures/tier is set)
+                        className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                          />
+                        </svg>
+                        {t('review.upgradeTier')}
+                      </button>
+                    </div>
+                  )}
+              </div>
+            )}
+            {formData.youtubeVideoUrl && <p>{t('review.youtubeAdded')}</p>}
+          </div>
+        )}
+
+        {/* Location & Targeting */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h4 className="font-semibold text-gray-800 mb-2">
+            {t('review.locationTargeting')}
+          </h4>
+          <p>
+            <strong>{t('review.targetSignatures')}</strong>{' '}
+            {formData.targetSignatures?.toLocaleString()}
+          </p>
+          <p>
+            <strong>{t('review.location')}</strong>{' '}
+            {formData.location?.city
+              ? `${
+                  formData.location.city === 'Kingdom of Morocco'
+                    ? t('city.kingdomOfMorocco')
+                    : formData.location.city === 'Other'
+                      ? t('city.other')
+                      : t(
+                          `city.${formData.location.city.toLowerCase().replace(/\s+/g, '')}`,
+                        )
+                }, ${formData.location.country === 'Morocco' ? t('common.morocco') : formData.location.country}`
+              : formData.location?.country === 'Morocco'
+                ? t('common.morocco')
+                : formData.location?.country || t('review.notSpecified')}
+          </p>
+          {formData.tags && formData.tags.trim() && (
+            <div>
+              <p className="font-semibold text-gray-700 mb-2">
+                {t('review.tags')}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {formData.tags
+                  .split(',')
+                  .map((tag: string) => tag.trim())
+                  .filter((tag: string) => tag.length > 0)
+                  .map((tag: string, index: number) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Pricing */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <h4 className="font-semibold text-green-800 mb-2">
+            {t('review.pricingInfo')}
+          </h4>
+          <p className="text-green-700">
+            <strong>{t('review.totalCost')}</strong>{' '}
+            {price === 0
+              ? t('review.free')
+              : `${price} ${t('common.moroccanDirham')}`}
+          </p>
+          <p className="text-sm text-green-600 mt-1">
+            {t('review.tier')} {tier} | {t('review.plan')}{' '}
+            {tierInfo.nameKey ? t(tierInfo.nameKey) : tierInfo.name}
+          </p>
+        </div>
+
+        {/* Coupon Code Input - Only show if price > 0 and publisher is Influencer */}
+        {price > 0 && formData.publisherType === 'Influencer' && (
+          <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+            <h4 className="font-semibold text-purple-900 mb-3 flex items-center gap-2">
+              <span>🎟️</span>
+              <span>كود الخصم للمؤثرين</span>
+            </h4>
+
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => {
+                  setCouponCode(e.target.value);
+                  setCouponError('');
+                }}
+                placeholder="أدخل كود الكوبون"
+                className="flex-1 px-3 py-2 border border-purple-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+              <button
+                type="button"
+                onClick={applyCoupon}
+                className="px-4 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition-colors"
+              >
+                تطبيق
+              </button>
+            </div>
+
+            {couponError && (
+              <p className="text-sm text-red-600 mt-1">❌ {couponError}</p>
+            )}
+
+            {couponDiscount > 0 && (
+              <div className="mt-3 bg-white rounded-md p-3 border border-purple-200">
+                <p className="text-sm text-green-700 font-semibold mb-2">
+                  ✅ تم تطبيق الكوبون بنجاح!
+                </p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">السعر الأصلي:</span>
+                  <span className="text-gray-600 line-through">
+                    {price} درهم
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-purple-700">
+                    الخصم ({couponDiscount}%):
+                  </span>
+                  <span className="text-purple-700">
+                    -{Math.round((price * couponDiscount) / 100)} درهم
+                  </span>
+                </div>
+                <div className="flex justify-between text-lg font-bold mt-2 pt-2 border-t border-purple-200">
+                  <span className="text-gray-900">المجموع النهائي:</span>
+                  <span className="text-green-600">
+                    {Math.round((price * (100 - couponDiscount)) / 100)} درهم
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-purple-600 mt-2">
+              💡 ليس لديك كوبون؟{' '}
+              <Link
+                href="/contact?reason=influencer-coupon"
+                className="underline hover:text-purple-800"
+              >
+                اطلب كوبون الخصم هنا
+              </Link>
+            </p>
           </div>
         )}
       </div>
-
-      {/* Pricing */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-        <h4 className="font-semibold text-green-800 mb-2">
-          {t('review.pricingInfo')}
-        </h4>
-        <p className="text-green-700">
-          <strong>{t('review.totalCost')}</strong>{' '}
-          {price === 0
-            ? t('review.free')
-            : `${price} ${t('common.moroccanDirham')}`}
-        </p>
-        <p className="text-sm text-green-600 mt-1">
-          {t('review.tier')} {tier} | {t('review.plan')}{' '}
-          {tierInfo.nameKey ? t(tierInfo.nameKey) : tierInfo.name}
-        </p>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // Calculate pricing info
   const price = calculatePetitionPrice(formData.targetSignatures);
@@ -2165,6 +2981,7 @@ export default function CreatePetitionPage() {
             formData={formData}
             onPaymentSuccess={handlePaymentSuccess}
             onCancel={handlePaymentCancel}
+            couponDiscount={couponDiscount}
           />
         </div>
       )}
@@ -2427,7 +3244,11 @@ export default function CreatePetitionPage() {
                         {t('form.creatingPetition')}
                       </>
                     ) : price > 0 ? (
-                      `Proceed to Payment - ${formatCurrency(price)} ${t('common.moroccanDirham')}`
+                      `Proceed to Payment - ${formatCurrency(
+                        couponDiscount > 0
+                          ? Math.round((price * (100 - couponDiscount)) / 100)
+                          : price,
+                      )} ${t('common.moroccanDirham')}`
                     ) : (
                       t('form.createPetitionButton')
                     )}
@@ -2510,6 +3331,15 @@ export default function CreatePetitionPage() {
       </div>
 
       <Footer />
+
+      {/* Upgrade Modal for Image Limit */}
+      {showUpgradeModal && (
+        <UpgradeModal
+          feature="updates"
+          isOpen={true}
+          onClose={() => setShowUpgradeModal(false)}
+        />
+      )}
     </div>
   );
 }

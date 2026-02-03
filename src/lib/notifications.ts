@@ -46,7 +46,7 @@ export const createNotification = async (
   type: NotificationType,
   title: string,
   message: string,
-  data?: any
+  data?: any,
 ): Promise<string> => {
   try {
     const notificationData = {
@@ -61,7 +61,7 @@ export const createNotification = async (
 
     const docRef = await addDoc(
       collection(db, 'notifications'),
-      notificationData
+      notificationData,
     );
     return docRef.id;
   } catch (error) {
@@ -75,14 +75,14 @@ export const createNotification = async (
  */
 export const getUserNotifications = async (
   userId: string,
-  limit: number = 20
+  limit: number = 20,
 ): Promise<Notification[]> => {
   try {
     const notificationsRef = collection(db, 'notifications');
     const notificationsQuery = query(
       notificationsRef,
       where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
 
     const snapshot = await getDocs(notificationsQuery);
@@ -113,7 +113,7 @@ export const getUserNotifications = async (
  * Mark notification as read
  */
 export const markNotificationAsRead = async (
-  notificationId: string
+  notificationId: string,
 ): Promise<void> => {
   try {
     const notificationRef = doc(db, 'notifications', notificationId);
@@ -130,19 +130,19 @@ export const markNotificationAsRead = async (
  * Mark all user notifications as read
  */
 export const markAllNotificationsAsRead = async (
-  userId: string
+  userId: string,
 ): Promise<void> => {
   try {
     const notificationsRef = collection(db, 'notifications');
     const unreadQuery = query(
       notificationsRef,
       where('userId', '==', userId),
-      where('read', '==', false)
+      where('read', '==', false),
     );
 
     const snapshot = await getDocs(unreadQuery);
     const updatePromises = snapshot.docs.map((doc) =>
-      updateDoc(doc.ref, { read: true })
+      updateDoc(doc.ref, { read: true }),
     );
 
     await Promise.all(updatePromises);
@@ -157,13 +157,13 @@ export const markAllNotificationsAsRead = async (
  */
 export const subscribeToUserNotifications = (
   userId: string,
-  callback: (notifications: Notification[]) => void
+  callback: (notifications: Notification[]) => void,
 ) => {
   const notificationsRef = collection(db, 'notifications');
   const notificationsQuery = query(
     notificationsRef,
     where('userId', '==', userId),
-    orderBy('createdAt', 'desc')
+    orderBy('createdAt', 'desc'),
   );
 
   return onSnapshot(notificationsQuery, (snapshot) => {
@@ -195,27 +195,70 @@ export const notifyPetitionStatusChange = async (
   creatorId: string,
   petitionTitle: string,
   newStatus: string,
-  moderatorNotes?: string
+  moderatorNotes?: string,
+  locale: 'ar' | 'fr' = 'ar',
 ): Promise<void> => {
   let title = '';
   let message = '';
 
+  // Translation messages
+  const translations = {
+    ar: {
+      approved: {
+        title: '🎉 تمت الموافقة على العريضة!',
+        message: `تمت الموافقة على عريضتك "${petitionTitle}" ونشرها على المنصة.`,
+      },
+      paused: {
+        title: '⏸️ تم إيقاف العريضة مؤقتاً',
+        message: `تم إيقاف عريضتك "${petitionTitle}" مؤقتاً من قبل المشرفين.`,
+      },
+      deleted: {
+        title: '❌ تم حذف العريضة',
+        message: `تم حذف عريضتك "${petitionTitle}".`,
+      },
+      default: {
+        title: '📝 تم تحديث حالة العريضة',
+        message: `تم تحديث حالة عريضتك "${petitionTitle}" إلى ${newStatus}.`,
+      },
+    },
+    fr: {
+      approved: {
+        title: '🎉 Pétition Approuvée!',
+        message: `Votre pétition "${petitionTitle}" a été approuvée et est maintenant en ligne.`,
+      },
+      paused: {
+        title: '⏸️ Pétition Suspendue',
+        message: `Votre pétition "${petitionTitle}" a été suspendue par les modérateurs.`,
+      },
+      deleted: {
+        title: '❌ Pétition Supprimée',
+        message: `Votre pétition "${petitionTitle}" a été supprimée.`,
+      },
+      default: {
+        title: '📝 Statut de Pétition Mis à Jour',
+        message: `Le statut de votre pétition "${petitionTitle}" a été mis à jour à ${newStatus}.`,
+      },
+    },
+  };
+
+  const statusTranslations = translations[locale];
+
   switch (newStatus) {
     case 'approved':
-      title = '🎉 Petition Approved!';
-      message = `Your petition "${petitionTitle}" has been approved and is now live.`;
+      title = statusTranslations.approved.title;
+      message = statusTranslations.approved.message;
       break;
     case 'paused':
-      title = '⏸️ Petition Paused';
-      message = `Your petition "${petitionTitle}" has been paused by moderators.`;
+      title = statusTranslations.paused.title;
+      message = statusTranslations.paused.message;
       break;
     case 'deleted':
-      title = '❌ Petition Removed';
-      message = `Your petition "${petitionTitle}" has been removed.`;
+      title = statusTranslations.deleted.title;
+      message = statusTranslations.deleted.message;
       break;
     default:
-      title = '📝 Petition Status Updated';
-      message = `Your petition "${petitionTitle}" status has been updated to ${newStatus}.`;
+      title = statusTranslations.default.title;
+      message = statusTranslations.default.message;
   }
 
   if (moderatorNotes) {
@@ -232,7 +275,7 @@ export const notifyPetitionStatusChange = async (
       petitionTitle,
       newStatus,
       moderatorNotes,
-    }
+    },
   );
 };
 
@@ -244,17 +287,34 @@ export const notifySignatureMilestone = async (
   creatorId: string,
   petitionTitle: string,
   currentSignatures: number,
-  milestone: number
+  milestone: number,
+  locale: 'ar' | 'fr' = 'ar',
 ): Promise<void> => {
-  const title = `🎯 Milestone Reached!`;
-  const message = `Your petition "${petitionTitle}" has reached ${milestone}% of its goal with ${currentSignatures.toLocaleString()} signatures!`;
+  const translations = {
+    ar: {
+      title: '🎯 تم الوصول إلى هدف!',
+      message: `وصلت عريضتك "${petitionTitle}" إلى ${milestone}% من هدفها مع ${currentSignatures.toLocaleString()} توقيع!`,
+    },
+    fr: {
+      title: '🎯 Objectif Atteint!',
+      message: `Votre pétition "${petitionTitle}" a atteint ${milestone}% de son objectif avec ${currentSignatures.toLocaleString()} signatures!`,
+    },
+  };
 
-  await createNotification(creatorId, 'signature_milestone', title, message, {
-    petitionId,
-    petitionTitle,
-    currentSignatures,
-    milestone,
-  });
+  const t = translations[locale];
+
+  await createNotification(
+    creatorId,
+    'signature_milestone',
+    t.title,
+    t.message,
+    {
+      petitionId,
+      petitionTitle,
+      currentSignatures,
+      milestone,
+    },
+  );
 };
 
 /**
@@ -265,12 +325,23 @@ export const notifyNewComment = async (
   creatorId: string,
   petitionTitle: string,
   commenterName: string,
-  commentId: string
+  commentId: string,
+  locale: 'ar' | 'fr' = 'ar',
 ): Promise<void> => {
-  const title = '💬 New Comment';
-  const message = `${commenterName} commented on your petition "${petitionTitle}".`;
+  const translations = {
+    ar: {
+      title: '💬 تعليق جديد',
+      message: `${commenterName} علق على عريضتك "${petitionTitle}".`,
+    },
+    fr: {
+      title: '💬 Nouveau Commentaire',
+      message: `${commenterName} a commenté votre pétition "${petitionTitle}".`,
+    },
+  };
 
-  await createNotification(creatorId, 'new_comment', title, message, {
+  const t = translations[locale];
+
+  await createNotification(creatorId, 'new_comment', t.title, t.message, {
     petitionId,
     petitionTitle,
     commenterName,
@@ -285,7 +356,7 @@ export const sendEmailNotification = async (
   email: string,
   subject: string,
   message: string,
-  data?: any
+  data?: any,
 ): Promise<void> => {
   // This would integrate with an email service like SendGrid, Mailgun, etc.
   // For now, we'll just log it
@@ -315,7 +386,7 @@ export const sendPushNotification = async (
   userId: string,
   title: string,
   message: string,
-  data?: any
+  data?: any,
 ): Promise<void> => {
   // This would integrate with Firebase Cloud Messaging or similar
   console.log('Push notification:', {
@@ -384,14 +455,14 @@ export const notifyAdminsOfDeletionRequest = async (
   petitionTitle: string,
   creatorId: string,
   reason: string,
-  signatureCount: number
+  signatureCount: number,
 ): Promise<void> => {
   try {
     // Get all admin and moderator users
     const usersRef = collection(db, 'users');
     const adminsQuery = query(
       usersRef,
-      where('role', 'in', ['admin', 'moderator'])
+      where('role', 'in', ['admin', 'moderator']),
     );
     const adminsSnapshot = await getDocs(adminsQuery);
 
@@ -409,13 +480,13 @@ export const notifyAdminsOfDeletionRequest = async (
           reason,
           signatureCount,
           actionType: 'deletion_request',
-        }
-      )
+        },
+      ),
     );
 
     await Promise.all(notificationPromises);
     console.log(
-      `✅ Notified ${adminsSnapshot.size} admins of deletion request`
+      `✅ Notified ${adminsSnapshot.size} admins of deletion request`,
     );
   } catch (error) {
     console.error('Error notifying admins of deletion request:', error);
@@ -429,7 +500,7 @@ export const notifyAdminsOfDeletionRequest = async (
 export const notifyDeletionRequestApproved = async (
   petitionId: string,
   petitionTitle: string,
-  creatorId: string
+  creatorId: string,
 ): Promise<void> => {
   try {
     await createNotification(
@@ -441,7 +512,7 @@ export const notifyDeletionRequestApproved = async (
         petitionId,
         petitionTitle,
         actionType: 'deletion_approved',
-      }
+      },
     );
     console.log('✅ Notified creator of deletion approval');
   } catch (error) {
@@ -457,7 +528,7 @@ export const notifyDeletionRequestDenied = async (
   petitionId: string,
   petitionTitle: string,
   creatorId: string,
-  reason: string
+  reason: string,
 ): Promise<void> => {
   try {
     await createNotification(
@@ -470,7 +541,7 @@ export const notifyDeletionRequestDenied = async (
         petitionTitle,
         reason,
         actionType: 'deletion_denied',
-      }
+      },
     );
     console.log('✅ Notified creator of deletion denial');
   } catch (error) {

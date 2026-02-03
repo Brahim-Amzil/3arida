@@ -119,14 +119,6 @@ function ProfileDropdown({ user, userProfile, onLogout }: any) {
             <div className="font-medium">{t('profile.dashboard')}</div>
           </Link>
 
-          <Link
-            href="/dashboard"
-            onClick={() => setIsOpen(false)}
-            className="block px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            <div className="font-medium">{t('profile.myCampaigns')}</div>
-          </Link>
-
           {userProfile?.role === 'admin' && (
             <Link
               href="/admin"
@@ -288,6 +280,13 @@ function HeaderInner() {
               {t('petitions.startPetition')}
             </Link>
             <Link
+              href="/influencers"
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors flex items-center gap-1"
+            >
+              <span className="text-lg">🌟</span>
+              {t('nav.influencers')}
+            </Link>
+            <Link
               href="/pricing"
               className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
@@ -375,6 +374,14 @@ function HeaderInner() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {t('petitions.startPetition')}
+              </Link>
+              <Link
+                href="/influencers"
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors flex items-center gap-1"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="text-lg">🌟</span>
+                {t('nav.influencers')}
               </Link>
               <Link
                 href="/pricing"

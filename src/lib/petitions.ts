@@ -72,7 +72,7 @@ async function isReferenceCodeUnique(code: string): Promise<boolean> {
     const q = query(
       collection(db, PETITIONS_COLLECTION),
       where('referenceCode', '==', code),
-      limit(1)
+      limit(1),
     );
     const snapshot = await getDocs(q);
     return snapshot.empty;
@@ -112,13 +112,13 @@ const USERS_COLLECTION = 'users';
 export const createPetition = async (
   petitionData: PetitionFormData,
   creatorId: string,
-  creatorName: string
+  creatorName: string,
 ): Promise<Petition> => {
   // Validate petition data
   const validationErrors = validatePetitionData(petitionData);
   if (validationErrors.length > 0) {
     throw new Error(
-      `Validation failed: ${validationErrors.map((e) => e.message).join(', ')}`
+      `Validation failed: ${validationErrors.map((e) => e.message).join(', ')}`,
     );
   }
 
@@ -126,7 +126,7 @@ export const createPetition = async (
     const now = new Date();
     const pricingTier = calculatePricingTier(petitionData.targetSignatures);
     const amountRequired = calculatePetitionPrice(
-      petitionData.targetSignatures
+      petitionData.targetSignatures,
     );
 
     // Generate unique reference code
@@ -152,6 +152,8 @@ export const createPetition = async (
       // Publisher information (from creation form)
       publisherType: petitionData.publisherType,
       publisherName: petitionData.publisherName,
+      socialMediaUrl: petitionData.socialMediaUrl,
+      channelData: petitionData.channelData,
 
       // Petition details (from creation form)
       petitionType: petitionData.petitionType,
@@ -201,7 +203,7 @@ export const createPetition = async (
         console.log('📄 Verification data:', verifyDoc.data());
       } else {
         console.log(
-          '❌ Verification: Document does not exist immediately after creation'
+          '❌ Verification: Document does not exist immediately after creation',
         );
       }
     } catch (verifyError) {
@@ -224,13 +226,13 @@ export const getPetitionById = async (id: string): Promise<Petition | null> => {
 
 export const getPetition = async (
   petitionIdOrSlug: string,
-  retryCount: number = 0
+  retryCount: number = 0,
 ): Promise<Petition | null> => {
   try {
     console.log(
       '🔍 Getting petition with ID/Slug:',
       petitionIdOrSlug,
-      retryCount > 0 ? `(retry ${retryCount})` : ''
+      retryCount > 0 ? `(retry ${retryCount})` : '',
     );
 
     // First, try direct lookup (in case it's a full document ID)
@@ -251,7 +253,7 @@ export const getPetition = async (
         // Query all petitions and find one with matching ID suffix
         const petitionsQuery = query(
           collection(db, PETITIONS_COLLECTION),
-          limit(100) // Limit to avoid large queries
+          limit(100), // Limit to avoid large queries
         );
 
         const querySnapshot = await getDocs(petitionsQuery);
@@ -438,7 +440,7 @@ export const getPetition = async (
 export const updatePetition = async (
   petitionId: string,
   updates: Partial<PetitionFormData>,
-  userId: string
+  userId: string,
 ): Promise<void> => {
   try {
     // First, verify the user owns this petition
@@ -464,7 +466,7 @@ export const updatePetition = async (
         throw new Error(
           `Validation failed: ${validationErrors
             .map((e) => e.message)
-            .join(', ')}`
+            .join(', ')}`,
         );
       }
     }
@@ -504,7 +506,7 @@ export const updatePetition = async (
  */
 export const deletePetition = async (
   petitionId: string,
-  userId: string
+  userId: string,
 ): Promise<void> => {
   try {
     // First, verify the user owns this petition
@@ -567,7 +569,7 @@ export const signPetition = async (
   },
   userId?: string,
   ipAddress: string = '',
-  userAgent: string = ''
+  userAgent: string = '',
 ): Promise<void> => {
   const now = new Date();
 
@@ -621,7 +623,7 @@ export const signPetition = async (
       petitionId,
       signerData.phone,
       ipAddress,
-      userAgent
+      userAgent,
     );
 
     if (!securityCheck.valid) {
@@ -655,7 +657,7 @@ export const signPetition = async (
         //   )}`,
         // });
         throw new Error(
-          'Your comment contains inappropriate content. Please revise and try again.'
+          'Your comment contains inappropriate content. Please revise and try again.',
         );
       }
     }
@@ -664,7 +666,7 @@ export const signPetition = async (
     if (userId) {
       const existingSignature = await checkExistingSignature(
         petitionId,
-        userId
+        userId,
       );
       if (existingSignature) {
         throw new Error('You have already signed this petition');
@@ -674,7 +676,7 @@ export const signPetition = async (
     // MVP: Skip phone number duplicate check to avoid friction
     // Phone verification is disabled for MVP, so phone-based duplicate check is not needed
     console.log(
-      'ℹ️ MVP: Skipping phone number duplicate check in signPetition'
+      'ℹ️ MVP: Skipping phone number duplicate check in signPetition',
     );
 
     // Create signature with security fingerprint
@@ -682,7 +684,7 @@ export const signPetition = async (
       signerData.phone,
       ipAddress,
       userAgent,
-      now
+      now,
     );
 
     const signatureData: any = {
@@ -724,7 +726,7 @@ export const signPetition = async (
     } catch (updateError) {
       console.warn(
         '⚠️ MVP: Could not update petition count (signature still valid):',
-        updateError
+        updateError,
       );
       // Don't throw error - signature was created successfully
       // The count will be updated when Firestore rules are deployed
@@ -747,12 +749,12 @@ export const signPetition = async (
               petition.creatorId,
               petition.title,
               newSignatureCount,
-              milestone
+              milestone,
             );
           } catch (notificationError) {
             console.error(
               'Error sending milestone notification:',
-              notificationError
+              notificationError,
             );
             // Don't fail the signature process if notification fails
           }
@@ -762,7 +764,7 @@ export const signPetition = async (
     } catch (milestoneError) {
       console.warn(
         '⚠️ MVP: Milestone notifications skipped (will work after rules deployment):',
-        milestoneError
+        milestoneError,
       );
     }
 
@@ -775,6 +777,32 @@ export const signPetition = async (
     //   userId,
     //   success: true,
     // });
+
+    // Send signature confirmation email (async, non-blocking)
+    if (userId) {
+      setTimeout(async () => {
+        try {
+          const signer = await getUserById(userId);
+          if (signer?.email) {
+            const { sendSignatureConfirmationEmail } =
+              await import('./email-notifications');
+            await sendSignatureConfirmationEmail(
+              signer.name,
+              signer.email,
+              petition.title,
+              petitionId,
+            );
+            console.log('✅ Signature confirmation email sent');
+          }
+        } catch (emailError) {
+          console.warn(
+            '⚠️ Could not send signature confirmation email:',
+            emailError,
+          );
+        }
+      }, 0);
+    }
+
     console.log('✅ Petition signed successfully');
   } catch (error) {
     console.error('Error signing petition:', error);
@@ -809,14 +837,14 @@ export const signPetition = async (
  */
 const checkExistingSignature = async (
   petitionId: string,
-  userId: string
+  userId: string,
 ): Promise<boolean> => {
   try {
     const q = query(
       collection(db, SIGNATURES_COLLECTION),
       where('petitionId', '==', petitionId),
       where('userId', '==', userId),
-      limit(1)
+      limit(1),
     );
 
     const querySnapshot = await getDocs(q);
@@ -832,14 +860,14 @@ const checkExistingSignature = async (
  */
 const checkPhoneSignature = async (
   petitionId: string,
-  phone: string
+  phone: string,
 ): Promise<boolean> => {
   try {
     const q = query(
       collection(db, SIGNATURES_COLLECTION),
       where('petitionId', '==', petitionId),
       where('signerPhone', '==', phone),
-      limit(1)
+      limit(1),
     );
 
     const querySnapshot = await getDocs(q);
@@ -855,7 +883,7 @@ const checkPhoneSignature = async (
  */
 export const getPetitions = async (
   filters: PetitionFilters = {},
-  pagination: PaginationInfo = { page: 1, limit: 12, total: 0, hasMore: false }
+  pagination: PaginationInfo = { page: 1, limit: 12, total: 0, hasMore: false },
 ): Promise<{ petitions: Petition[]; pagination: PaginationInfo }> => {
   try {
     let q = query(collection(db, PETITIONS_COLLECTION));
@@ -949,7 +977,7 @@ export const getPetitions = async (
       filteredPetitions = petitions.filter(
         (petition) =>
           petition.title.toLowerCase().includes(searchTerm) ||
-          petition.description.toLowerCase().includes(searchTerm)
+          petition.description.toLowerCase().includes(searchTerm),
       );
     }
 
@@ -957,7 +985,7 @@ export const getPetitions = async (
       filteredPetitions = filteredPetitions.filter(
         (petition) =>
           petition.location?.country === filters.location ||
-          petition.location?.city === filters.location
+          petition.location?.city === filters.location,
       );
     }
 
@@ -986,7 +1014,7 @@ export const getUserPetitions = async (userId: string): Promise<Petition[]> => {
     let q = query(
       collection(db, PETITIONS_COLLECTION),
       where('creatorId', '==', userId),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
 
     const querySnapshot = await getDocs(q);
@@ -1051,7 +1079,7 @@ export const updatePetitionStatus = async (
   petitionId: string,
   status: Petition['status'],
   moderatorId: string,
-  notes?: string
+  notes?: string,
 ): Promise<void> => {
   try {
     // Get petition details for audit log
@@ -1080,6 +1108,43 @@ export const updatePetitionStatus = async (
     }
 
     await updateDoc(docRef, updateData);
+
+    // Send email notification if petition was approved (async, non-blocking)
+    if (status === 'approved' && petition) {
+      setTimeout(async () => {
+        try {
+          const creator = await getUserById(petition.creatorId);
+          if (creator?.email) {
+            const { sendPetitionApprovedEmail } =
+              await import('./email-notifications');
+            await sendPetitionApprovedEmail(
+              creator.name,
+              creator.email,
+              petition.title,
+              petitionId,
+            );
+            console.log('✅ Petition approved email sent to creator');
+
+            // Send push notification
+            const { notifyPetitionApproved } =
+              await import('./unified-notifications');
+            await notifyPetitionApproved(
+              petition.creatorId,
+              creator.name,
+              petition.title,
+              petitionId,
+              'ar', // TODO: Get user's preferred locale
+            );
+            console.log('✅ Petition approved notification sent');
+          }
+        } catch (emailError) {
+          console.warn(
+            '⚠️ Could not send petition approved email:',
+            emailError,
+          );
+        }
+      }, 0);
+    }
 
     // Log the action (async, won't block)
     const moderator = await getUserById(moderatorId);
@@ -1118,7 +1183,7 @@ export const updatePetitionStatus = async (
  * Increment petition view count
  */
 export const incrementPetitionViews = async (
-  petitionId: string
+  petitionId: string,
 ): Promise<void> => {
   try {
     const docRef = doc(db, PETITIONS_COLLECTION, petitionId);
@@ -1136,7 +1201,7 @@ export const incrementPetitionViews = async (
  * Increment petition share count
  */
 export const incrementPetitionShares = async (
-  petitionId: string
+  petitionId: string,
 ): Promise<void> => {
   try {
     const docRef = doc(db, PETITIONS_COLLECTION, petitionId);
@@ -1167,7 +1232,7 @@ export const initializeCategories = async (): Promise<void> => {
           petitionCount: 0,
           createdAt: Timestamp.fromDate(now),
           updatedAt: Timestamp.fromDate(now),
-        })
+        }),
       );
 
       await Promise.all(promises);
@@ -1222,7 +1287,7 @@ export const getCategories = async (): Promise<Category[]> => {
     const petitionsRef = collection(db, PETITIONS_COLLECTION);
     const petitionsQuery = query(
       petitionsRef,
-      where('status', '==', 'approved')
+      where('status', '==', 'approved'),
     );
     const petitionsSnapshot = await getDocs(petitionsQuery);
 
@@ -1283,7 +1348,7 @@ export const getPetitionAnalytics = async (petitionId: string) => {
  */
 export const getRelatedPetitions = async (
   category: string,
-  excludeId?: string
+  excludeId?: string,
 ) => {
   try {
     // Mock implementation for now
@@ -1333,7 +1398,7 @@ export const getUserById = async (userId: string): Promise<User | null> => {
  */
 export const deletePetitionByCreator = async (
   petitionId: string,
-  userId: string
+  userId: string,
 ): Promise<void> => {
   try {
     const petitionRef = doc(db, PETITIONS_COLLECTION, petitionId);
@@ -1367,7 +1432,7 @@ export const deletePetitionByCreator = async (
  */
 export const archivePetition = async (
   petitionId: string,
-  userId: string
+  userId: string,
 ): Promise<void> => {
   try {
     const petitionRef = doc(db, PETITIONS_COLLECTION, petitionId);
@@ -1401,7 +1466,7 @@ export const archivePetition = async (
 export const requestPetitionDeletion = async (
   petitionId: string,
   userId: string,
-  reason: string
+  reason: string,
 ): Promise<void> => {
   try {
     // In a real implementation, this would create a deletion request

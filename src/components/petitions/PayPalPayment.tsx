@@ -27,6 +27,8 @@ export default function PayPalPayment({
   const { t } = useTranslation();
   const [error, setError] = useState<string>('');
   const [processing, setProcessing] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [termsError, setTermsError] = useState(false);
 
   const price = calculatePetitionPrice(formData.targetSignatures);
   const tier = calculatePricingTier(formData.targetSignatures);
@@ -185,6 +187,60 @@ export default function PayPalPayment({
 
           {/* PayPal Buttons */}
           <div className="space-y-4">
+            {/* Terms Agreement Checkbox */}
+            <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => {
+                    setAgreedToTerms(e.target.checked);
+                    if (e.target.checked) {
+                      setTermsError(false);
+                    }
+                  }}
+                  className={`mt-1 h-4 w-4 text-green-600 focus:ring-green-500 rounded ${
+                    termsError
+                      ? 'border-red-500 ring-2 ring-red-500'
+                      : 'border-gray-300'
+                  }`}
+                />
+                <span
+                  className={`text-sm ${termsError ? 'text-red-600' : 'text-gray-700'}`}
+                >
+                  {t('payment.agreeToTerms')}{' '}
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-600 hover:text-green-700 underline"
+                  >
+                    {t('payment.termsOfService')}
+                  </a>{' '}
+                  {t('payment.andAcknowledge')}{' '}
+                  <span className="font-semibold">
+                    {t('payment.noRefundPolicy')}
+                  </span>
+                </span>
+              </label>
+              {termsError && (
+                <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {t('payment.mustAgreeToTerms')}
+                </p>
+              )}
+            </div>
+
             <PayPalScriptProvider
               options={{
                 clientId: paypalClientId,
@@ -202,8 +258,15 @@ export default function PayPalPayment({
                 disabled={processing}
                 createOrder={async () => {
                   try {
+                    // Check if terms are agreed
+                    if (!agreedToTerms) {
+                      setTermsError(true);
+                      throw new Error(t('payment.mustAgreeToTerms'));
+                    }
+
                     setProcessing(true);
                     setError('');
+                    setTermsError(false);
 
                     // Create order via API
                     const response = await fetch('/api/paypal/create-order', {

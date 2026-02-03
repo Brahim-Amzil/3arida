@@ -5,6 +5,7 @@ import { Petition } from '@/types/petition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ContactModeratorModalProps {
   petition: Petition;
@@ -16,6 +17,7 @@ export default function ContactModeratorModal({
   onClose,
 }: ContactModeratorModalProps) {
   const { user, userProfile } = useAuth();
+  const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -25,7 +27,7 @@ export default function ContactModeratorModal({
     e.preventDefault();
 
     if (!message.trim()) {
-      setError('Please enter a message');
+      setError(t('contactModerator.errorMessage'));
       return;
     }
 
@@ -66,7 +68,7 @@ export default function ContactModeratorModal({
       setError(
         err instanceof Error
           ? err.message
-          : 'Failed to send message. Please try again.'
+          : 'Failed to send message. Please try again.',
       );
     } finally {
       setLoading(false);
@@ -82,7 +84,7 @@ export default function ContactModeratorModal({
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Contact Moderator</CardTitle>
+              <CardTitle>{t('contactModerator.title')}</CardTitle>
               <button
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-600 p-1"
@@ -119,11 +121,13 @@ export default function ContactModeratorModal({
                     {petition.title}
                   </h4>
                   <p className="text-sm text-gray-600 mb-2">
-                    Status:{' '}
+                    {t('contactModerator.status')}:{' '}
                     <span
                       className={`font-medium ${petition.status === 'paused' ? 'text-orange-600' : 'text-red-600'}`}
                     >
-                      {petition.status === 'paused' ? 'Paused' : 'Rejected'}
+                      {petition.status === 'paused'
+                        ? t('contactModerator.paused')
+                        : t('contactModerator.rejected')}
                     </span>
                   </p>
                   <a
@@ -132,7 +136,7 @@ export default function ContactModeratorModal({
                     rel="noopener noreferrer"
                     className="text-sm text-blue-600 hover:underline"
                   >
-                    View Petition →
+                    {t('contactModerator.viewPetition')} ←
                   </a>
                 </div>
               </div>
@@ -153,8 +157,11 @@ export default function ContactModeratorModal({
                         : 'text-red-800'
                     }`}
                   >
-                    Reason for{' '}
-                    {petition.status === 'paused' ? 'Pause' : 'Rejection'}:
+                    {t('contactModerator.reasonFor')}{' '}
+                    {petition.status === 'paused'
+                      ? t('contactModerator.pause')
+                      : t('contactModerator.rejection')}
+                    :
                   </p>
                   <p
                     className={`text-sm ${
@@ -173,12 +180,14 @@ export default function ContactModeratorModal({
                 petition.resubmissionCount !== undefined && (
                   <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
                     <p className="text-sm font-medium text-blue-800 mb-1">
-                      Resubmission Status:
+                      {t('contactModerator.resubmissionStatus')}:
                     </p>
                     <p className="text-sm text-blue-700">
                       {petition.resubmissionCount >= 3
-                        ? 'Maximum resubmission attempts reached (3/3). Please contact moderators for further assistance.'
-                        : `You have ${3 - petition.resubmissionCount} resubmission attempt(s) remaining.`}
+                        ? t('contactModerator.maxResubmissionReached')
+                        : t('contactModerator.resubmissionAttemptsRemaining', {
+                            count: 3 - petition.resubmissionCount,
+                          })}
                     </p>
                   </div>
                 )}
@@ -202,12 +211,11 @@ export default function ContactModeratorModal({
                     />
                   </svg>
                   <p className="text-sm text-green-800 font-medium">
-                    Appeal submitted successfully!
+                    {t('contactModerator.appealSubmittedSuccess')}
                   </p>
                 </div>
                 <p className="text-xs text-green-700 mr-7">
-                  A moderator will review your appeal and respond within 24-48
-                  hours. You can view your appeal status in your dashboard.
+                  {t('contactModerator.appealReviewMessage')}
                 </p>
               </div>
             )}
@@ -227,20 +235,19 @@ export default function ContactModeratorModal({
                     htmlFor="message"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Your Message to Moderators
+                    {t('contactModerator.yourMessage')}
                   </label>
                   <textarea
                     id="message"
                     rows={6}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Explain why you believe this petition should be unpaused. Include any relevant information or corrections..."
+                    placeholder={t('contactModerator.messagePlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     disabled={loading}
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Be clear and respectful. Include any information that might
-                    help moderators review your petition.
+                    {t('contactModerator.messageHelp')}
                   </p>
                 </div>
 
@@ -271,10 +278,10 @@ export default function ContactModeratorModal({
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
                         </svg>
-                        Sending...
+                        {t('contactModerator.sending')}
                       </>
                     ) : (
-                      'Send Message'
+                      t('contactModerator.sendMessage')
                     )}
                   </Button>
                   <Button
@@ -283,7 +290,7 @@ export default function ContactModeratorModal({
                     onClick={onClose}
                     disabled={loading}
                   >
-                    Cancel
+                    {t('contactModerator.cancel')}
                   </Button>
                 </div>
               </form>
@@ -307,18 +314,13 @@ export default function ContactModeratorModal({
                 </svg>
                 <div>
                   <h5 className="text-sm font-medium text-blue-800 mb-1">
-                    What happens next?
+                    {t('contactModerator.whatHappensNext')}
                   </h5>
                   <ul className="text-xs text-blue-700 space-y-1">
-                    <li>• Your message will be sent to the moderation team</li>
-                    <li>• A moderator will review your petition and appeal</li>
-                    <li>
-                      • You'll receive a response via email within 24-48 hours
-                    </li>
-                    <li>
-                      • If approved, your petition status will be updated
-                      accordingly
-                    </li>
+                    <li>• {t('contactModerator.step1')}</li>
+                    <li>• {t('contactModerator.step2')}</li>
+                    <li>• {t('contactModerator.step3')}</li>
+                    <li>• {t('contactModerator.step4')}</li>
                   </ul>
                 </div>
               </div>
