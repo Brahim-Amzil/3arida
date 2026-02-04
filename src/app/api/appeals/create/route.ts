@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, doc, getDoc, Timestamp } from 'firebase/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,10 +24,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Get petition data
-    const petitionRef = adminDb.collection('petitions').doc(petitionId);
-    const petitionSnap = await petitionRef.get();
+    const petitionRef = doc(db, 'petitions', petitionId);
+    const petitionSnap = await getDoc(petitionRef);
 
-    if (!petitionSnap.exists) {
+    if (!petitionSnap.exists()) {
       return NextResponse.json(
         { error: 'Petition not found' },
         { status: 404 },
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     const petitionData = petitionSnap.data();
 
     // Create appeal document
-    const now = new Date();
+    const now = Timestamp.now();
     const appealData = {
       petitionId,
       petitionTitle: petitionData?.title || 'Unknown Petition',
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
       updatedAt: now,
     };
 
-    const docRef = await adminDb.collection('appeals').add(appealData);
+    const docRef = await addDoc(collection(db, 'appeals'), appealData);
 
     return NextResponse.json(
       {
