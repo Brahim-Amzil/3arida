@@ -179,25 +179,3 @@ function cleanTitle(title: string, platform: string): string {
 
   return cleaned || 'Unknown Channel';
 }
-
-// Add platform icons/emojis for UI
-export function getPlatformIcon(platform: string): string {
-  switch (platform) {
-    case 'youtube':
-      return '📺';
-    case 'instagram':
-      return '📷';
-    case 'tiktok':
-      return '🎵';
-    case 'x':
-      return '🐦';
-    case 'facebook':
-      return '👥';
-    case 'linkedin':
-      return '💼';
-    case 'snapchat':
-      return '👻';
-    default:
-      return '🌐';
-  }
-}
