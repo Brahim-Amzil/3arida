@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, doc, getDoc, Timestamp } from 'firebase/firestore';
 
+// This route acts as a pass-through to allow client-side creation
+// The actual creation happens client-side with Firestore security rules
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { petitionId, message, userId, userName, userEmail } = body;
 
-    // Validation
+    // Validation only - actual creation happens client-side
     if (!petitionId || !message || !userId || !userName || !userEmail) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -23,68 +23,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get petition data
-    const petitionRef = doc(db, 'petitions', petitionId);
-    const petitionSnap = await getDoc(petitionRef);
-
-    if (!petitionSnap.exists()) {
-      return NextResponse.json(
-        { error: 'Petition not found' },
-        { status: 404 },
-      );
-    }
-
-    const petitionData = petitionSnap.data();
-
-    // Create appeal document
-    const now = Timestamp.now();
-    const appealData = {
-      petitionId,
-      petitionTitle: petitionData?.title || 'Unknown Petition',
-      creatorId: userId,
-      creatorName: userName,
-      creatorEmail: userEmail,
-      status: 'pending',
-      messages: [
-        {
-          id: `msg_${Date.now()}`,
-          senderId: userId,
-          senderName: userName,
-          senderRole: 'creator',
-          content: message.trim(),
-          createdAt: now,
-          isInternal: false,
-        },
-      ],
-      statusHistory: [
-        {
-          status: 'pending',
-          changedBy: userId,
-          changedAt: now,
-        },
-      ],
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    const docRef = await addDoc(collection(db, 'appeals'), appealData);
-
+    // Return success - client will handle the actual creation
     return NextResponse.json(
       {
         success: true,
-        appealId: docRef.id,
-        message: 'Appeal created successfully',
+        message: 'Validation passed',
       },
-      { status: 201 },
+      { status: 200 },
     );
   } catch (error) {
-    console.error('Create appeal error:', error);
+    console.error('Validate appeal error:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
 
     return NextResponse.json(
       {
-        error: 'Failed to create appeal',
+        error: 'Validation failed',
         details: errorMessage,
       },
       { status: 500 },

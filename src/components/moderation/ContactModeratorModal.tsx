@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useTranslation } from '@/hooks/useTranslation';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, doc, getDoc, Timestamp } from 'firebase/firestore';
 
 interface ContactModeratorModalProps {
   petition: Petition;
@@ -35,29 +37,57 @@ export default function ContactModeratorModal({
     setError('');
 
     try {
-      const response = await fetch('/api/appeals/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          petitionId: petition.id,
-          message: message.trim(),
-          userId: user?.uid,
-          userName:
-            userProfile?.name ||
-            user?.displayName ||
-            petition.creatorName ||
-            'Petition Creator',
-          userEmail: user?.email || 'no-reply@3arida.ma',
-        }),
-      });
+      // Get petition data
+      const petitionRef = doc(db, 'petitions', petition.id);
+      const petitionSnap = await getDoc(petitionRef);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create appeal');
+      if (!petitionSnap.exists()) {
+        throw new Error('Petition not found');
       }
+
+      const petitionData = petitionSnap.data();
+
+      // Create appeal document directly with Firestore
+      const now = Timestamp.now();
+      const appealData = {
+        petitionId: petition.id,
+        petitionTitle:
+          petitionData?.title || petition.title || 'Unknown Petition',
+        creatorId: user?.uid || '',
+        creatorName:
+          userProfile?.name ||
+          user?.displayName ||
+          petition.creatorName ||
+          'Petition Creator',
+        creatorEmail: user?.email || 'no-reply@3arida.ma',
+        status: 'pending',
+        messages: [
+          {
+            id: `msg_${Date.now()}`,
+            senderId: user?.uid || '',
+            senderName:
+              userProfile?.name ||
+              user?.displayName ||
+              petition.creatorName ||
+              'Petition Creator',
+            senderRole: 'creator',
+            content: message.trim(),
+            createdAt: now,
+            isInternal: false,
+          },
+        ],
+        statusHistory: [
+          {
+            status: 'pending',
+            changedBy: user?.uid || '',
+            changedAt: now,
+          },
+        ],
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      await addDoc(collection(db, 'appeals'), appealData);
 
       setSuccess(true);
       setTimeout(() => {
