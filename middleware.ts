@@ -1,110 +1,65 @@
-import createMiddleware from 'next-intl/middleware';
-import { NextRequest, NextResponse } from 'next/server';
-import { locales, defaultLocale } from './src/i18n';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// Create the internationalization middleware
-const intlMiddleware = createMiddleware({
-  locales,
-  defaultLocale,
-  localePrefix: 'as-needed', // Only add locale prefix when not default
-});
+// Simple in-memory rate limiting
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-// Define protected routes that require authentication
-const protectedRoutes = [
-  '/dashboard',
-  '/petitions/create',
-  '/profile',
+const RATE_LIMIT = 100; // requests per window
+const RATE_WINDOW = 60 * 1000; // 1 minute
+
+// Routes that bypass coming soon (admin access)
+const BYPASS_PATHS = [
+  '/coming-soon',
   '/admin',
-  '/moderator',
+  '/auth',
+  '/api',
+  '/_next',
+  '/favicon',
 ];
-
-// Define admin-only routes
-const adminRoutes = ['/admin'];
-
-// Define moderator routes (accessible by moderators and admins)
-const moderatorRoutes = ['/moderator', '/admin'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // First, handle internationalization
-  const intlResponse = intlMiddleware(request);
+  // --- COMING SOON MODE ---
+  // Set COMING_SOON=true in Vercel env vars to enable (server-side only, no NEXT_PUBLIC_ prefix)
+  const isComingSoon = process.env.COMING_SOON === 'true';
 
-  // Extract locale from pathname or use default
-  const locale = pathname.split('/')[1];
-  const isValidLocale = locales.includes(locale as any);
-  const pathWithoutLocale = isValidLocale ? pathname.slice(3) : pathname; // Remove /ar or /fr
-
-  // Check if the current path is protected (without locale prefix)
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathWithoutLocale.startsWith(route)
-  );
-
-  // Check if the current path is admin-only (without locale prefix)
-  const isAdminRoute = adminRoutes.some((route) =>
-    pathWithoutLocale.startsWith(route)
-  );
-
-  // Check if the current path is moderator route (without locale prefix)
-  const isModeratorRoute = moderatorRoutes.some((route) =>
-    pathWithoutLocale.startsWith(route)
-  );
-
-  // Get authentication token from cookies
-  const authToken = request.cookies.get('auth-token')?.value;
-  const userRole = request.cookies.get('user-role')?.value;
-
-  // If accessing protected route without auth token, redirect to login
-  if (isProtectedRoute && !authToken) {
-    const loginUrl = new URL(
-      `${isValidLocale ? `/${locale}` : ''}/auth/login`,
-      request.url
-    );
-    loginUrl.searchParams.set('redirect', pathWithoutLocale);
-    return NextResponse.redirect(loginUrl);
+  if (isComingSoon) {
+    const isBypassed = BYPASS_PATHS.some((p) => pathname.startsWith(p));
+    if (!isBypassed) {
+      return NextResponse.redirect(new URL('/coming-soon', request.url));
+    }
   }
 
-  // If accessing admin route without admin role, redirect to dashboard
-  if (isAdminRoute && userRole !== 'admin') {
-    return NextResponse.redirect(
-      new URL(`${isValidLocale ? `/${locale}` : ''}/dashboard`, request.url)
-    );
+  // --- RATE LIMITING ---
+  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+  const now = Date.now();
+
+  const rateLimit = rateLimitMap.get(ip);
+
+  if (!rateLimit || now > rateLimit.resetTime) {
+    rateLimitMap.set(ip, {
+      count: 1,
+      resetTime: now + RATE_WINDOW,
+    });
+  } else {
+    rateLimit.count++;
+
+    if (rateLimit.count > RATE_LIMIT) {
+      return new NextResponse('Too Many Requests', {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil((rateLimit.resetTime - now) / 1000)),
+        },
+      });
+    }
   }
 
-  // If accessing moderator route without moderator or admin role, redirect to dashboard
-  if (isModeratorRoute && !['moderator', 'admin'].includes(userRole || '')) {
-    return NextResponse.redirect(
-      new URL(`${isValidLocale ? `/${locale}` : ''}/dashboard`, request.url)
-    );
-  }
-
-  // If authenticated user tries to access auth pages, redirect to dashboard
-  if (authToken && pathWithoutLocale.startsWith('/auth/')) {
-    const redirectUrl =
-      request.nextUrl.searchParams.get('redirect') || '/dashboard';
-    return NextResponse.redirect(
-      new URL(`${isValidLocale ? `/${locale}` : ''}${redirectUrl}`, request.url)
-    );
-  }
-
-  // Return the internationalization response
-  return intlResponse;
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - manifest.json (PWA manifest)
-     * - sw.js (service worker)
-     * - workbox (service worker files)
-     * - firebase-messaging-sw.js (Firebase service worker)
-     * - public folder files (icons, images, etc)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox|firebase-messaging-sw.js|icon-.*\\.png|.*\\.svg|.*\\.jpg|.*\\.jpeg|.*\\.png|.*\\.gif|public).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg).*)',
   ],
 };
