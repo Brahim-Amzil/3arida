@@ -21,13 +21,19 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // --- COMING SOON MODE ---
-  // Set COMING_SOON=true in Vercel env vars to enable (server-side only, no NEXT_PUBLIC_ prefix)
-  const isComingSoon = process.env.COMING_SOON === 'true';
+  const isComingSoon = true; // Set to false to disable
 
   if (isComingSoon) {
     const isBypassed = BYPASS_PATHS.some((p) => pathname.startsWith(p));
     if (!isBypassed) {
-      return NextResponse.redirect(new URL('/coming-soon', request.url));
+      const response = NextResponse.redirect(
+        new URL('/coming-soon', request.url),
+      );
+      response.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate',
+      );
+      return response;
     }
   }
 
