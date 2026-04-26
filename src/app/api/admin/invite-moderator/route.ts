@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
     `;
 
     await resend.emails.send({
-      from: 'noreply@3arida.ma',
+      from: 'noreply@3arida.org',
       to: email,
       subject: emailSubject,
       html: emailHtml,

@@ -11,6 +11,7 @@ export default function AdminNav() {
   const { user, userProfile } = useAuth();
   const { t } = useTranslation();
   const [pendingAppealsCount, setPendingAppealsCount] = useState(0);
+  const [pendingPetitionsCount, setPendingPetitionsCount] = useState(0);
 
   const navItems = [
     {
@@ -226,6 +227,35 @@ export default function AdminNav() {
     return () => clearInterval(interval);
   }, [user]);
 
+  // Fetch pending petitions count
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchPendingPetitionsCount = async () => {
+      try {
+        const { collection, query, where, getDocs } =
+          await import('firebase/firestore');
+        const { db } = await import('@/lib/firebase');
+
+        const petitionsRef = collection(db, 'petitions');
+        const pendingQuery = query(
+          petitionsRef,
+          where('status', '==', 'pending'),
+        );
+        const snapshot = await getDocs(pendingQuery);
+        setPendingPetitionsCount(snapshot.size);
+      } catch (error) {
+        console.error('Error fetching pending petitions count:', error);
+      }
+    };
+
+    fetchPendingPetitionsCount();
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchPendingPetitionsCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   const isActive = (href: string) => {
     if (href === '/admin') {
       return pathname === '/admin';
@@ -271,6 +301,12 @@ export default function AdminNav() {
               >
                 {item.icon}
                 {item.name}
+                {item.name === t('admin.nav.petitions') &&
+                  pendingPetitionsCount > 0 && (
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                      {pendingPetitionsCount}
+                    </span>
+                  )}
                 {item.name === t('admin.nav.appeals') &&
                   pendingAppealsCount > 0 && (
                     <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">

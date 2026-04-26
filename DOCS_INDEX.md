@@ -1,11 +1,25 @@
 # 3arida Documentation Index
 
-**Last Updated:** February 3, 2026  
+**Last Updated:** February 4, 2026  
 Complete index of all project documentation organized by category.
 
 ---
 
-## 📊 PROGRESS TRACKING (START HERE)
+## 🚀 MVP LAUNCH SYSTEM (NEW!)
+
+### Feature Flags & MVP Mode
+
+- **[MVP-FEATURE-FLAGS-IMPLEMENTATION.md](MVP-FEATURE-FLAGS-IMPLEMENTATION.md)** ⭐ - Complete implementation guide
+- **[MVP-TO-PAID-MIGRATION-GUIDE.md](MVP-TO-PAID-MIGRATION-GUIDE.md)** ⭐ - How to switch between MVP and Paid
+- **[MVP-QUICK-REFERENCE.md](MVP-QUICK-REFERENCE.md)** - Quick reference card
+- **[.env.mvp.example](.env.mvp.example)** - MVP environment template
+- **[.env.paid.example](.env.paid.example)** - Paid environment template
+
+**What is this?** A feature flag system that lets you switch between FREE MVP and FULL PAID versions with one environment variable. No code changes, no data migration, fully reversible!
+
+---
+
+## 📊 PROGRESS TRACKING
 
 ### Current Status Files
 
@@ -153,6 +167,12 @@ Complete index of all project documentation organized by category.
 ## 🎯 Quick Navigation
 
 ### I want to...
+
+**Launch FREE MVP version**
+→ [`MVP-FEATURE-FLAGS-IMPLEMENTATION.md`](MVP-FEATURE-FLAGS-IMPLEMENTATION.md) ⭐ NEW!
+
+**Switch from MVP to Paid**
+→ [`MVP-TO-PAID-MIGRATION-GUIDE.md`](MVP-TO-PAID-MIGRATION-GUIDE.md) ⭐ NEW!
 
 **Set up WhatsApp verification**
 → [`WHATSAPP_DOCS/WHATSAPP-QUICK-START.md`](./WHATSAPP_DOCS/WHATSAPP-QUICK-START.md)

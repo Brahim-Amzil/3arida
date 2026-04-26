@@ -4,7 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/layout/HeaderWrapper';
+import Footer from '@/components/layout/Footer';
 import PetitionCard from '@/components/petitions/PetitionCard';
+import PetitionCardWithReport from '@/components/petitions/PetitionCardWithReport';
 import CreatorAppealsSection from '@/components/appeals/CreatorAppealsSection';
 import MySignaturesSection from '@/components/dashboard/MySignaturesSection';
 import { Button } from '@/components/ui/button';
@@ -140,6 +142,7 @@ export default function DashboardPage() {
     if (statusFilter === 'pending') return petition.status === 'pending';
     if (statusFilter === 'rejected') return petition.status === 'rejected';
     if (statusFilter === 'paused') return petition.status === 'paused';
+    if (statusFilter === 'closed') return petition.closedByCreator === true;
     if (statusFilter === 'deleted')
       return petition.status === 'deleted' || petition.deletedAt !== undefined;
     return true;
@@ -152,6 +155,7 @@ export default function DashboardPage() {
     pending: petitions.filter((p) => p.status === 'pending').length,
     rejected: petitions.filter((p) => p.status === 'rejected').length,
     paused: petitions.filter((p) => p.status === 'paused').length,
+    closed: petitions.filter((p) => p.closedByCreator === true).length,
     deleted: petitions.filter(
       (p) => p.status === 'deleted' || p.deletedAt !== undefined,
     ).length,
@@ -580,6 +584,30 @@ export default function DashboardPage() {
                 </span>
               </Button>
               <Button
+                variant={statusFilter === 'closed' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('closed')}
+                className="flex items-center gap-2"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                  />
+                </svg>
+                مغلقة من طرفي
+                <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                  {statusCounts.closed}
+                </span>
+              </Button>
+              <Button
                 variant={statusFilter === 'deleted' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setStatusFilter('deleted')}
@@ -648,7 +676,7 @@ export default function DashboardPage() {
             {!loading && !error && filteredPetitions.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredPetitions.map((petition) => (
-                  <PetitionCard
+                  <PetitionCardWithReport
                     key={petition.id}
                     petition={petition}
                     variant="grid"
@@ -734,6 +762,7 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

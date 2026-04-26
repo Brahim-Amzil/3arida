@@ -173,7 +173,7 @@ describe('QR Service', () => {
   describe('validateQRCodeUrl', () => {
     it('should validate correct petition URLs', () => {
       const validUrls = [
-        'https://3arida.ma/petitions/petition123',
+        'https://3arida.org/petitions/petition123',
         'http://localhost:3000/petitions/abc-def-123',
         'https://example.com/petitions/test-petition-456',
       ];
@@ -185,10 +185,10 @@ describe('QR Service', () => {
 
     it('should reject invalid URLs', () => {
       const invalidUrls = [
-        'https://3arida.ma/users/user123',
+        'https://3arida.org/users/user123',
         'https://example.com/admin/dashboard',
         'not-a-url',
-        'https://3arida.ma/petition/missing-s',
+        'https://3arida.org/petition/missing-s',
       ];
 
       invalidUrls.forEach((url) => {
@@ -201,7 +201,7 @@ describe('QR Service', () => {
     it('should extract petition ID from URL', () => {
       const testCases = [
         {
-          url: 'https://3arida.ma/petitions/save-environment-abc12345',
+          url: 'https://3arida.org/petitions/save-environment-abc12345',
           expected: 'abc12345',
         },
         {
@@ -218,10 +218,10 @@ describe('QR Service', () => {
 
     it('should return null for invalid URLs', () => {
       const invalidUrls = [
-        'https://3arida.ma/users/user123',
+        'https://3arida.org/users/user123',
         'not-a-url',
-        'https://3arida.ma/petitions/no-id-here',
-        'https://3arida.ma/petitions/short-id-123', // ID too short
+        'https://3arida.org/petitions/no-id-here',
+        'https://3arida.org/petitions/short-id-123', // ID too short
       ];
 
       invalidUrls.forEach((url) => {

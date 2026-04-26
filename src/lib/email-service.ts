@@ -26,7 +26,10 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
 
   try {
     const data = await client.emails.send({
-      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+      from:
+        process.env.EMAIL_FROM ||
+        process.env.FROM_EMAIL ||
+        'onboarding@resend.dev',
       to,
       subject,
       html,
@@ -44,12 +47,83 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
 export function getBaseEmailStyles() {
   return `
     <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
-      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-      .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-      .content { background: white; padding: 30px; border: 1px solid #e5e7eb; }
-      .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-      .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+      @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+      
+      * {
+        font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+      }
+      
+      body { 
+        font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+        direction: rtl;
+        text-align: right;
+        margin: 0;
+        padding: 0;
+      }
+      .container { 
+        max-width: 600px; 
+        margin: 0 auto; 
+        padding: 20px;
+        direction: rtl;
+        font-family: 'Cairo', sans-serif !important;
+      }
+      .header { 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        color: white; 
+        padding: 30px; 
+        text-align: center; 
+        border-radius: 8px 8px 0 0;
+        direction: rtl;
+        font-family: 'Cairo', sans-serif !important;
+      }
+      .header h1 {
+        font-family: 'Cairo', sans-serif !important;
+        margin: 0;
+      }
+      .content { 
+        background: white; 
+        padding: 30px; 
+        border: 1px solid #e5e7eb;
+        direction: rtl;
+        text-align: right;
+        font-family: 'Cairo', sans-serif !important;
+      }
+      .content h2,
+      .content h3,
+      .content p,
+      .content ul,
+      .content li,
+      .content div {
+        text-align: right;
+        direction: rtl;
+        font-family: 'Cairo', sans-serif !important;
+      }
+      .content ul {
+        padding-right: 20px;
+        padding-left: 0;
+      }
+      .button { 
+        display: inline-block; 
+        background: #667eea; 
+        color: white; 
+        padding: 12px 24px; 
+        text-decoration: none; 
+        border-radius: 6px; 
+        margin: 20px 0;
+        font-family: 'Cairo', sans-serif !important;
+      }
+      .footer { 
+        text-align: center; 
+        padding: 20px; 
+        color: #6b7280; 
+        font-size: 14px;
+        direction: rtl;
+        font-family: 'Cairo', sans-serif !important;
+      }
+      .footer p,
+      .footer a {
+        font-family: 'Cairo', sans-serif !important;
+      }
     </style>
   `;
 }

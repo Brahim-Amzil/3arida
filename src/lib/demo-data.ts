@@ -250,7 +250,7 @@ export const DEMO_PETITIONS: Petition[] = [
 export const DEMO_USER: User = {
   id: 'demo-user',
   name: 'Demo User',
-  email: 'demo@3arida.ma',
+  email: 'demo@3arida.org',
   verifiedEmail: true,
   verifiedPhone: false,
   role: 'user',

@@ -54,11 +54,10 @@ export default function PetitionCardModern({
             {/* Image Container */}
             <div className="relative h-48 bg-gradient-to-br from-primary/10 to-primary/5 overflow-hidden">
               {imageUrl ? (
-                <img
-                  src={imageUrl}
+                <img src={imageUrl}
                   alt={petition.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                 loading="lazy" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <TrendingUp className="w-12 h-12 text-primary/30" />
@@ -143,11 +142,10 @@ export default function PetitionCardModern({
               {/* Image */}
               <div className="relative w-full md:w-48 h-40 md:h-auto bg-gradient-to-br from-primary/10 to-primary/5 flex-shrink-0">
                 {imageUrl ? (
-                  <img
-                    src={imageUrl}
+                  <img src={imageUrl}
                     alt={petition.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                   loading="lazy" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <TrendingUp className="w-10 h-10 text-primary/30" />
@@ -225,11 +223,10 @@ export default function PetitionCardModern({
           {/* Image Container */}
           <div className="relative h-40 bg-gradient-to-br from-primary/10 to-primary/5 overflow-hidden flex-shrink-0">
             {imageUrl ? (
-              <img
-                src={imageUrl}
+              <img src={imageUrl}
                 alt={petition.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
+               loading="lazy" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <TrendingUp className="w-10 h-10 text-primary/30" />

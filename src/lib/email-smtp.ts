@@ -21,7 +21,7 @@ export async function sendEmail({ to, subject, html, replyTo }: EmailOptions) {
       port: parseInt(process.env.SMTP_PORT || '465'),
       secure: true, // use SSL
       auth: {
-        user: process.env.SMTP_USER, // your email: contact@3arida.ma
+        user: process.env.SMTP_USER, // your email: contact@3arida.org
         pass: process.env.SMTP_PASSWORD, // your email password
       },
     });

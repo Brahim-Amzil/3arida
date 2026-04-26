@@ -1,0 +1,390 @@
+'use client';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import Header from '@/components/layout/HeaderWrapper';
+import Footer from '@/components/layout/Footer';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslation } from '@/hooks/useTranslation';
+
+export default function InfluencersPage() {
+  const { t } = useTranslation();
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  // Discount tiers based on follower count
+  const discountTiers = [
+    {
+      id: '30k',
+      followers: '30,000+',
+      discount: '10%',
+      color: 'bg-blue-50 border-blue-200 text-blue-800',
+      badge: 'bg-blue-100 text-blue-800',
+    },
+    {
+      id: '50k',
+      followers: '50,000+',
+      discount: '15%',
+      color: 'bg-green-50 border-green-200 text-green-800',
+      badge: 'bg-green-100 text-green-800',
+    },
+    {
+      id: '100k',
+      followers: '100,000+',
+      discount: '20%',
+      color: 'bg-purple-50 border-purple-200 text-purple-800',
+      badge: 'bg-purple-100 text-purple-800',
+    },
+    {
+      id: '500k',
+      followers: '500,000+',
+      discount: '30%',
+      color: 'bg-orange-50 border-orange-200 text-orange-800',
+      badge: 'bg-orange-100 text-orange-800',
+    },
+  ];
+
+  // Sample petition ideas for different causes
+    const petitionIdeas = [
+    {
+      id: 1,
+      category: 'عدالة',
+      title: 'مسائلة القضاء بسبب أحكام مخففة في جرائم الاعتداء الجنسي',
+      description: 'نحن نطلق هذه العريضة للمطالبة بمراجعة صارمة لكيفية تعامل القضاء مع قضايا الاعتداءات الجنسية على النساء والأطفال في المغرب، لأننا نلاحظ أحكامًا مخففة لا تتناسب مع خطورة الفعل وما يعانيه الضحايا من صدمات طويلة الأمد.',
+      urgency: 'high',
+    },
+    {
+      id: 2,
+      category: 'ثقافة',
+      title: 'عريضة تدين السطو الثقافي الجزائري',
+      description: 'نحن نطلق هذه العريضة للتنديد بما نعتبره محاولات للسطو على عناصر من التراث والثقافة المغربية ونسبها لجهات أخرى، لأن التراث المغربي جزء من هويتنا الوطنية وتاريخنا العريق.',
+      urgency: 'high',
+    },
+    {
+      id: 3,
+      category: 'اقتصاد',
+      title: 'خفض أسعار الإنترنت في المغرب',
+      description: 'نحن نطلق هذه العريضة للمطالبة بخفض أسعار خدمات الإنترنت في المغرب، التي نعتبرها مرتفعة مقارنة بدول أوروبية عديدة رغم اختلاف القدرة الشرائية.',
+      urgency: 'medium',
+    },
+    {
+      id: 4,
+      category: 'عدالة',
+      title: 'تفعيل الفصل 507 من القانون الجنائي',
+      description: 'نحن نطلق هذه العريضة للمطالبة بتفعيل صارم لمقتضيات الفصل 507 من القانون الجنائي، خاصة في القضايا المتعلقة بالتهديد والابتزاز، لضمان حماية المواطنين من أي استغلال أو ضغط غير قانوني.',
+      urgency: 'high',
+    },
+    {
+      id: 5,
+      category: 'حماية المستهلك',
+      title: 'تعزيز حماية المستهلك بإحداث هيئة مستقلة وفعّالة',
+      description: 'نطالب بإحداث هيئة وطنية مستقلة لحماية المستهلك، تتمتع بصلاحيات واضحة وواسعة في المراقبة والتتبع والتدخل، وتعمل بشكل مستقل عن المصالح التنفيذية المباشرة.',
+      urgency: 'medium',
+    },
+    {
+      id: 6,
+      category: 'إعلام',
+      title: 'مقاطعة منصات "Voice of Morocco"',
+      description: 'نحن نطلق هذه العريضة للدعوة إلى مقاطعة منصات ومواقع "Voice of Morocco" على الإنترنت ووسائل التواصل الاجتماعي، بسبب ما نعتبره تمويلاً خارجياً وأجندة غير واضحة وهجمات إعلامية تمس بصورة المغرب.',
+      urgency: 'medium',
+    },
+    {
+      id: 7,
+      category: 'اقتصاد',
+      title: 'تحذير من استمرار الغلاء حتى شهر رمضان',
+      description: 'نحن نطلق هذه العريضة مطالبة الجهات الحكومية بتكثيف مراقبة الأسعار لمواجهة الغلاء المتواصل للمواد الأساسية، خاصة مع اقتراب شهر رمضان.',
+      urgency: 'high',
+    },
+    {
+      id: 8,
+      category: 'أمن',
+      title: 'تنبيه من "الدعارة المقنعة" على مواقع التواصل الاجتماعي',
+      description: 'نحن نطلق هذه العريضة للمطالبة بإجراءات قانونية ورقابية صارمة ضد الإعلانات المشبوهة التي تُروج عبر مواقع التواصل الاجتماعي تحت ستار خدمات التدليك.',
+      urgency: 'medium',
+    },
+    {
+      id: 9,
+      category: 'عمل',
+      title: 'حراس الأمن الخاص بالمغرب يلتمسون حلولاً',
+      description: 'نحن نطلق هذه العريضة لمساندة حراس الأمن الخاص بالمغرب في مطالبهم المشروعة المتعلقة بتحسين أوضاعهم المهنية والاجتماعية، لأن هذه الفئة تؤدي دوراً مهماً في حماية المؤسسات والمواطنين.',
+      urgency: 'medium',
+    },
+    {
+      id: 10,
+      category: 'حقوق',
+      title: 'مطالب بـ"فوترة عربية"',
+      description: 'نحن نطلق هذه العريضة للمطالبة باحترام حق المواطنين في الحصول على الفواتير باللغة العربية، باعتبارها لغة رسمية للدولة.',
+      urgency: 'low',
+    },
+    {
+      id: 11,
+      category: 'تراث',
+      title: 'جمعيات مختصة وعلماء آثار يستنكرون إتلاف مواقع أثرية',
+      description: 'نحن نطلق هذه العريضة للمطالبة بحماية المواقع الأثرية والتراثية من أي إتلاف أو إهمال، لأن هذه المعالم تمثل ذاكرة تاريخية لا تقدر بثمن.',
+      urgency: 'high',
+    },
+    {
+      id: 12,
+      category: 'نقل',
+      title: 'السماح بالنقل عبر التطبيقات الذكية',
+      description: 'نحن نطلق هذه العريضة للمطالبة بالسماح القانوني والمنظم لخدمات النقل عبر التطبيقات الذكية، لأن هذه الخدمات توفر فرص شغل جديدة وتمنح المواطنين خيارات نقل أكثر مرونة وشفافية.',
+      urgency: 'medium',
+    },
+    {
+      id: 13,
+      category: 'بيئة',
+      title: 'حملة رقمية تدعو إلى وقف قتل الكلاب الضالة',
+      description: 'نحن نطلق هذه العريضة للمطالبة بوقف حملات قتل الكلاب الضالة واعتماد حلول إنسانية بديلة، مثل التعقيم والتلقيح والتكفل البيطري، لأن حماية الحيوان تعكس تحضر المجتمع.',
+      urgency: 'medium',
+    },
+    {
+      id: 14,
+      category: 'حماية الطفل',
+      title: 'حظر "روبلوكس" و"فري فاير" بالمغرب بسبب مخاطرها على الأطفال',
+      description: 'نحن نطلق هذه العريضة للمطالبة بحظر لعبتي Roblox وFree Fire في المغرب أو على الأقل فرض قيود صارمة عليهما، بسبب ما نعتبره مخاطر نفسية وسلوكية على الأطفال والمراهقين.',
+      urgency: 'high',
+    },
+    {
+      id: 15,
+      category: 'إدارة',
+      title: 'إجراءات صارمة ضد سماسرة مواعيد الفيزا',
+      description: 'نحن نطلق هذه العريضة للمطالبة بتدخل عاجل لوضع حد لظاهرة سماسرة مواعيد التأشيرات الذين يستغلون حاجة المواطنين للسفر ويرفعون أسعار المواعيد بشكل غير قانوني.',
+      urgency: 'high',
+    },
+    {
+      id: 16,
+      category: 'حياة يومية',
+      title: 'رفض تغيير الساعة القانونية بالمغرب',
+      description: 'نحن نطلق هذه العريضة للتعبير عن رفضنا لاستمرار العمل بالساعة الإضافية، لما لها من آثار سلبية على الصحة والنوم والحياة الأسرية والدراسية.',
+      urgency: 'medium',
+    },
+    {
+      id: 17,
+      category: 'أمن',
+      title: 'تمكين عناصر إنفاذ القانون من استعمال السلاح في حالات الخطر',
+      description: 'نحن نطلق هذه العريضة للمطالبة بمراجعة الإطار القانوني المنظم لاستعمال السلاح من طرف عناصر الأمن، بما يسمح لهم باستخدامه في الحالات التي تهدد حياتهم أو حياة المواطنين بشكل مباشر.',
+      urgency: 'high',
+    },
+    {
+      id: 18,
+      category: 'سياسة',
+      title: 'فرض التأشيرة على الجزائريين',
+      description: 'نحن نطلق هذه العريضة للمطالبة بفرض نظام تأشيرة على المواطنين الجزائريين الراغبين في دخول المغرب، في إطار المعاملة بالمثل وتنظيم حركة الدخول بما يخدم المصالح الأمنية والسيادية للبلاد.',
+      urgency: 'medium',
+    },
+    {
+      id: 19,
+      category: 'رياضة',
+      title: 'مقاطعة تنظيم بطولة كأس أمم إفريقيا للسيدات بالمغرب',
+      description: 'نحن نطلق هذه العريضة لمطالبة الجهات المعنية بإعادة النظر في تنظيم بطولة Women\'s Africa Cup of Nations بالمغرب، بسبب ما شهدته النسخة السابقة من أحداث مؤسفة.',
+      urgency: 'medium',
+    },
+    {
+      id: 20,
+      category: 'رياضة',
+      title: 'مطالبة الجامعة الملكية المغربية لكرة القدم بمقاطعة تنظيم فعاليات "الكاف"',
+      description: 'نحن نطلق هذه العريضة لمطالبة الجامعة الملكية المغربية لكرة القدم بإعادة تقييم استضافة وتنظيم فعاليات تابعة للكاف بالمغرب، على خلفية الأحداث التي رافقت بطولة الكان السابقة.',
+      urgency: 'medium',
+    },
+  ];
+
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getUrgencyText = (urgency: string) => {
+    switch (urgency) {
+      case 'high':
+        return 'عاجل';
+      case 'medium':
+        return 'متوسط';
+      case 'low':
+        return 'منخفض';
+      default:
+        return 'عادي';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        {/* Petition Ideas */}
+        <div className="mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              {t('influencers.petitionIdeas.title')}
+            </h2>
+            <p className="text-lg text-gray-600">
+              {t('influencers.petitionIdeas.subtitle')}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {petitionIdeas.map((idea) => (
+              <Card key={idea.id} className="hover:shadow-lg transition-all duration-300">
+                <div 
+                  className="flex flex-col md:flex-row gap-4 p-6 cursor-pointer"
+                  onClick={() => setExpandedId(expandedId === idea.id ? null : idea.id)}
+                >
+                  {/* Left side - Category and Urgency */}
+                  <div className="flex md:flex-col gap-2 md:gap-4 items-start md:items-center md:min-w-[120px]">
+                    <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                      {idea.category}
+                    </span>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${getUrgencyColor(idea.urgency)}`}
+                    >
+                      {getUrgencyText(idea.urgency)}
+                    </span>
+                  </div>
+                  
+                  {/* Middle - Title and Description */}
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {idea.title}
+                    </h3>
+                    <p className={`text-gray-600 text-sm ${expandedId === idea.id ? '' : 'line-clamp-2'}`}>
+                      {idea.description}
+                    </p>
+                  </div>
+                  
+                  {/* Expand/Collapse Icon */}
+                  <div className="flex items-center justify-center md:min-w-[40px]">
+                    <svg
+                      className={`w-6 h-6 text-gray-400 transition-transform duration-300 ${expandedId === idea.id ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+                
+                {/* Expanded Content */}
+                {expandedId === idea.id && (
+                  <div className="border-t px-6 pb-6 pt-4 bg-gray-50 animate-in slide-in-from-top duration-300">
+                    <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-500 mb-4">
+                          اضغط على "تبني العريضة" لاستخدام هذا النموذج، أو "ابدأ جديدة" لإنشاء عريضة من الصفر
+                        </p>
+                      </div>
+                      <div className="flex gap-3 w-full md:w-auto">
+                        <Link
+                          href={`/petitions/create?template=${idea.id}`}
+                          className="flex-1 md:flex-initial"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button size="lg" className="w-full md:w-auto px-8">
+                            {t('influencers.adoptPetition')}
+                          </Button>
+                        </Link>
+                        <Link 
+                          href="/petitions/create" 
+                          className="flex-1 md:flex-initial"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button variant="outline" size="lg" className="w-full md:w-auto px-8">
+                            {t('influencers.startNew')}
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* How It Works */}
+        <div className="bg-white rounded-2xl shadow-sm border p-8 mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              {t('influencers.howItWorks.title')}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-blue-600">1</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">
+                {t('influencers.step1.title')}
+              </h3>
+              <p className="text-gray-600">
+                {t('influencers.step1.description')}
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-green-600">2</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">
+                {t('influencers.step2.title')}
+              </h3>
+              <p className="text-gray-600">
+                {t('influencers.step2.description')}
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-purple-600">3</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">
+                {t('influencers.step3.title')}
+              </h3>
+              <p className="text-gray-600">
+                {t('influencers.step3.description')}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="bg-gradient-to-r from-green-600 to-blue-400 rounded-2xl text-white p-8 text-center">
+          <h2 className="text-3xl font-bold mb-4">
+            {t('influencers.cta.title')}
+          </h2>
+          <p className="text-xl mb-8 opacity-90">
+            {t('influencers.cta.subtitle')}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/petitions/create">
+              <Button size="lg" variant="secondary" className="px-8">
+                {t('influencers.cta.startPetition')}
+              </Button>
+            </Link>
+            <Link href="/contact">
+              <Button
+                size="lg"
+                variant="outline"
+                className="px-8 border-white text-white bg-green-100 text-gray-800 hover:bg-white hover:text-gray-900"
+              >
+                {t('influencers.cta.contactUs')}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}

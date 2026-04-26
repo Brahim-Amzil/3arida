@@ -252,11 +252,10 @@ export default function MySignaturesSection() {
           </svg>
           <div>
             <h3 className="text-sm font-medium text-blue-900 mb-1">
-              Track Your Impact
+              تتبع تأثيرك
             </h3>
             <p className="text-sm text-blue-700">
-              These are the petitions you've signed. You can track their
-              progress and see updates from the creators.
+              هذه هي العرائض التي وقعت عليها. يمكنك تتبع تقدمها ومشاهدة التحديثات من المنشئين.
             </p>
           </div>
         </div>

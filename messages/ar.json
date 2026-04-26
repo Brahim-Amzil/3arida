@@ -72,11 +72,31 @@
   },
   "petitions": {
     "title": "العرائض",
-    "create": "إنشاء عريضة",
+    "create": {
+      "title": "إنشاء عريضة جديدة",
+      "step1": "المعلومات الأساسية",
+      "step2": "التفاصيل",
+      "step3": "الوسائط",
+      "step4": "المراجعة",
+      "petitionTitle": "عنوان العريضة",
+      "petitionDescription": "وصف العريضة",
+      "targetSignatures": "عدد التوقيعات المطلوب",
+      "category": "الفئة",
+      "tags": "الكلمات المفتاحية",
+      "publisherName": "اسم الناشر",
+      "publisherType": "نوع الناشر",
+      "addressedTo": "موجهة إلى",
+      "uploadImage": "رفع صورة",
+      "uploadVideo": "رفع فيديو",
+      "youtubeUrl": "رابط يوتيوب",
+      "createPetition": "إنشاء العريضة",
+      "saveDraft": "حفظ كمسودة",
+      "preview": "معاينة"
+    },
     "sign": "وقع العريضة",
     "signed": "تم التوقيع",
     "signatures": "التوقيعات",
-    "goal": "مُوَجهة لِ",
+    "goal": "الهدف",
     "progress": "التقدم",
     "category": "الفئة",
     "status": "الحالة",
@@ -85,17 +105,9 @@
     "description": "الوصف",
     "updates": "التحديثات",
     "comments": "التعليقات",
-    "supporters": "المُوقِّعون",
+    "supporters": "المؤيدون",
     "share": "مشاركة العريضة",
-    "qrCode": "QR رمز الاستجابة السريعة",
-    "sharingTips": "نصائح للمشاركة",
-    "sharingTip1": "أضف رسالة شخصية عند المشاركة",
-    "sharingTip2": "شارك مع الأصدقاء المهتمين بهذه القضية",
-    "sharingTip3": "انشر في المجموعات والمجتمعات ذات الصلة",
-    "sharingTip4": "استخدم الهاشتاجات ذات الصلة على وسائل التواصل الاجتماعي",
-    "copyLink": "نسخ الرابط",
-    "copied": "تم النسخ",
-    "shareOnSocial": "شارِك العريضة على منصات التواصل الإجتماعي",
+    "qrCode": "رمز الاستجابة السريعة",
     "browse": "تصفح العرائض",
     "search": "البحث في العرائض",
     "filter": "تصفية العرائض",
@@ -121,27 +133,6 @@
       "archived": "مؤرشفة",
       "deleted": "محذوفة"
     },
-    "create": {
-      "title": "إنشاء عريضة جديدة",
-      "step1": "المعلومات الأساسية",
-      "step2": "التفاصيل",
-      "step3": "الوسائط",
-      "step4": "المراجعة",
-      "petitionTitle": "عنوان العريضة",
-      "petitionDescription": "وصف العريضة",
-      "targetSignatures": "عدد التوقيعات المطلوب",
-      "category": "الفئة",
-      "tags": "الكلمات المفتاحية",
-      "publisherName": "اسم الناشر",
-      "publisherType": "نوع الناشر",
-      "addressedTo": "موجهة إلى",
-      "uploadImage": "رفع صورة",
-      "uploadVideo": "رفع فيديو",
-      "youtubeUrl": "رابط يوتيوب",
-      "createPetition": "إنشاء العريضة",
-      "saveDraft": "حفظ كمسودة",
-      "preview": "معاينة"
-    },
     "detail": {
       "aboutPetition": "نص العريضة",
       "signPetition": "وقع هذه العريضة",
@@ -159,14 +150,14 @@
       "sharePetition": "شارك العريضة",
       "viewDiscussion": "عرض النقاش",
       "publisher": "الناشر",
-      "target": "مُوَجهة لِ",
+      "target": "الهدف",
       "subject": "الموضوع"
     }
   },
   "dashboard": {
     "title": "لوحة التحكم",
     "welcome": "مرحبًا، {name}",
-    "yourPetitions": "عرائضي",
+    "yourPetitions": "عرائضك",
     "mySignatures": "توقيعاتي",
     "appeals": "الطعون",
     "statistics": "الإحصائيات",
@@ -177,7 +168,7 @@
     "createNewPetition": "إنشاء عريضة جديدة",
     "noPetitions": "لم تنشئ أي عرائض بعد",
     "noSignatures": "لم توقع على أي عرائض بعد",
-    "discoverPetitions": "إكتشف العرائض"
+    "discoverPetitions": "اكتشف العرائض"
   },
   "profile": {
     "title": "الملف الشخصي",
@@ -297,148 +288,131 @@
     "passwordMatch": "كلمات المرور غير متطابقة",
     "invalidFormat": "تنسيق غير صحيح"
   },
-  "pricing": {
-    "page": {
-      "title": "الأسعار",
-      "subtitle": "اختر الخطة المناسبة لعريضتك",
-      "freePlan": "مجاني",
-      "starterPlan": "المبتدئ",
-      "proPlan": "المحترف",
-      "advancedPlan": "المتقدم",
-      "enterprisePlan": "المؤسسات",
-      "upTo": "حتى {count}",
+  "report": {
+    "download": "تحميل تقرير العريضة",
+    "downloadButton": "تحميل التقرير",
+    "free": "مجاني",
+    "remaining": "متبقي",
+    "price": "19 درهم",
+    "beta": "مجاني - بيتا",
+    "locked": "مقفل",
+    "paidOnly": "تقارير العرائض متاحة فقط للباقات المدفوعة",
+    "upgrade": "ترقية الباقة",
+    "upgradeRequired": "يجب الترقية",
+    "generating": "جاري إنشاء التقرير...",
+    "ready": "التقرير جاهز للتحميل",
+    "verified": "تقرير عريضة موثق",
+    "verification": "التحقق من التقرير",
+    "scanQR": "امسح رمز QR للتحقق",
+    "official": "تقرير رسمي",
+    "downloadCount": "عدد التحميلات",
+    "lastDownload": "آخر تحميل",
+    "freeDownloadsRemaining": "{count} تحميل مجاني متبقي",
+    "paymentRequired": "يتطلب الدفع",
+    "progress": {
+      "generating": "جاري إنشاء التقرير...",
+      "downloading": "جاري تحميل التقرير...",
+      "saving": "جاري حفظ الملف..."
+    },
+    "paymentModal": {
+      "title": "تحميل تقرير العريضة",
+      "subtitle": "لقد استخدمت التحميلات المجانية",
+      "price": "السعر: 19 درهم",
+      "features": {
+        "title": "ما ستحصل عليه:",
+        "official": "تقرير PDF رسمي",
+        "qr": "رمز QR للتحقق",
+        "stats": "جميع الإحصائيات",
+        "valid": "صالح للتقديم الرسمي"
+      },
+      "payStripe": "الدفع بواسطة Stripe",
+      "payPayPal": "الدفع بواسطة PayPal",
+      "cancel": "إلغاء",
+      "processing": "جاري المعالجة..."
+    },
+    "upgradeModal": {
+      "title": "ترقية مطلوبة",
+      "message": "تقارير العرائض متاحة فقط للباقات المدفوعة",
+      "benefits": {
+        "title": "فوائد الترقية:",
+        "reports": "تحميلان مجانيان للتقرير",
+        "official": "تقارير PDF رسمية",
+        "verification": "التحقق بواسطة QR",
+        "more": "والمزيد من المميزات..."
+      },
+      "viewPlans": "عرض الباقات",
+      "cancel": "إلغاء"
+    },
+    "verificationPage": {
+      "title": "التحقق من تقرير العريضة",
+      "verified": "تقرير موثق",
+      "invalid": "تقرير غير صالح",
+      "petitionInfo": "معلومات العريضة",
+      "referenceCode": "الرمز المرجعي للعريضة",
+      "currentSignatures": "التوقيعات الحالية",
+      "targetSignatures": "الهدف",
+      "status": "الحالة",
+      "category": "الفئة",
+      "reportInfo": "معلومات التقرير",
+      "totalDownloads": "إجمالي التحميلات",
+      "lastDownloaded": "آخر تحميل",
+      "viewPetition": "عرض العريضة الكاملة",
+      "notFound": "العريضة غير موجودة أو التقرير غير صالح"
+    },
+    "errors": {
+      "unauthorized": "غير مصرح لك بتحميل هذا التقرير",
+      "notFound": "العريضة غير موجودة",
+      "generationFailed": "فشل إنشاء التقرير",
+      "paymentFailed": "فشل الدفع",
+      "networkError": "خطأ في الشبكة. يرجى المحاولة مرة أخرى",
+      "retry": "إعادة المحاولة"
+    },
+    "success": {
+      "generated": "تم إنشاء التقرير بنجاح",
+      "downloaded": "تم تحميل التقرير بنجاح",
+      "paymentComplete": "تم الدفع بنجاح"
+    }
+  },
+  "upgrade": {
+    "modal": {
+      "title": "ترقية باقة العريضة",
+      "currentTier": "الباقة الحالية",
+      "selectTier": "اختر الباقة الجديدة",
+      "upTo": "حتى",
       "signatures": "توقيع",
-      "optionalAddon": "إضافة اختيارية: {price} درهم",
-      "messagingAddon": "{count} رسائل مجانية، ثم {price} درهم لكل {count} رسائل إضافية",
-      "freeMessages": "{count} رسائل مجانية، ثم {price} درهم لكل {extraCount} رسائل إضافية",
-      "getStartedFree": "ابدأ مجانًا",
-      "chooseThisPlan": "اختر هذه الخطة",
-      "features": "المميزات",
-      "qrCode": "رمز الاستجابة السريعة QR",
-      "messaging": "الرسائل",
-      "includedWithPlan": "مشمول في الخطة",
-      "notIncluded": "غير مشمول",
-      "available": "متاح",
-      "notAvailable": "غير متاح",
-      "readyToStart": "هل أنت مستعد للبدء مع"
+      "fullPrice": "السعر الكامل",
+      "priceDifference": "الفرق من باقتك الحالية",
+      "continueToPayment": "متابعة إلى الدفع",
+      "cancel": "إلغاء",
+      "processing": "جاري المعالجة...",
+      "alreadyTopTier": "أنت بالفعل في أعلى باقة متاحة",
+      "upgradeRequired": "يجب الترقية"
     },
-    "features": {
-      "createPublish": "إنشاء ونشر العرائض",
-      "basicSharing": "مشاركة أساسية",
-      "basicAnalytics": "تحليلات أساسية",
-      "publicListing": "قائمة عامة",
-      "allFreeFeatures": "جميع مميزات الخطة المجانية",
-      "customCoverImage": "صورة غلاف مخصصة",
-      "enhancedSocialSharing": "مشاركة محسنة على وسائل التواصل",
-      "basicAnalyticsDashboard": "لوحة تحليلات أساسية",
-      "fasterApproval": "موافقة أسرع",
-      "allStarterFeatures": "جميع مميزات خطة المبتدئ",
-      "regionalTargeting": "استهداف إقليمي",
-      "petitionBranding": "علامة تجارية للعريضة",
-      "priorityVisibility": "ظهور ذو أولوية",
-      "allProFeatures": "جميع مميزات الخطة المحترفة",
-      "advancedAnalytics": "تحليلات متقدمة",
-      "exportSigneesData": "تصدير بيانات الموقعين",
-      "featuredListing": "قائمة مميزة",
-      "emailSupport": "دعم عبر البريد الإلكتروني",
-      "allAdvancedFeatures": "جميع مميزات الخطة المتقدمة",
-      "apiAccess": "الوصول إلى API",
-      "customDomain": "نطاق مخصص",
-      "dedicatedSupport": "دعم مخصص",
-      "organizationBadge": "شارة المنظمة",
-      "highestVisibility": "أعلى ظهور"
+    "tiers": {
+      "free": "مجاني",
+      "starter": "ستارتر",
+      "pro": "برو",
+      "advanced": "متقدم",
+      "enterprise": "إنتربرايز"
     },
-    "enterprise": {
-      "title": "تتوقع أكثر من 100 ألف توقيع؟",
-      "description": "نقدم خطط مؤسسات مخصصة مع دعم مخصص، وضمانات SLA، وأسعار حسب الحجم.",
-      "cta": "اتصل بنا"
+    "success": {
+      "title": "تمت الترقية بنجاح",
+      "message": "تم ترقية باقة عريضتك بنجاح",
+      "newTier": "الباقة الجديدة",
+      "newLimit": "الحد الجديد للتوقيعات"
+    },
+    "error": {
+      "title": "فشلت الترقية",
+      "message": "حدث خطأ أثناء ترقية باقتك",
+      "paymentFailed": "فشل الدفع",
+      "updateFailed": "فشل تحديث الباقة",
+      "contactSupport": "يرجى الاتصال بالدعم مع رقم المرجع"
     }
   },
-  "influencer": {
-    "couponAlert": {
-      "title": "كمؤثر، يمكنك الحصول على خصم!",
-      "description": "احصل على كوبون خصم يصل إلى 30% قبل إنشاء عريضتك. سنتحقق من حسابك ونرسل لك الكود خلال 24-48 ساعة.",
-      "button": "اطلب كوبون الخصم",
-      "orContinue": "أو يمكنك المتابعة بدون كوبون"
-    }
-  },
-  "influencers": {
-    "title": "برنامج المؤثرين",
-    "subtitle": "استخدم تأثيرك لإحداث تغيير حقيقي. انضم إلى آلاف المؤثرين الذين يستخدمون منصتنا لإطلاق حملات تغيير اجتماعي.",
-    "startPetition": "ابدأ عريضة",
-    "learnMore": "اعرف المزيد",
-    "followers": "متابع",
-    "discount": "خصم",
-    "onAllTiers": "على جميع الخطط",
-    "clickToRequest": "إضغط لطلب الكوبون",
-    "verificationNote": "سيتم التحقق من عدد المتابعين قبل إصدار الكوبون",
-    "impact": {
-      "title": "لماذا يختار المؤثرون منصتنا؟",
-      "description": "منصتنا توفر لك الأدوات اللازمة لتحويل تأثيرك إلى تغيير حقيقي. احصل على خصومات حصرية، وأدوات تحليل متقدمة، ودعم مخصص."
-    },
-    "discounts": {
-      "title": "خصومات حصرية للمؤثرين",
-      "subtitle": "احصل على خصم يصل إلى 30% بناءً على عدد متابعيك"
-    },
-    "petitionIdeas": {
-      "title": "أفكار عرائض ملهمة",
-      "subtitle": "ابدأ بإحدى هذه القضايا أو أنشئ عريضتك الخاصة"
-    },
-    "targetSignatures": "الهدف",
-    "adoptPetition": "تبني هذه العريضة",
-    "startNew": "ابدأ عريضة جديدة",
-    "howItWorks": {
-      "title": "كيف يعمل البرنامج؟"
-    },
-    "step1": {
-      "title": "اطلب كوبون الخصم",
-      "description": "اختر فئة الخصم المناسبة لعدد متابعيك واملأ نموذج الطلب"
-    },
-    "step2": {
-      "title": "التحقق والموافقة",
-      "description": "سنتحقق من حسابك وعدد المتابعين ونرسل لك الكوبون خلال 24-48 ساعة"
-    },
-    "step3": {
-      "title": "أنشئ عريضتك",
-      "description": "استخدم الكوبون عند إنشاء عريضتك واحصل على الخصم فوراً"
-    },
-    "cta": {
-      "title": "جاهز لإحداث التغيير؟",
-      "subtitle": "انضم إلى مجتمع المؤثرين المغيرين اليوم",
-      "startPetition": "ابدأ عريضتك الآن",
-      "contactUs": "تواصل معنا"
-    }
-  },
-  "contactModerator": {
-    "title": "تواصل مع المشرف",
-    "status": "الحالة",
-    "paused": "متوقفة",
-    "rejected": "مرفوضة",
-    "viewPetition": "عرض العريضة",
-    "reasonFor": "سبب",
-    "pause": "الإيقاف",
-    "rejection": "الرفض",
-    "resubmissionStatus": "حالة إعادة التقديم",
-    "maxResubmissionReached": "تم الوصول للحد الأقصى من محاولات إعادة التقديم (3/3). يرجى التواصل مع المشرفين للحصول على مساعدة إضافية.",
-    "resubmissionAttemptsRemaining": "لديك {count} محاولة إعادة تقديم متبقية",
-    "appealSubmittedSuccess": "تم إرسال الطعن بنجاح!",
-    "appealReviewMessage": "سيقوم المشرف بمراجعة طعنك والرد خلال 24-48 ساعة. يمكنك عرض حالة طعنك في لوحة التحكم الخاصة بك.",
-    "yourMessage": "رسالتك للمشرفين",
-    "messagePlaceholder": "اشرح لماذا تعتقد أن هذه العريضة يجب أن يتم إلغاء إيقافها. قم بتضمين أي معلومات أو تصحيحات ذات صلة...",
-    "messageHelp": "كن واضحًا ومحترمًا. قم بتضمين أي معلومات قد تساعد المشرفين في مراجعة عريضتك.",
-    "sending": "جاري الإرسال...",
-    "sendMessage": "إرسال الرسالة",
-    "cancel": "إلغاء",
-    "whatHappensNext": "ماذا سيحدث بعد ذلك؟",
-    "step1": "سيتم إرسال رسالتك إلى فريق الإشراف",
-    "step2": "سيقوم المشرف بمراجعة عريضتك وطعنك",
-    "step3": "ستتلقى ردًا عبر البريد الإلكتروني في أقرب الآجال",
-    "step4": "إذا تمت الموافقة، سيتم تحديث حالة عريضتك وفقًا لذلك",
-    "errorMessage": "يرجى إدخال رسالة",
-    "contactModeratorButton": "تواصل مع المشرف",
-    "contactSupportButton": "تواصل مع الدعم",
-    "lockedTitle": "التواصل المباشر مع المشرفين متاح للعرائض المدفوعة فقط",
-    "lockedDescription": "يمكنك استخدام نموذج الدعم العام أو ترقية عريضتك للحصول على دعم مباشر من المشرفين",
-    "paidPetitionsOnly": "التواصل المباشر مع المشرفين مخصص للعرائض المدفوعة"
+  "nav": {
+    "influencers": "أفكار عرائض",
+    "pricing": "الأسعار",
+    "about": "حول المنصة",
+    "petitionIdeas": "أفكار عرائض"
   }
 }

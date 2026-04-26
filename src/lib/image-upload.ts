@@ -5,6 +5,7 @@ import {
   deleteObject,
 } from 'firebase/storage';
 import { storage } from './firebase';
+import imageCompression from 'browser-image-compression';
 
 // Image validation constants
 export const IMAGE_LIMITS = {
@@ -24,6 +25,43 @@ const ALLOWED_IMAGE_TYPES = [
 ];
 
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+
+/**
+ * Compress an image file before upload
+ * @param file - The image file to compress
+ * @param maxSizeMB - Maximum size in MB after compression
+ * @param maxWidthOrHeight - Maximum width or height in pixels
+ * @returns Promise<File> - The compressed image file
+ */
+async function compressImage(
+  file: File,
+  maxSizeMB: number = 1,
+  maxWidthOrHeight: number = 1200
+): Promise<File> {
+  try {
+    console.log('🗜️ Starting image compression...');
+    console.log('📊 Original size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+    
+    const options = {
+      maxSizeMB,
+      maxWidthOrHeight,
+      useWebWorker: true,
+      fileType: 'image/jpeg', // Convert to JPEG for better compression
+    };
+    
+    const compressedFile = await imageCompression(file, options);
+    
+    console.log('✅ Compression complete!');
+    console.log('📊 Compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+    console.log('📉 Size reduction:', ((1 - compressedFile.size / file.size) * 100).toFixed(1), '%');
+    
+    return compressedFile;
+  } catch (error) {
+    console.error('⚠️ Compression failed, using original file:', error);
+    // If compression fails, return original file
+    return file;
+  }
+}
 
 /**
  * Validate image file
@@ -147,7 +185,7 @@ function getImageDimensions(
 }
 
 /**
- * Upload profile image with validation
+ * Upload profile image with validation and compression
  */
 export async function uploadProfileImage(
   userId: string,
@@ -164,6 +202,9 @@ export async function uploadProfileImage(
     throw new Error(validation.error);
   }
 
+  // Compress image (profile photos: 0.5MB max, 800px max dimension)
+  const compressedFile = await compressImage(file, 0.5, 800);
+
   // Create unique filename
   const timestamp = Date.now();
   const extension = file.name.split('.').pop()?.toLowerCase();
@@ -171,7 +212,7 @@ export async function uploadProfileImage(
 
   // Upload to Firebase Storage
   const storageRef = ref(storage, `profile-images/${filename}`);
-  await uploadBytes(storageRef, file);
+  await uploadBytes(storageRef, compressedFile);
 
   // Get download URL
   const downloadURL = await getDownloadURL(storageRef);
@@ -179,7 +220,7 @@ export async function uploadProfileImage(
 }
 
 /**
- * Upload petition image with validation
+ * Upload petition image with validation and compression
  */
 export async function uploadPetitionImage(
   petitionId: string,
@@ -197,6 +238,9 @@ export async function uploadPetitionImage(
     throw new Error(validation.error);
   }
 
+  // Compress image (petition images: 1MB max, 1200px max dimension)
+  const compressedFile = await compressImage(file, 1, 1200);
+
   // Create unique filename
   const timestamp = Date.now();
   const extension = file.name.split('.').pop()?.toLowerCase();
@@ -204,7 +248,7 @@ export async function uploadPetitionImage(
 
   // Upload to Firebase Storage
   const storageRef = ref(storage, `petition-images/${filename}`);
-  await uploadBytes(storageRef, file);
+  await uploadBytes(storageRef, compressedFile);
 
   // Get download URL
   const downloadURL = await getDownloadURL(storageRef);
@@ -212,7 +256,7 @@ export async function uploadPetitionImage(
 }
 
 /**
- * Upload multiple petition gallery images with validation
+ * Upload multiple petition gallery images with validation and compression
  */
 export async function uploadPetitionGallery(
   petitionId: string,
@@ -238,14 +282,18 @@ export async function uploadPetitionGallery(
     }
   }
 
-  // Upload all images
-  const uploadPromises = files.map((file, index) => {
+  // Compress and upload all images
+  const uploadPromises = files.map(async (file, index) => {
+    // Compress image (gallery images: 0.8MB max, 1200px max dimension)
+    const compressedFile = await compressImage(file, 0.8, 1200);
+    
     const timestamp = Date.now();
     const extension = file.name.split('.').pop()?.toLowerCase();
     const filename = `${petitionId}_gallery_${index}_${timestamp}.${extension}`;
     const storageRef = ref(storage, `petition-gallery/${filename}`);
 
-    return uploadBytes(storageRef, file).then(() => getDownloadURL(storageRef));
+    await uploadBytes(storageRef, compressedFile);
+    return getDownloadURL(storageRef);
   });
 
   const urls = await Promise.all(uploadPromises);

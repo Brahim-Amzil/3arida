@@ -20,7 +20,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'nav.register': 'إنشاء حساب',
     'nav.logout': 'تسجيل الخروج',
     'nav.pricing': 'الأسعار',
-    'nav.influencers': 'المؤثرون',
+    'nav.influencers': 'أفكار عرائض',
     'nav.about': 'حول المنصة',
 
     // Common
@@ -199,9 +199,9 @@ const translations: Record<Locale, TranslationMessages> = {
       'تصفح العرائض أو ابحث عن قضية محددة',
     'help.gettingStarted.signPetition.step2': 'انقر على العريضة لعرض التفاصيل',
     'help.gettingStarted.signPetition.step3': 'انقر على زر "وقع هذه العريضة"',
-    'help.gettingStarted.signPetition.step4': 'تحقق من رقم هاتفك (للأمان)',
-    'help.gettingStarted.signPetition.step5':
+    'help.gettingStarted.signPetition.step4':
       'اختياريًا أضف تعليقًا يوضح سبب توقيعك',
+    'help.gettingStarted.signPetition.step5': '',
 
     // Account & Profile Section
     'help.account.title': 'الحساب والملف الشخصي',
@@ -343,7 +343,7 @@ const translations: Record<Locale, TranslationMessages> = {
       'التحقق من الهاتف يضمن أن كل توقيع من شخص حقيقي ويمنع التوقيعات المكررة أو الاحتيالية. هذا يحافظ على سلامة جميع العرائض على منصتنا.',
     'help.privacy.anonymous.title': 'هل يمكنني التوقيع بشكل مجهول؟',
     'help.privacy.anonymous.description':
-      'بينما نتطلب التحقق من الهاتف للأمان، يمكنك اختيار عدم عرض اسمك الكامل علنًا. ومع ذلك، يمكن لمنشئي العرائض رؤية جميع التوقيعات للتحقق من الدعم.',
+      '  يمكنك اختيار عدم عرض اسمك الكامل علنًا. ومع ذلك، يمكن لمنشئي العرائض رؤية جميع التوقيعات للتحقق من الدعم.',
 
     // Pricing & Payments Section
     'help.pricing.title': 'التسعير والمدفوعات',
@@ -410,7 +410,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'about.features.title': 'ميزات المنصة',
     'about.features.secureAuth.title': 'مصادقة آمنة',
     'about.features.secureAuth.description':
-      'التحقق من الهاتف يضمن أن كل توقيع أصيل ويمنع الاحتيال.',
+      'التحقق الآلي يضمن أن كل توقيع أصيل ويمنع الاحتيال.',
     'about.features.discussion.title': 'نقاش المجتمع',
     'about.features.discussion.description':
       'علق ورد وتفاعل مع الآخرين الذين يدعمون نفس القضايا.',
@@ -427,18 +427,18 @@ const translations: Record<Locale, TranslationMessages> = {
     'about.features.notifications.description':
       'ابق محدثاً حول العرائض التي تهمك مع الإشعارات الفورية.',
     'about.values.title': 'قيمنا',
-    'about.values.voices.title': '🗣️ تضخيم الأصوات',
+    'about.values.voices.title': '🗣️ تمكين الصوت',
     'about.values.voices.description':
-      'كل صوت مهم. نحن نوفر منصة حيث يمكن لأي شخص أن يتكلم ويُسمع.',
-    'about.values.community.title': '🤝 بناء المجتمع',
+      'نؤمن أن لكل شخص الحق في أن يُسمَع. نوفر مساحة آمنة تتيح للجميع التعبير عن قضاياهم بحرية.',
+    'about.values.community.title': '🤝 قوة المجتمع',
     'about.values.community.description':
-      'التغيير يحدث عندما يجتمع الناس. نحن نعزز الروابط بين الأفراد الذين يشتركون في أهداف مشتركة.',
-    'about.values.transparency.title': '✨ الشفافية والثقة',
+      'حين يجتمع الناس حول هدف مُشترك، يصبح التغيير ممكنًا. نربط بين الأفراد لنحوّل الإهتمام إلى فعل جماعي.',
+    'about.values.transparency.title': '🔍 الشفافية والمصداقية',
     'about.values.transparency.description':
-      'نحن نعمل بشفافية كاملة ونضمن أن كل توقيع موثق وأصيل.',
-    'about.values.impact.title': '🚀 قيادة التأثير',
+      'كل توقيع حقيقي، وكل خطوة واضحة. نلتزم بالوضوح لبناء الثقة بيننا وبين مجتمعنا.',
+    'about.values.impact.title': '🚀 أثر حقيقي',
     'about.values.impact.description':
-      'نحن لسنا فقط حول جمع التوقيعات—نحن حول خلق تغيير حقيقي وقابل للقياس في المجتمعات.',
+      'لا نكتفي بجمع التوقيعات، بل نسعى لتحويلها إلى نتائج ملموسة تحدث فرقًا في الواقع.',
     'about.cta.title': 'مستعد لإحداث فرق؟',
     'about.cta.subtitle':
       'انضم إلى آلاف المغاربة الذين يستخدمون عريضة لخلق تغيير إيجابي.',
@@ -500,7 +500,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'footer.termsOfService': 'شروط الخدمة',
     'footer.cookiePolicy': 'سياسة ملفات تعريف الارتباط',
     'footer.aboutUs': 'حول المنصة',
-    'footer.copyright': '© 2025 عريضة  / 3arida . جميع الحقوق محفوظة.',
+    'footer.copyright': '© 2026 عريضة  / 3arida . جميع الحقوق محفوظة.',
 
     // Privacy Page
     'privacy.title': 'سياسة الخصوصية',
@@ -2083,7 +2083,7 @@ const translations: Record<Locale, TranslationMessages> = {
       "Chaque voix compte. Nous fournissons une plateforme où chacun peut s'exprimer et être entendu.",
     'about.values.community.title': '🤝 Construire la communauté',
     'about.values.community.description':
-      'Le changement se produit quand les gens se rassemblent. Nous favorisons les connexions entre individus qui partagent des objectifs communs.',
+      'حين يجتمع الناس حول هدف مُشترك، يصبح التغيير ممكنًا. نربط بين الأفراد لنحوّل الإهتمام إلى فعل جماعي.',
     'about.values.transparency.title': '✨ Transparence et confiance',
     'about.values.transparency.description':
       'Nous opérons avec une transparence complète et nous nous assurons que chaque signature est vérifiée et authentique.',
@@ -2153,7 +2153,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'footer.termsOfService': "Conditions d'utilisation",
     'footer.cookiePolicy': 'Politique des cookies',
     'footer.aboutUs': 'À propos de nous',
-    'footer.copyright': '© 2025 3arida. Tous droits réservés.',
+    'footer.copyright': '© 2026 3arida. Tous droits réservés.',
 
     // Privacy Page
     'privacy.title': 'Politique de confidentialité',

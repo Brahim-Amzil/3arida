@@ -17,7 +17,7 @@ export default function TermsPage() {
             </h1>
 
             <div className="prose prose-lg max-w-none space-y-6 text-gray-700">
-              <p className="text-gray-600 mb-6">آخر تحديث: يناير 2025</p>
+              <p className="text-gray-600 mb-6">آخر تحديث: يناير 2026</p>
 
               <section>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">

@@ -122,76 +122,224 @@ const PETITION_TEMPLATES: Record<
   }
 > = {
   '1': {
-    title: 'حماية الغابات المغربية من التصحر',
-    description:
-      'مبادرة لحماية الغابات المغربية وزراعة مليون شجرة جديدة لمكافحة التصحر والحفاظ على التنوع البيولوجي.\n\nنطالب بـ:\n- برنامج شامل لزراعة الأشجار\n- حماية الغابات الموجودة من القطع الجائر\n- توعية المجتمعات المحلية\n- استثمار في الطاقات المتجددة\n- سياسات بيئية صارمة',
-    category: 'Environment',
-    subcategory: 'Climate Change',
+    title: 'مسائلة القضاء بسبب أحكام مخففة في جرائم الاعتداء الجنسي',
+    description: 'نحن نطلق هذه العريضة للمطالبة بمراجعة صارمة لكيفية تعامل القضاء مع قضايا الاعتداءات الجنسية على النساء والأطفال في المغرب، لأننا نلاحظ أحكامًا مخففة لا تتناسب مع خطورة الفعل وما يعانيه الضحايا من صدمات طويلة الأمد، ونطالب بضمان تطبيق العدالة كاملة دون تساهل، مع حماية حقوق الضحايا وتشديد العقوبات على كل من يرتكب هذه الجرائم الشنيعة.',
+    category: 'Social Justice',
+    subcategory: 'Justice Reform',
     petitionType: 'Start',
     addressedToType: 'Government',
-    addressedToSpecific: 'وزارة الانتقال الطاقي والتنمية المستدامة',
+    addressedToSpecific: 'وزارة العدل',
     targetSignatures: 10000,
-    tags: 'البيئة, الغابات, التصحر, الأشجار, المغرب',
+    tags: 'عدالة, قضاء, حقوق المرأة, حماية الطفل',
   },
   '2': {
-    title: 'توفير الإنترنت المجاني في المدارس الريفية',
-    description:
-      'ضمان وصول جميع الطلاب للتعليم الرقمي من خلال توفير الإنترنت المجاني في المدارس الريفية.\n\nأهدافنا:\n- إنترنت مجاني في جميع المدارس الريفية\n- أجهزة كمبيوتر وتابلت للطلاب\n- تدريب المعلمين على التكنولوجيا\n- منصات تعليمية رقمية\n- تقليل الفجوة الرقمية',
-    category: 'Education',
-    subcategory: 'Educational Access',
-    petitionType: 'Start',
-    addressedToType: 'Government',
-    addressedToSpecific: 'وزارة التربية الوطنية والتعليم الأولي والرياضة',
-    targetSignatures: 5000,
-    tags: 'التعليم, الإنترنت, المدارس الريفية, التكنولوجيا',
-  },
-  '3': {
-    title: 'تحسين خدمات الصحة النفسية للشباب',
-    description:
-      'توفير الدعم النفسي المجاني للشباب المغربي وتحسين خدمات الصحة النفسية.\n\nمطالبنا:\n- مراكز صحة نفسية مجانية\n- خط ساخن للدعم النفسي\n- برامج توعية في المدارس والجامعات\n- تدريب المختصين\n- إزالة وصمة العار حول الصحة النفسية',
-    category: 'Healthcare',
-    subcategory: 'Mental Health',
-    petitionType: 'Start',
-    addressedToType: 'Government',
-    addressedToSpecific: 'وزارة الصحة والحماية الاجتماعية',
-    targetSignatures: 7500,
-    tags: 'الصحة النفسية, الشباب, الدعم النفسي, الصحة',
-  },
-  '4': {
-    title: 'دعم حقوق الأشخاص ذوي الإعاقة',
-    description:
-      'تحسين إمكانية الوصول في الأماكن العامة ودعم حقوق الأشخاص ذوي الإعاقة.\n\nنطالب بـ:\n- مباني عامة قابلة للوصول\n- وسائل نقل مجهزة للإعاقة\n- فرص عمل متكافئة\n- تعليم شامل ومتاح\n- خدمات صحية متخصصة',
-    category: 'Social Justice',
-    subcategory: 'Disability Rights',
-    petitionType: 'Support',
-    addressedToType: 'Government',
-    addressedToSpecific: 'وزارة التضامن والإدماج الاجتماعي والأسرة',
-    targetSignatures: 3000,
-    tags: 'حقوق الإعاقة, إمكانية الوصول, العدالة الاجتماعية',
-  },
-  '5': {
-    title: 'تطوير النقل العمومي في المدن الكبرى',
-    description:
-      'نظام نقل عمومي صديق للبيئة وفعال في المدن المغربية الكبرى.\n\nمشروعنا يشمل:\n- حافلات كهربائية حديثة\n- شبكة مترو في المدن الكبرى\n- محطات ذكية ومريحة\n- تطبيق موحد للنقل\n- أسعار معقولة للجميع',
-    category: 'Infrastructure',
-    subcategory: 'Transportation',
-    petitionType: 'Start',
-    addressedToType: 'Government',
-    addressedToSpecific: 'وزارة التجهيز والنقل واللوجستيك والماء',
-    targetSignatures: 15000,
-    tags: 'النقل العمومي, البيئة, المدن, المواصلات',
-  },
-  '6': {
-    title: 'الحفاظ على التراث الثقافي المغربي',
-    description:
-      'حماية المواقع التاريخية والتراث الشعبي المغربي للأجيال القادمة.\n\nأهدافنا:\n- ترميم المواقع التاريخية\n- توثيق التراث الشعبي\n- برامج تعليمية عن التراث\n- دعم الحرفيين التقليديين\n- تطوير السياحة الثقافية',
+    title: 'عريضة تدين السطو الثقافي الجزائري',
+    description: 'نحن نطلق هذه العريضة للتنديد بما نعتبره محاولات للسطو على عناصر من التراث والثقافة المغربية ونسبها لجهات أخرى، لأن التراث المغربي جزء من هويتنا الوطنية وتاريخنا العريق، ونطالب الدولة بالتحرك الدبلوماسي والثقافي لحماية موروثنا لدى الهيئات الدولية المختصة، وتوثيقه بشكل رسمي يحفظ حقوق المغرب ويصون رموزه الحضارية.',
     category: 'Culture',
     subcategory: 'Cultural Heritage',
     petitionType: 'Support',
     addressedToType: 'Government',
     addressedToSpecific: 'وزارة الشباب والثقافة والتواصل',
-    targetSignatures: 2500,
-    tags: 'التراث, الثقافة المغربية, التاريخ, الحرف التقليدية',
+    targetSignatures: 15000,
+    tags: 'ثقافة, تراث, هوية وطنية',
+  },
+  '3': {
+    title: 'خفض أسعار الإنترنت في المغرب',
+    description: 'نحن نطلق هذه العريضة للمطالبة بخفض أسعار خدمات الإنترنت في المغرب، التي نعتبرها مرتفعة مقارنة بدول أوروبية عديدة رغم اختلاف القدرة الشرائية، ونطالب بتدخل الجهات التنظيمية لتعزيز المنافسة وضمان جودة أفضل بأسعار عادلة، لأن الإنترنت أصبح خدمة أساسية للتعليم والعمل والخدمات الرقمية.',
+    category: 'Economy',
+    subcategory: 'Consumer Rights',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'الوكالة الوطنية لتقنين المواصلات',
+    targetSignatures: 20000,
+    tags: 'اقتصاد, إنترنت, أسعار, اتصالات',
+  },
+  '4': {
+    title: 'تفعيل الفصل 507 من القانون الجنائي',
+    description: 'نحن نطلق هذه العريضة للمطالبة بتفعيل صارم لمقتضيات الفصل 507 من القانون الجنائي، خاصة في القضايا المتعلقة بالتهديد والابتزاز، لضمان حماية المواطنين من أي استغلال أو ضغط غير قانوني، وتعزيز الثقة في سيادة القانون ومبدأ عدم الإفلات من العقاب.',
+    category: 'Social Justice',
+    subcategory: 'Legal Reform',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة العدل',
+    targetSignatures: 8000,
+    tags: 'عدالة, قانون, حماية المواطنين',
+  },
+  '5': {
+    title: 'تعزيز حماية المستهلك بإحداث هيئة مستقلة وفعّالة',
+    description: 'نحن الموقعين على هذه العريضة، نؤكد أن المغرب يتوفر على الإطار القانوني المنظم لحماية المستهلك، خاصة بموجب القانون رقم 31-08، غير أن التجربة العملية أظهرت وجود تحديات حقيقية في تفعيل بعض مقتضياته وضمان فعاليته على أرض الواقع. نطالب بإحداث هيئة وطنية مستقلة لحماية المستهلك، تتمتع بصلاحيات واضحة وواسعة في المراقبة والتتبع والتدخل.',
+    category: 'Economy',
+    subcategory: 'Consumer Rights',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الصناعة والتجارة',
+    targetSignatures: 12000,
+    tags: 'حماية المستهلك, اقتصاد, حقوق',
+  },
+  '6': {
+    title: 'مقاطعة منصات "Voice of Morocco"',
+    description: 'نحن نطلق هذه العريضة للدعوة إلى مقاطعة منصات ومواقع "Voice of Morocco" على الإنترنت ووسائل التواصل الاجتماعي، بسبب ما نعتبره تمويلاً خارجياً وأجندة غير واضحة وهجمات إعلامية تمس بصورة المغرب، وندعو إلى دعم الإعلام الوطني المسؤول الذي يخدم مصالح البلاد ويحترم ثوابتها.',
+    category: 'Media',
+    subcategory: 'Media Ethics',
+    petitionType: 'Stop',
+    addressedToType: 'Public',
+    addressedToSpecific: 'الرأي العام المغربي',
+    targetSignatures: 10000,
+    tags: 'إعلام, مقاطعة, سيادة وطنية',
+  },
+  '7': {
+    title: 'تحذير من استمرار الغلاء حتى شهر رمضان',
+    description: 'نحن نطلق هذه العريضة مطالبة الجهات الحكومية بتكثيف مراقبة الأسعار لمواجهة الغلاء المتواصل للمواد الأساسية، خاصة مع اقتراب شهر رمضان، لأن استمرار ارتفاع الأسعار يضغط بشكل كبير على القدرة الشرائية للفئات ذات الدخل المحدود، ونؤكد على ضرورة وجود رقابة شفافة ومستمرة طوال السنة لضمان أسعار عادلة لكل المواطنين.',
+    category: 'Economy',
+    subcategory: 'Cost of Living',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الداخلية',
+    targetSignatures: 15000,
+    tags: 'اقتصاد, أسعار, غلاء, رمضان',
+  },
+  '8': {
+    title: 'تنبيه من "الدعارة المقنعة" على مواقع التواصل الاجتماعي',
+    description: 'نحن نطلق هذه العريضة للمطالبة بإجراءات قانونية ورقابية صارمة ضد الإعلانات المشبوهة التي تُروج عبر مواقع التواصل الاجتماعي تحت ستار خدمات التدليك وتثير الإيحاءات وتخدم أغراضاً غير قانونية، لأن انتشار هذه الإعلانات يسيء للقيم العامة ويشكل استغلالًا للمستهلكين، ويدعو إلى حماية الأخلاق الرقمية.',
+    category: 'Social Justice',
+    subcategory: 'Public Morality',
+    petitionType: 'Stop',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الداخلية',
+    targetSignatures: 8000,
+    tags: 'أمن, أخلاق, رقابة',
+  },
+  '9': {
+    title: 'حراس الأمن الخاص بالمغرب يلتمسون حلولاً',
+    description: 'نحن نطلق هذه العريضة لمساندة حراس الأمن الخاص بالمغرب في مطالبهم المشروعة المتعلقة بتحسين أوضاعهم المهنية والاجتماعية، لأن هذه الفئة تؤدي دوراً مهماً في حماية المؤسسات والمواطنين، ونطالب بتمكينهم من عقود عادلة، وأجور منصفة، وتغطية اجتماعية تحفظ كرامتهم وحقوقهم.',
+    category: 'Labor Rights',
+    subcategory: 'Workers Rights',
+    petitionType: 'Support',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الإدماج الاقتصادي والمقاولة الصغرى والتشغيل والكفاءات',
+    targetSignatures: 7000,
+    tags: 'عمل, حقوق العمال, أمن خاص',
+  },
+  '10': {
+    title: 'مطالب بـ"فوترة عربية"',
+    description: 'نحن نطلق هذه العريضة للمطالبة باحترام حق المواطنين في الحصول على الفواتير باللغة العربية، باعتبارها لغة رسمية للدولة، لأن استعمال لغة مفهومة في المعاملات التجارية والإدارية يضمن الشفافية ويعزز الثقة بين المستهلك ومقدمي الخدمات.',
+    category: 'Language Rights',
+    subcategory: 'Arabic Language',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الصناعة والتجارة',
+    targetSignatures: 5000,
+    tags: 'حقوق, لغة عربية, فوترة',
+  },
+  '11': {
+    title: 'جمعيات مختصة وعلماء آثار يستنكرون إتلاف مواقع أثرية',
+    description: 'نحن نطلق هذه العريضة للمطالبة بحماية المواقع الأثرية والتراثية من أي إتلاف أو إهمال، لأن هذه المعالم تمثل ذاكرة تاريخية لا تقدر بثمن، ونطالب بتشديد المراقبة وتفعيل القوانين المتعلقة بحماية التراث الوطني، ومحاسبة كل من يثبت تورطه في المساس به.',
+    category: 'Culture',
+    subcategory: 'Heritage Protection',
+    petitionType: 'Stop',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الشباب والثقافة والتواصل',
+    targetSignatures: 6000,
+    tags: 'تراث, آثار, حماية',
+  },
+  '12': {
+    title: 'السماح بالنقل عبر التطبيقات الذكية',
+    description: 'نحن نطلق هذه العريضة للمطالبة بالسماح القانوني والمنظم لخدمات النقل عبر التطبيقات الذكية، لأن هذه الخدمات توفر فرص شغل جديدة وتمنح المواطنين خيارات نقل أكثر مرونة وشفافية، ونطالب بإطار قانوني واضح يضمن المنافسة العادلة ويحمي حقوق السائقين والركاب معاً.',
+    category: 'Transportation',
+    subcategory: 'Ride Sharing',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة التجهيز والنقل واللوجستيك والماء',
+    targetSignatures: 18000,
+    tags: 'نقل, تطبيقات, تكنولوجيا',
+  },
+  '13': {
+    title: 'حملة رقمية تدعو إلى وقف قتل الكلاب الضالة',
+    description: 'نحن نطلق هذه العريضة للمطالبة بوقف حملات قتل الكلاب الضالة واعتماد حلول إنسانية بديلة، مثل التعقيم والتلقيح والتكفل البيطري، لأن حماية الحيوان تعكس تحضر المجتمع، ونؤكد على ضرورة اعتماد مقاربة إنسانية تراعي الصحة العامة وحقوق الحيوان في آن واحد.',
+    category: 'Animal Rights',
+    subcategory: 'Animal Welfare',
+    petitionType: 'Stop',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الداخلية',
+    targetSignatures: 12000,
+    tags: 'بيئة, حيوانات, رفق بالحيوان',
+  },
+  '14': {
+    title: 'حظر "روبلوكس" و"فري فاير" بالمغرب بسبب مخاطرها على الأطفال',
+    description: 'نحن نطلق هذه العريضة للمطالبة بحظر لعبتي Roblox وFree Fire في المغرب أو على الأقل فرض قيود صارمة عليهما، بسبب ما نعتبره مخاطر نفسية وسلوكية على الأطفال والمراهقين، من عنف رقمي وإدمان وتعرض لمحتويات غير مناسبة لأعمارهم، ونطالب بحماية الناشئة عبر آليات رقابية واضحة تضع مصلحة الأسرة المغربية فوق أي اعتبارات تجارية.',
+    category: 'Child Protection',
+    subcategory: 'Digital Safety',
+    petitionType: 'Stop',
+    addressedToType: 'Government',
+    addressedToSpecific: 'الوكالة الوطنية لتقنين المواصلات',
+    targetSignatures: 25000,
+    tags: 'حماية الطفل, ألعاب, رقابة',
+  },
+  '15': {
+    title: 'إجراءات صارمة ضد سماسرة مواعيد الفيزا',
+    description: 'نحن نطلق هذه العريضة للمطالبة بتدخل عاجل لوضع حد لظاهرة سماسرة مواعيد التأشيرات الذين يستغلون حاجة المواطنين للسفر ويرفعون أسعار المواعيد بشكل غير قانوني، مما يضرب مبدأ تكافؤ الفرص ويثقل كاهل الأسر، ونطالب برقمنة شفافة للمواعيد ومتابعة قضائية صارمة لكل المتورطين في هذه الممارسات.',
+    category: 'Administrative Reform',
+    subcategory: 'Visa Services',
+    petitionType: 'Stop',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الخارجية والتعاون الإفريقي والمغاربة المقيمين بالخارج',
+    targetSignatures: 10000,
+    tags: 'إدارة, فيزا, سماسرة',
+  },
+  '16': {
+    title: 'رفض تغيير الساعة القانونية بالمغرب',
+    description: 'نحن نطلق هذه العريضة للتعبير عن رفضنا لاستمرار العمل بالساعة الإضافية، لما لها من آثار سلبية على الصحة والنوم والحياة الأسرية والدراسية، ونطالب الحكومة بإلغاء تغيير الساعة واعتماد توقيت قار يحترم الساعة الطبيعية، مع فتح نقاش وطني حقيقي يأخذ بعين الاعتبار رأي المواطنين.',
+    category: 'Public Policy',
+    subcategory: 'Time Policy',
+    petitionType: 'Stop',
+    addressedToType: 'Government',
+    addressedToSpecific: 'رئاسة الحكومة',
+    targetSignatures: 30000,
+    tags: 'حياة يومية, ساعة, صحة',
+  },
+  '17': {
+    title: 'تمكين عناصر إنفاذ القانون من استعمال السلاح في حالات الخطر',
+    description: 'نحن نطلق هذه العريضة للمطالبة بمراجعة الإطار القانوني المنظم لاستعمال السلاح من طرف عناصر الأمن، بما يسمح لهم باستخدامه في الحالات التي تهدد حياتهم أو حياة المواطنين بشكل مباشر، مع وضع ضوابط واضحة وآليات مراقبة تضمن عدم إساءة الاستعمال، حفاظاً على الأمن العام واحتراماً لحقوق الإنسان في آن واحد.',
+    category: 'Security',
+    subcategory: 'Law Enforcement',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الداخلية',
+    targetSignatures: 8000,
+    tags: 'أمن, قانون, شرطة',
+  },
+  '18': {
+    title: 'فرض التأشيرة على الجزائريين',
+    description: 'نحن نطلق هذه العريضة للمطالبة بفرض نظام تأشيرة على المواطنين الجزائريين الراغبين في دخول المغرب، في إطار المعاملة بالمثل وتنظيم حركة الدخول بما يخدم المصالح الأمنية والسيادية للبلاد، مع احترام العلاقات الإنسانية بين الشعبين.',
+    category: 'Foreign Policy',
+    subcategory: 'Border Control',
+    petitionType: 'Start',
+    addressedToType: 'Government',
+    addressedToSpecific: 'وزارة الخارجية والتعاون الإفريقي والمغاربة المقيمين بالخارج',
+    targetSignatures: 15000,
+    tags: 'سياسة, تأشيرة, حدود',
+  },
+  '19': {
+    title: 'مقاطعة تنظيم بطولة كأس أمم إفريقيا للسيدات بالمغرب',
+    description: 'نحن نطلق هذه العريضة لمطالبة الجهات المعنية بإعادة النظر في تنظيم بطولة Women\'s Africa Cup of Nations بالمغرب، بسبب ما شهدته النسخة السابقة من بطولة Africa Cup of Nations من أحداث مؤسفة، وعدم اتخاذ Confederation of African Football إجراءات عقابية واضحة في حق المنتخب السنغالي، ونعتبر أن احترام المغرب وصورته الرياضية يقتضي موقفاً حازماً في هذا الشأن.',
+    category: 'Sports',
+    subcategory: 'Football',
+    petitionType: 'Stop',
+    addressedToType: 'Organization',
+    addressedToSpecific: 'الجامعة الملكية المغربية لكرة القدم',
+    targetSignatures: 12000,
+    tags: 'رياضة, كرة القدم, كاف',
+  },
+  '20': {
+    title: 'مطالبة الجامعة الملكية المغربية لكرة القدم بمقاطعة تنظيم فعاليات "الكاف"',
+    description: 'نحن نطلق هذه العريضة لمطالبة الجامعة الملكية المغربية لكرة القدم بإعادة تقييم استضافة وتنظيم فعاليات تابعة للكاف بالمغرب، على خلفية الأحداث التي رافقت بطولة الكان السابقة، وغياب قرارات تأديبية واضحة، ونرى أن كرامة الكرة المغربية تستوجب موقفاً يحفظ صورة البلاد ومصالحها الرياضية.',
+    category: 'Sports',
+    subcategory: 'Football',
+    petitionType: 'Stop',
+    addressedToType: 'Organization',
+    addressedToSpecific: 'الجامعة الملكية المغربية لكرة القدم',
+    targetSignatures: 15000,
+    tags: 'رياضة, كرة القدم, كاف',
   },
 };
 
@@ -270,10 +418,17 @@ function CreatePetitionContent() {
   const [showPayment, setShowPayment] = useState(false);
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
 
-  // Coupon state
-  const [couponCode, setCouponCode] = useState('');
-  const [couponDiscount, setCouponDiscount] = useState(0);
+  // Coupon state - HARDCODED 100% DISCOUNT FOR BETA LAUNCH
+  const [couponCode, setCouponCode] = useState('BETA100');
+  const [couponDiscount, setCouponDiscount] = useState(100);
   const [couponError, setCouponError] = useState('');
+
+  // BETA100 coupon is hardcoded for Beta Founder launch
+  // No API call needed - coupon is automatically applied
+  useEffect(() => {
+    console.log('🎉 BETA100 coupon auto-applied (hardcoded for beta launch)');
+    console.log('✅ 100% discount active for all petitions');
+  }, []); // Run once on mount
 
   // Accordion state - only one section can be open at a time
   const [openAccordion, setOpenAccordion] = useState<'pricing' | 'tips' | null>(
@@ -1099,21 +1254,33 @@ function CreatePetitionContent() {
 
     console.log('✅ Form data prepared for submission');
 
-    // Check if payment is required
+    // Check if payment is required (after coupon discount)
     const price = calculatePetitionPrice(formData.targetSignatures);
-    if (price > 0) {
-      console.log('💳 Payment required:', price, 'MAD');
+    const discountAmount = (price * couponDiscount) / 100;
+    const finalPrice = price - discountAmount;
+
+    console.log('💰 Price calculation:', {
+      basePrice: price,
+      discount: couponDiscount,
+      discountAmount,
+      finalPrice,
+    });
+
+    if (finalPrice > 0) {
+      console.log('💳 Payment required:', finalPrice, 'MAD');
       setShowPayment(true);
       return;
     }
 
-    // Create petition directly if free
-    await createPetitionWithPayment(submissionData, null);
+    // If price is 0 (due to coupon), create petition directly
+    console.log('🎉 Free petition (Beta Founder) - creating directly...');
+    await createPetitionWithPayment(submissionData, null, finalPrice);
   };
 
   const createPetitionWithPayment = async (
     submissionData: any,
     paymentId: string | null,
+    finalPrice: number,
   ) => {
     try {
       setLoading(true);
@@ -1124,6 +1291,7 @@ function CreatePetitionContent() {
         submissionData,
         user!.uid,
         user!.displayName || user!.email?.split('@')[0] || 'Anonymous',
+        finalPrice, // Pass the final price after coupon discount
       );
 
       // If payment was made, update petition status to pending for moderation
@@ -1229,8 +1397,13 @@ function CreatePetitionContent() {
           : formData.subcategory,
     };
 
+    // Calculate final price after coupon discount
+    const price = calculatePetitionPrice(formData.targetSignatures);
+    const discountAmount = (price * couponDiscount) / 100;
+    const finalPrice = price - discountAmount;
+
     // Create petition after successful payment
-    createPetitionWithPayment(submissionData, paymentIntentId);
+    createPetitionWithPayment(submissionData, paymentIntentId, finalPrice);
   };
 
   const handlePaymentCancel = () => {
@@ -1916,13 +2089,12 @@ function CreatePetitionContent() {
                 const isExcluded = index > 0 && currentTier === 'free';
                 return (
                   <div key={index} className="relative group">
-                    <img
-                      src={url}
+                    <img src={url}
                       alt={`Petition image ${index + 1}`}
                       className={`w-full h-32 object-cover rounded-lg border transition-all ${
                         isExcluded ? 'opacity-40 grayscale' : ''
                       }`}
-                    />
+                     loading="lazy" />
 
                     {/* Red X overlay for excluded images */}
                     {isExcluded && (
@@ -2729,13 +2901,12 @@ function CreatePetitionContent() {
                         'free';
                     return (
                       <div key={index} className="relative">
-                        <img
-                          src={url}
+                        <img src={url}
                           alt={`Petition image ${index + 1}`}
                           className={`w-full h-24 object-cover rounded-lg border transition-all ${
                             isExcluded ? 'opacity-40 grayscale' : ''
                           }`}
-                        />
+                         loading="lazy" />
 
                         {/* Red X overlay for excluded images */}
                         {isExcluded && (
@@ -2876,19 +3047,65 @@ function CreatePetitionContent() {
 
         {/* Pricing */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="font-semibold text-green-800 mb-2">
+          <h4 className="font-semibold text-green-800 mb-3">
             {t('review.pricingInfo')}
           </h4>
-          <p className="text-green-700">
-            <strong>{t('review.totalCost')}</strong>{' '}
-            {price === 0
-              ? t('review.free')
-              : `${price} ${t('common.moroccanDirham')}`}
-          </p>
-          <p className="text-sm text-green-600 mt-1">
-            {t('review.tier')} {tier} | {t('review.plan')}{' '}
-            {tierInfo.nameKey ? t(tierInfo.nameKey) : tierInfo.name}
-          </p>
+
+          {/* Price Breakdown */}
+          <div className="space-y-2">
+            {/* Original Price */}
+            <div className="flex justify-between items-center">
+              <span className="text-green-700">
+                <strong>
+                  {tierInfo.nameKey ? t(tierInfo.nameKey) : tierInfo.name}:
+                </strong>
+              </span>
+              <span className="text-green-700 font-semibold">
+                {price} {t('common.moroccanDirham')}
+              </span>
+            </div>
+
+            {/* Coupon Discount */}
+            {couponCode && couponDiscount > 0 && (
+              <div className="flex justify-between items-center text-purple-700">
+                <span className="flex items-center gap-2">
+                  <span>🎉</span>
+                  <strong>خصم {couponCode}:</strong>
+                </span>
+                <span className="font-semibold">
+                  -{((price * couponDiscount) / 100).toFixed(0)}{' '}
+                  {t('common.moroccanDirham')}
+                </span>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="border-t-2 border-green-300 my-2"></div>
+
+            {/* Total */}
+            <div className="flex justify-between items-center">
+              <span className="text-green-800">
+                <strong className="text-lg">{t('review.totalCost')}:</strong>
+              </span>
+              <span className="text-green-800 font-bold text-xl">
+                {couponDiscount > 0
+                  ? `${(price - (price * couponDiscount) / 100).toFixed(0)} ${t('common.moroccanDirham')}`
+                  : price === 0
+                    ? t('review.free')
+                    : `${price} ${t('common.moroccanDirham')}`}
+              </span>
+            </div>
+
+            {/* Beta Founder Message */}
+            {couponCode === 'BETA100' && couponDiscount === 100 && (
+              <div className="mt-3 p-3 bg-purple-100 border border-purple-300 rounded-lg">
+                <p className="text-purple-900 text-sm font-semibold text-center">
+                  🎉 مبروك! أنت من أوائل المستخدمين – إستمتع بجميع الميزات
+                  مجانًا خلال الإطلاق التجريبي
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Coupon Code Input - Only show if price > 0 and publisher is Influencer */}
@@ -3260,14 +3477,17 @@ function CreatePetitionContent() {
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                         {t('form.creatingPetition')}
                       </>
-                    ) : price > 0 ? (
-                      `Proceed to Payment - ${formatCurrency(
-                        couponDiscount > 0
-                          ? Math.round((price * (100 - couponDiscount)) / 100)
-                          : price,
-                      )} ${t('common.moroccanDirham')}`
                     ) : (
-                      t('form.createPetitionButton')
+                      (() => {
+                        const finalPrice =
+                          couponDiscount > 0
+                            ? Math.round((price * (100 - couponDiscount)) / 100)
+                            : price;
+
+                        return finalPrice > 0
+                          ? `Proceed to Payment - ${formatCurrency(finalPrice)} ${t('common.moroccanDirham')}`
+                          : t('form.createPetitionButton');
+                      })()
                     )}
                   </Button>
                 )}

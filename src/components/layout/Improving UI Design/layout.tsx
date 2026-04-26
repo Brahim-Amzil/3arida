@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://3arida.ma'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://3arida.org'),
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

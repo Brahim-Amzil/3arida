@@ -24,7 +24,7 @@ class EnvironmentValidator {
       required: true,
       validator: (value) => value.startsWith('https://'),
       description: 'Production app URL',
-      example: 'https://3arida.ma',
+      example: 'https://3arida.org',
     },
     {
       key: 'NEXT_PUBLIC_APP_NAME',

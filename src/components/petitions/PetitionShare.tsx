@@ -23,7 +23,7 @@ export default function PetitionShare({
   const petitionUrl =
     typeof window !== 'undefined'
       ? `${window.location.origin}/petitions/${petition.id}`
-      : `https://3arida.ma/petitions/${petition.id}`;
+      : `https://3arida.org/petitions/${petition.id}`;
 
   const shareText = `Support this petition: ${petition.title}`;
   const encodedUrl = encodeURIComponent(petitionUrl);

@@ -1,5 +1,37 @@
 import { storage, auth } from './firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import imageCompression from 'browser-image-compression';
+
+/**
+ * Compress an image file before upload
+ * @param file - The image file to compress
+ * @returns Promise<File> - The compressed image file
+ */
+async function compressImage(file: File): Promise<File> {
+  try {
+    console.log('��️ Starting image compression...');
+    console.log('📊 Original size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+    
+    const options = {
+      maxSizeMB: 1, // Max file size 1MB
+      maxWidthOrHeight: 1200, // Max dimension 1200px
+      useWebWorker: true,
+      fileType: 'image/jpeg', // Convert to JPEG for better compression
+    };
+    
+    const compressedFile = await imageCompression(file, options);
+    
+    console.log('✅ Compression complete!');
+    console.log('📊 Compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+    console.log('📉 Size reduction:', ((1 - compressedFile.size / file.size) * 100).toFixed(1), '%');
+    
+    return compressedFile;
+  } catch (error) {
+    console.error('⚠️ Compression failed, using original file:', error);
+    // If compression fails, return original file
+    return file;
+  }
+}
 
 /**
  * Upload an image file to Firebase Storage
@@ -21,11 +53,14 @@ export async function uploadImage(file: File, path: string): Promise<string> {
       throw new Error('User must be authenticated to upload images');
     }
     
+    // Compress the image before upload
+    const compressedFile = await compressImage(file);
+    
     // Create a storage reference
     const storageRef = ref(storage, path);
     
-    // Upload the file
-    const snapshot = await uploadBytes(storageRef, file);
+    // Upload the compressed file
+    const snapshot = await uploadBytes(storageRef, compressedFile);
     
     // Get the download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
@@ -85,7 +120,7 @@ export function validateImageFile(file: File): void {
     throw new Error('Please select an image file');
   }
   
-  // Check file size (max 5MB)
+  // Check file size (max 5MB before compression)
   const maxSize = 5 * 1024 * 1024; // 5MB
   if (file.size > maxSize) {
     throw new Error('Image must be less than 5MB');

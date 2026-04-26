@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useModeratorGuard } from '@/lib/auth-guards';
 import { useTranslation } from '@/hooks/useTranslation';
 import PetitionAdminActions from '@/components/admin/PetitionAdminActions';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Petition } from '@/types/petition';
 
@@ -604,11 +604,10 @@ export default function AdminPetitionsPage() {
                         <div className="flex-shrink-0">
                           {petition.mediaUrls &&
                           petition.mediaUrls.length > 0 ? (
-                            <img
-                              src={petition.mediaUrls[0]}
+                            <img src={petition.mediaUrls[0]}
                               alt={petition.title}
                               className="w-48 h-32 object-cover rounded-lg"
-                            />
+                             loading="lazy" />
                           ) : (
                             <div className="w-48 h-32 bg-gray-100 rounded-lg flex items-center justify-center">
                               <svg
@@ -702,7 +701,7 @@ export default function AdminPetitionsPage() {
                                 petition.resubmissionHistory.length > 0 && (
                                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
                                     <p className="text-sm font-medium text-red-800 mb-2">
-                                      Rejection History (
+                                      سجل الرفض (
                                       {petition.resubmissionCount || 0}{' '}
                                       resubmission
                                       {(petition.resubmissionCount || 0) !== 1
@@ -719,7 +718,7 @@ export default function AdminPetitionsPage() {
                                           >
                                             <p>
                                               <strong>
-                                                Attempt {index + 1}:
+                                                المحاولة {index + 1}:
                                               </strong>
                                             </p>
                                             <p>
@@ -730,7 +729,7 @@ export default function AdminPetitionsPage() {
                                                     entry.rejectedAt
                                                   ).toLocaleDateString()}
                                             </p>
-                                            <p>Reason: {entry.reason}</p>
+                                            <p>السبب: {entry.reason}</p>
                                             {entry.resubmittedAt && (
                                               <p>
                                                 Resubmitted:{' '}
@@ -756,6 +755,29 @@ export default function AdminPetitionsPage() {
                                   {t('admin.actions.review')}
                                 </Link>
                               </Button>
+
+                              {/* Permanent Delete Button - Only for deleted petitions */}
+                              {petition.status === 'deleted' && (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={async () => {
+                                    if (confirm('⚠️ هل أنت متأكد من الحذف النهائي؟ لا يمكن التراجع عن هذا الإجراء!')) {
+                                      try {
+                                        const petitionRef = doc(db, 'petitions', petition.id);
+                                        await deleteDoc(petitionRef);
+                                        alert('✅ تم الحذف النهائي بنجاح');
+                                        loadPetitions();
+                                      } catch (error) {
+                                        console.error('Error permanently deleting:', error);
+                                        alert('❌ فشل الحذف النهائي');
+                                      }
+                                    }
+                                  }}
+                                >
+                                  🗑️ حذف نهائي
+                                </Button>
+                              )}
 
                               <PetitionAdminActions
                                 petition={petition}

@@ -55,8 +55,7 @@ export function InfluencerCard({
         {/* Profile Image */}
         <div className="relative">
           {channelData.image ? (
-            <img
-              src={channelData.image}
+            <img loading="lazy" src={channelData.image}
               className={`${classes.image} rounded-full object-cover border-2 border-white shadow-sm`}
               alt={channelData.name}
               onError={(e) => {

@@ -73,7 +73,7 @@ Two ways influencers can request coupons:
    - Message
 2. Click "إرسال الرسالة"
 3. Should see success message
-4. Check admin email (3aridapp@gmail.com)
+4. Check admin email (contact@3arida.ma)
 5. Email should have purple section with all influencer info
 ```
 
@@ -147,4 +147,4 @@ If you encounter any issues:
 1. Check browser console for errors
 2. Verify all required fields are filled
 3. Ensure email service (Resend) is configured
-4. Check admin email inbox (3aridapp@gmail.com)
+4. Check admin email inbox (contact@3arida.ma)

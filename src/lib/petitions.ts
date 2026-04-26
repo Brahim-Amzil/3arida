@@ -113,6 +113,7 @@ export const createPetition = async (
   petitionData: PetitionFormData,
   creatorId: string,
   creatorName: string,
+  finalPrice?: number, // Optional: final price after coupons (for beta launch)
 ): Promise<Petition> => {
   // Validate petition data
   const validationErrors = validatePetitionData(petitionData);
@@ -125,14 +126,18 @@ export const createPetition = async (
   try {
     const now = new Date();
     const pricingTier = calculatePricingTier(petitionData.targetSignatures);
-    const amountRequired = calculatePetitionPrice(
-      petitionData.targetSignatures,
-    );
+
+    // Use provided finalPrice if available (for coupon scenarios), otherwise calculate
+    const amountRequired =
+      finalPrice !== undefined
+        ? finalPrice
+        : calculatePetitionPrice(petitionData.targetSignatures);
 
     // Generate unique reference code
     const referenceCode = await generateUniqueReferenceCode();
 
-    const petitionDoc: Omit<Petition, 'id'> = {
+    // Build petition document, only including defined optional fields
+    const petitionDoc: any = {
       title: petitionData.title.trim(),
       description: petitionData.description.trim(),
       category: petitionData.category,
@@ -152,18 +157,11 @@ export const createPetition = async (
       // Publisher information (from creation form)
       publisherType: petitionData.publisherType,
       publisherName: petitionData.publisherName,
-      socialMediaUrl: petitionData.socialMediaUrl,
-      channelData: petitionData.channelData,
+      referenceCode,
 
       // Petition details (from creation form)
       petitionType: petitionData.petitionType,
       addressedToType: petitionData.addressedToType,
-      addressedToSpecific: petitionData.addressedToSpecific,
-      referenceCode,
-
-      // Additional content
-      youtubeVideoUrl: petitionData.youtubeVideoUrl,
-      tags: petitionData.tags,
 
       // Location targeting
       location: petitionData.location as any,
@@ -180,6 +178,23 @@ export const createPetition = async (
       isPublic: true,
       isActive: true,
     };
+
+    // Only add optional fields if they have values (avoid undefined in Firestore)
+    if (petitionData.socialMediaUrl) {
+      petitionDoc.socialMediaUrl = petitionData.socialMediaUrl;
+    }
+    if (petitionData.channelData) {
+      petitionDoc.channelData = petitionData.channelData;
+    }
+    if (petitionData.addressedToSpecific) {
+      petitionDoc.addressedToSpecific = petitionData.addressedToSpecific;
+    }
+    if (petitionData.youtubeVideoUrl) {
+      petitionDoc.youtubeVideoUrl = petitionData.youtubeVideoUrl;
+    }
+    if (petitionData.tags) {
+      petitionDoc.tags = petitionData.tags;
+    }
 
     const docRef = await addDoc(collection(db, PETITIONS_COLLECTION), {
       ...petitionDoc,
@@ -604,6 +619,13 @@ export const signPetition = async (
       throw new Error('This petition is not available for signing');
     }
 
+    // Check if petition is closed by creator
+    if (petition.closedByCreator) {
+      throw new Error(
+        'This petition has been closed by its creator and is no longer accepting signatures',
+      );
+    }
+
     if (petition.currentSignatures >= petition.targetSignatures) {
       // MVP: Skip signature attempt tracking to avoid Firestore permission errors
       // await trackSignatureAttempt({
@@ -884,7 +906,8 @@ const checkPhoneSignature = async (
 export const getPetitions = async (
   filters: PetitionFilters = {},
   pagination: PaginationInfo = { page: 1, limit: 12, total: 0, hasMore: false },
-): Promise<{ petitions: Petition[]; pagination: PaginationInfo }> => {
+  lastDoc?: any,
+): Promise<{ petitions: Petition[]; pagination: PaginationInfo; lastDoc?: any }> => {
   try {
     let q = query(collection(db, PETITIONS_COLLECTION));
 
@@ -910,7 +933,11 @@ export const getPetitions = async (
     const sortDirection = filters.sortOrder || 'desc';
     q = query(q, orderBy(sortField, sortDirection));
 
-    // Apply pagination
+    // Apply pagination with cursor
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc));
+    }
+    
     if (pagination.limit) {
       q = query(q, limit(pagination.limit + 1)); // Get one extra to check if there are more
     }
@@ -996,9 +1023,13 @@ export const getPetitions = async (
       hasMore: filteredPetitions.length === pagination.limit,
     };
 
+    // Get the last document for cursor pagination
+    const lastDocument = docs.length > 0 ? docs[Math.min(docs.length - 1, pagination.limit - 1)] : undefined;
+    
     return {
       petitions: filteredPetitions,
       pagination: paginationInfo,
+      lastDoc: lastDocument,
     };
   } catch (error) {
     console.error('Error getting petitions:', error);
@@ -1481,6 +1512,72 @@ export const requestPetitionDeletion = async (
     });
   } catch (error) {
     console.error('Error requesting petition deletion:', error);
+    throw error;
+  }
+};
+
+/**
+ * Close a petition by creator
+ */
+export const closePetitionByCreator = async (
+  petitionId: string,
+  userId: string,
+  closingMessage?: string,
+): Promise<void> => {
+  try {
+    const petitionRef = doc(db, PETITIONS_COLLECTION, petitionId);
+    const petitionSnap = await getDoc(petitionRef);
+
+    if (!petitionSnap.exists()) {
+      throw new Error('Petition not found');
+    }
+
+    const petition = petitionSnap.data();
+
+    // Verify the user is the creator
+    if (petition.creatorId !== userId) {
+      throw new Error('Only the petition creator can close this petition');
+    }
+
+    // Cannot close if already closed
+    if (petition.closedByCreator) {
+      throw new Error('Petition is already closed');
+    }
+
+    const now = new Date();
+    const updateData: any = {
+      closedByCreator: true,
+      closedAt: Timestamp.fromDate(now),
+      updatedAt: Timestamp.fromDate(now),
+    };
+
+    if (closingMessage?.trim()) {
+      updateData.closingMessage = closingMessage.trim();
+    }
+
+    await updateDoc(petitionRef, updateData);
+
+    // Log audit action
+    const creator = await getUserById(userId);
+    await logAuditAction({
+      actorId: userId,
+      actorName: creator?.name || 'Unknown',
+      actorEmail: creator?.email || '',
+      actorRole: 'user',
+      action: 'petition.closed',
+      targetType: 'petition',
+      targetId: petitionId,
+      targetName: petition.title,
+      details: {
+        closingMessage: closingMessage || 'No message provided',
+        currentSignatures: petition.currentSignatures,
+        targetSignatures: petition.targetSignatures,
+      },
+    });
+
+    console.log('✅ Petition closed by creator successfully');
+  } catch (error) {
+    console.error('Error closing petition:', error);
     throw error;
   }
 };

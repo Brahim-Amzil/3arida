@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
         <body>
           <div class="container">
             <div class="header">
-              <h2 style="margin: 0;"># 3arida.ma #</h2>
+              <h2 style="margin: 0;"># 3arida.org #</h2>
             </div>
             <div class="content">
               <div class="field">
@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
               </div>
               
               <div class="footer">
-                <p>تم إرسال هذه الرسالة من نموذج الاتصال على موقع 3arida.ma</p>
+                <p>تم إرسال هذه الرسالة من نموذج الاتصال على موقع 3arida.org</p>
                 <p>للرد، استخدم البريد الإلكتروني: ${email}</p>
               </div>
             </div>
@@ -262,8 +262,8 @@ export async function POST(request: NextRequest) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     // Use verified domain for sender, configurable recipient
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'contact@3arida.ma';
-    const toEmail = process.env.CONTACT_EMAIL || 'contact@3arida.ma';
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'contact@3arida.org';
+    const toEmail = process.env.CONTACT_EMAIL || 'contact@3arida.org';
 
     console.log('Sending email from:', fromEmail, 'to:', toEmail);
 
