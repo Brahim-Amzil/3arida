@@ -112,7 +112,7 @@ export default function ContactButtons({
       {/* Locked Message */}
       {showLockedMessage && !isPaidPetition && (
         <div
-          className={`p-3 border rounded-lg ${colors.message} animate-in fade-in slide-in-from-top-2 duration-300`}
+          className={`p-3 border border-red-200 rounded-lg ${colors.message} animate-in fade-in slide-in-from-top-2 duration-300  bg-red-50`}
         >
           <div className="flex items-start gap-2">
             <LockIcon className="w-5 h-5 flex-shrink-0 mt-0.5" />

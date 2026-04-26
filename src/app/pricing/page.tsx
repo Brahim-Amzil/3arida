@@ -214,6 +214,26 @@ export default function PricingPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        {/* Beta Founder Banner */}
+        <div className="mt-8 mb-8 p-6 bg-gradient-to-r from-purple-50 via-blue-50 to-green-50 border-2 border-purple-300 rounded-xl text-center shadow-lg">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <span className="text-4xl">🎉</span>
+            <h2 className="text-3xl font-bold text-purple-900">
+              عرض المؤسسين - Beta Founder
+            </h2>
+            <span className="text-4xl">🎉</span>
+          </div>
+          <p className="text-xl text-purple-800 mb-2 font-semibold">
+            جميع الخطط مجانية 100% خلال فترة الإطلاق التجريبي
+          </p>
+          <p className="text-lg text-purple-700">
+            كن من المؤسسين واحصل على وصول مجاني لجميع الميزات المتقدمة
+          </p>
+          <div className="mt-4 inline-block px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold">
+            كود الخصم: BETA100 (يُطبق تلقائياً)
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-12">
           <br />

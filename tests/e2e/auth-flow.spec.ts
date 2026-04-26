@@ -33,7 +33,7 @@ test.describe('Authentication Flow', () => {
     await expect(page).toHaveURL('/auth/login');
 
     // Fill in login form with test credentials
-    await page.fill('input[type="email"]', 'test@3arida.ma');
+    await page.fill('input[type="email"]', 'test@3arida.org');
     await page.fill('input[type="password"]', 'TestPassword123');
 
     // Submit form
@@ -79,7 +79,7 @@ test.describe('Authentication Flow', () => {
   test('should logout user successfully', async ({ page }) => {
     // First login
     await page.goto('/auth/login');
-    await page.fill('input[type="email"]', 'test@3arida.ma');
+    await page.fill('input[type="email"]', 'test@3arida.org');
     await page.fill('input[type="password"]', 'TestPassword123');
     await page.click('button[type="submit"]');
 
@@ -107,7 +107,7 @@ test.describe('Authentication Flow', () => {
   }) => {
     // First login
     await page.goto('/auth/login');
-    await page.fill('input[type="email"]', 'test@3arida.ma');
+    await page.fill('input[type="email"]', 'test@3arida.org');
     await page.fill('input[type="password"]', 'TestPassword123');
     await page.click('button[type="submit"]');
 

@@ -1,0 +1,353 @@
+# Implementation Plan: Petition Report PDF Generation
+
+## Overview
+
+This implementation plan breaks down the Petition Report PDF Generation feature into discrete, incremental tasks. The approach follows a phased implementation: first establishing the data layer and core API, then implementing PDF generation, followed by UI integration, payment processing, and finally verification and polish.
+
+Each task builds on previous work, with testing integrated throughout to catch errors early. The plan assumes the BETA_MODE flag will initially be set to true for unlimited free access during beta launch.
+
+## Tasks
+
+- [x] 1. Database schema and feature flag setup
+    - [x] 1.1 Add reportDownloads and reportDownloadHistory fields to Petition schema
+    - Update Petition TypeScript interface with new fields
+    - Add default values (reportDownloads: 0, reportDownloadHistory: [])
+    - Create database migration script to add fields to existing petitions
+    - _Requirements: 9.1, 9.2_
+  - [ ] 1.2 Write property test for download tracking data persistence
+    - **Property 15: Data Persistence**
+    - **Validates: Requirements 9.5**
+    - [x] 1.3 Add BETA_MODE feature flag to environment configuration
+    - Add BETA_MODE environment variable
+    - Create feature flag utility function to check beta status
+    - Set initial value to true for beta launch
+    - _Requirements: 2.1, 2.2_
+
+- [x] 2. Access control service implementation
+    - [x] 2.1 Create AccessControlService with tier-based access logic
+    - Implement canGenerateReport() method
+    - Implement requiresPayment() method
+    - Implement getRemainingFreeDownloads() method
+    - Implement isBetaMode() method
+    - _Requirements: 2.1, 2.3, 2.4, 4.1, 4.2, 4.3_
+  - [ ] 2.2 Write property test for tier-based access control
+    - **Property 2: Tier-Based Access Control**
+    - **Validates: Requirements 2.1, 2.3, 2.4**
+  - [ ] 2.3 Write property test for free download allocation
+    - **Property 5: Free Download Allocation**
+    - **Validates: Requirements 4.1, 4.2, 4.3**
+  - [ ] 2.4 Write property test for beta mode unlimited downloads
+    - **Property 22: Beta Mode Unlimited Downloads**
+    - **Validates: Requirements 2.2**
+
+- [x] 3. Download tracking service implementation
+    - [x] 3.1 Create DownloadTrackerService with tracking methods
+    - Implement recordDownload() method with atomic updates
+    - Implement getDownloadHistory() method
+    - Implement getDownloadCount() method
+    - _Requirements: 3.1, 3.2, 3.3, 3.5, 9.3, 9.4_
+  - [ ] 3.2 Write property test for download count increment
+    - **Property 3: Download Count Increment**
+    - **Validates: Requirements 3.1, 3.2, 3.3, 3.5**
+  - [ ] 3.3 Write property test for atomic download tracking
+    - **Property 13: Atomic Download Tracking**
+    - **Validates: Requirements 9.3**
+  - [ ] 3.4 Write property test for download history record structure
+    - **Property 14: Download History Record Structure**
+    - **Validates: Requirements 9.4**
+
+- [ ] 4. Checkpoint - Ensure core services work correctly
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 5. QR code generation
+    - [x] 5.1 Install and configure qrcode library
+    - Add qrcode package to dependencies
+    - Create QR code generation utility function
+    - _Requirements: 1.2, 6.5_
+    - [x] 5.2 Implement QR code generation for verification URLs
+    - Generate QR codes with format: https://3arida.ma/reports/verify/{petitionId}
+    - Return QR code as base64 data URL for embedding in PDF
+    - _Requirements: 1.2, 6.1, 6.5_
+  - [ ] 5.3 Write property test for QR code verification URL format
+    - **Property 9: QR Code Verification URL**
+    - **Validates: Requirements 1.2, 6.1, 6.5**
+
+- [x] 6. PDF generation core implementation
+    - [x] 6.1 Install and configure jsPDF with Arabic support
+    - Add jsPDF package to dependencies
+    - Add Cairo font files for Arabic text
+    - Configure jsPDF with RTL support
+    - _Requirements: 10.1, 10.2, 10.3_
+    - [x] 6.2 Create PDFGeneratorService with page generation methods
+    - Implement generateReport() main method
+    - Implement createCoverPage() with logo, title, reference code, QR code
+    - Implement createDetailsPage() with petition metadata
+    - Implement createContentPage() with full description
+    - Implement createStatisticsPage() with all metrics
+    - Implement createVerificationPage() with generation info
+    - _Requirements: 1.1, 1.4, 1.5, 1.6, 1.7, 7.1, 7.2, 7.3, 7.4, 7.5_
+  - [ ] 6.3 Write property test for report content completeness
+    - **Property 1: Report Content Completeness**
+    - **Validates: Requirements 1.1, 1.2, 1.4, 1.5, 1.6, 1.7, 7.1, 7.2, 7.3, 7.4, 7.5**
+  - [ ] 6.4 Write property test for PDF filename format
+    - **Property 16: PDF Filename Format**
+    - **Validates: Requirements 10.6**
+  - [ ] 6.5 Write unit tests for edge cases
+    - Test with missing petition data
+    - Test with very long descriptions
+    - Test with special characters in title
+    - _Requirements: 11.1_
+
+- [x] 7. Report generation API endpoint
+    - [x] 7.1 Create POST /api/petitions/[id]/report/generate endpoint
+    - Validate petition exists and user has permission
+    - Check access control (tier, beta mode, download count)
+    - Generate PDF if allowed or return payment requirement
+    - Record download in tracking service
+    - Return response with download URL or payment requirement
+    - _Requirements: 1.1, 2.1, 2.3, 2.4, 3.1, 4.2, 4.3_
+  - [ ] 7.2 Write property test for error handling with missing data
+    - **Property 17: Error Handling for Missing Data**
+    - **Validates: Requirements 11.1**
+  - [ ] 7.3 Write property test for authorization error handling
+    - **Property 20: Authorization Error Handling**
+    - **Validates: Requirements 11.5**
+  - [ ] 7.4 Write unit tests for API endpoint
+    - Test successful generation with free download
+    - Test payment required response
+    - Test access denied for free tier
+    - Test unauthorized access
+    - _Requirements: 2.3, 4.2, 4.3, 11.5_
+
+- [x] 8. Download report API endpoint
+    - [x] 8.1 Create GET /api/petitions/[id]/report/download endpoint
+    - Validate petition exists and user has permission
+    - Verify payment if paymentId provided
+    - Generate PDF
+    - Set appropriate headers (Content-Type, Content-Disposition)
+    - Stream PDF to client
+    - _Requirements: 1.1_
+  - [ ] 8.2 Write unit tests for download endpoint
+    - Test successful download
+    - Test with payment verification
+    - Test unauthorized access
+    - _Requirements: 1.1, 11.5_
+
+- [ ] 9. Checkpoint - Ensure PDF generation and APIs work
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 10. Payment service implementation
+  - [ ] 10.1 Create PaymentService with Stripe integration
+    - Implement createStripePayment() method
+    - Configure Stripe with 19 MAD amount
+    - Add error handling for Stripe failures
+    - _Requirements: 5.2_
+  - [ ] 10.2 Add PayPal integration to PaymentService
+    - Implement createPayPalOrder() method
+    - Configure PayPal with 19 MAD amount
+    - Add error handling for PayPal failures
+    - _Requirements: 5.3_
+  - [ ] 10.3 Implement payment verification
+    - Implement verifyPayment() method for both Stripe and PayPal
+    - Add webhook handlers for payment confirmation
+    - _Requirements: 5.4, 5.5_
+  - [ ] 10.4 Implement payment confirmation email
+    - Create email template for payment confirmation
+    - Implement sendConfirmationEmail() method
+    - Include petition title and download link in email
+    - _Requirements: 5.6_
+  - [ ] 10.5 Write property test for payment amount consistency
+    - **Property 6: Payment Amount Consistency**
+    - **Validates: Requirements 5.1, 5.2, 5.3**
+  - [ ] 10.6 Write property test for payment success flow
+    - **Property 7: Payment Success Flow**
+    - **Validates: Requirements 5.4, 5.6**
+  - [ ] 10.7 Write property test for payment failure handling
+    - **Property 8: Payment Failure Handling**
+    - **Validates: Requirements 5.5**
+  - [ ] 10.8 Write property test for payment error handling
+    - **Property 18: Payment Error Handling**
+    - **Validates: Requirements 11.2**
+
+- [ ] 11. Purchase report API endpoint
+  - [ ] 11.1 Create POST /api/petitions/[id]/report/purchase endpoint
+    - Validate petition exists and user has permission
+    - Check that payment is required (not in free download range)
+    - Create payment intent/order based on selected method
+    - Return payment details for client-side completion
+    - _Requirements: 5.1, 5.2, 5.3_
+  - [ ] 11.2 Write unit tests for purchase endpoint
+    - Test Stripe payment creation
+    - Test PayPal order creation
+    - Test when payment not required (free downloads available)
+    - Test unauthorized access
+    - _Requirements: 5.1, 5.2, 5.3, 11.5_
+
+- [x] 12. Verification page API endpoint
+    - [x] 12.1 Create GET /api/reports/verify/[petitionId] endpoint
+    - Validate petition exists
+    - Fetch petition data (title, reference code, statistics)
+    - Fetch download history (count, last download date)
+    - Return verification response
+    - Handle invalid petition IDs gracefully
+    - _Requirements: 6.2, 6.3, 6.4_
+  - [ ] 12.2 Write property test for verification page content
+    - **Property 10: Verification Page Content**
+    - **Validates: Requirements 6.2, 6.3**
+  - [ ] 12.3 Write unit tests for verification endpoint
+    - Test with valid petition ID
+    - Test with invalid petition ID (edge case)
+    - Test with petition that has no downloads
+    - _Requirements: 6.2, 6.3, 6.4_
+
+- [ ] 13. Checkpoint - Ensure payment and verification work
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 14. Translation keys for report feature
+    - [x] 14.1 Add Arabic translations for all report-related UI text
+    - Add keys: report.download, report.free, report.remaining, report.price, etc.
+    - Ensure all UI text has Arabic translations
+    - _Requirements: 12.1_
+    - [x] 14.2 Add French translations for all report-related UI text
+    - Add keys: report.download, report.free, report.remaining, report.price, etc.
+    - Ensure all UI text has French translations
+    - _Requirements: 12.2_
+  - [ ] 14.3 Add English translations for all report-related UI text
+    - Add keys: report.download, report.free, report.remaining, report.price, etc.
+    - Ensure all UI text has English translations
+    - _Requirements: 12.3_
+
+- [x] 15. Report download button component
+    - [x] 15.1 Create ReportDownloadButton component
+    - Implement button state calculation based on tier, beta mode, and download count
+    - Add appropriate badges (Free, 19 MAD, Free - Beta)
+    - Add lock icon for disabled state (free tier post-beta)
+    - Handle click events for different states
+    - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
+  - [ ] 15.2 Write property test for button state calculation
+    - **Property 11: Button State Calculation**
+    - **Validates: Requirements 8.2, 8.3, 8.4, 8.5**
+  - [ ] 15.3 Write property test for button click behavior
+    - **Property 12: Button Click Behavior**
+    - **Validates: Requirements 8.6, 8.7, 8.8**
+  - [ ] 15.4 Write unit tests for button component
+    - Test rendering in different states
+    - Test click handlers
+    - Test with different language settings
+    - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 12.4_
+
+- [x] 16. Payment modal component
+    - [x] 16.1 Create PaymentModal component
+    - Display price (19 MAD) and feature list
+    - Add Stripe payment button
+    - Add PayPal payment button
+    - Handle payment completion and errors
+    - Show loading states during payment processing
+    - _Requirements: 5.1_
+  - [ ] 16.2 Write unit tests for payment modal
+    - Test rendering with correct price
+    - Test Stripe button click
+    - Test PayPal button click
+    - Test with different language settings
+    - _Requirements: 5.1, 12.5_
+
+- [ ] 17. Integrate report button into dashboard
+  - [ ] 17.1 Add ReportDownloadButton to PetitionManagement component
+    - Place button in petition management section
+    - Wire up button to report generation API
+    - Handle upgrade modal for free tier
+    - Handle payment modal for paid downloads
+    - Show success/error notifications
+    - _Requirements: 8.1, 8.6, 8.7, 8.8_
+  - [ ] 17.2 Write property test for download information display
+    - **Property 4: Download Information Display**
+    - **Validates: Requirements 3.4, 4.5**
+  - [ ] 17.3 Write integration tests for dashboard flow
+    - Test full flow: button click → generation → download
+    - Test full flow: button click → payment → generation → download
+    - Test upgrade prompt for free tier
+    - _Requirements: 8.1, 8.6, 8.7, 8.8_
+
+- [x] 18. Verification page UI
+    - [x] 18.1 Create /reports/verify/[petitionId] page
+    - Display petition title and reference code
+    - Display current statistics (signatures, comments, views)
+    - Display download count and last download date
+    - Add link to view full petition
+    - Handle invalid petition IDs with error message
+    - Support all three languages (Arabic, French, English)
+    - _Requirements: 6.2, 6.3, 6.4, 12.6_
+  - [ ] 18.2 Write unit tests for verification page
+    - Test rendering with valid petition data
+    - Test error state with invalid ID
+    - Test with different language settings
+    - _Requirements: 6.2, 6.3, 6.4, 12.6_
+
+- [ ] 19. Error handling and user feedback
+  - [ ] 19.1 Add error handling for network failures
+    - Implement retry logic with exponential backoff
+    - Display retry option to user
+    - Show clear error messages
+    - _Requirements: 11.3_
+  - [ ] 19.2 Write property test for network error recovery
+    - **Property 19: Network Error Recovery**
+    - **Validates: Requirements 11.3**
+  - [ ] 19.3 Write unit tests for error scenarios
+    - Test network timeout
+    - Test server error responses
+    - Test invalid data errors
+    - _Requirements: 11.1, 11.2, 11.3_
+
+- [ ] 20. Language selection integration
+  - [ ] 20.1 Ensure all report UI respects user language preference
+    - Test button text in all languages
+    - Test payment modal in all languages
+    - Test verification page in all languages
+    - Test error messages in all languages
+    - _Requirements: 12.4, 12.5, 12.6_
+  - [ ] 20.2 Write property test for language selection
+    - **Property 21: Language Selection**
+    - **Validates: Requirements 12.4, 12.5, 12.6**
+
+- [ ] 21. Final checkpoint - End-to-end testing
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 22. Performance optimization and monitoring
+  - [ ] 22.1 Add performance monitoring for PDF generation
+    - Log generation time for each report
+    - Add alerts for slow generation (> 5 seconds)
+    - Monitor memory usage during generation
+  - [ ] 22.2 Add monitoring for payment success rates
+    - Track payment completion rate
+    - Monitor payment failures by provider
+    - Add alerts for high failure rates (> 5%)
+  - [ ] 22.3 Optimize PDF generation performance
+    - Cache QR codes for repeated downloads
+    - Optimize font loading
+    - Test with large petition descriptions
+
+- [ ] 23. Documentation and deployment preparation
+  - [ ] 23.1 Document API endpoints
+    - Add API documentation for all report endpoints
+    - Include request/response examples
+    - Document error codes and messages
+  - [ ] 23.2 Create deployment checklist
+    - Verify BETA_MODE flag is set correctly
+    - Verify Stripe/PayPal credentials are configured
+    - Verify Cairo font files are deployed
+    - Test in staging environment
+  - [ ] 23.3 Create feature flag transition plan
+    - Document steps to disable beta mode
+    - Document expected behavior changes
+    - Create monitoring dashboard for transition
+
+## Notes
+
+- Tasks marked with `*` are optional and can be skipped for faster MVP
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation throughout implementation
+- Property tests validate universal correctness properties across all inputs
+- Unit tests validate specific examples, edge cases, and error conditions
+- The implementation assumes TypeScript/Next.js environment
+- Initial deployment should have BETA_MODE=true for unlimited free access
+- Payment integration requires Stripe and PayPal test credentials for development

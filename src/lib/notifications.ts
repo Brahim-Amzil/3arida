@@ -4,6 +4,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   getDocs,
   updateDoc,
   doc,
@@ -83,6 +84,7 @@ export const getUserNotifications = async (
       notificationsRef,
       where('userId', '==', userId),
       orderBy('createdAt', 'desc'),
+    limit(20),
     );
 
     const snapshot = await getDocs(notificationsQuery);
@@ -164,6 +166,7 @@ export const subscribeToUserNotifications = (
     notificationsRef,
     where('userId', '==', userId),
     orderBy('createdAt', 'desc'),
+    limit(20),
   );
 
   return onSnapshot(notificationsQuery, (snapshot) => {
@@ -371,7 +374,7 @@ export const sendEmailNotification = async (
   // Example with SendGrid:
   // const msg = {
   //   to: email,
-  //   from: 'notifications@3arida.ma',
+  //   from: 'notifications@3arida.org',
   //   subject,
   //   text: message,
   //   html: generateEmailTemplate(subject, message, data),

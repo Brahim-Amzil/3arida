@@ -59,7 +59,7 @@ export default function ContactModeratorModal({
           user?.displayName ||
           petition.creatorName ||
           'Petition Creator',
-        creatorEmail: user?.email || 'no-reply@3arida.ma',
+        creatorEmail: user?.email || 'no-reply@3arida.org',
         status: 'pending',
         messages: [
           {
@@ -140,11 +140,10 @@ export default function ContactModeratorModal({
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="flex items-start gap-4">
                 {petition.mediaUrls && petition.mediaUrls.length > 0 && (
-                  <img
-                    src={petition.mediaUrls[0]}
+                  <img src={petition.mediaUrls[0]}
                     alt={petition.title}
                     className="w-20 h-20 object-cover rounded"
-                  />
+                   loading="lazy" />
                 )}
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900 mb-1">

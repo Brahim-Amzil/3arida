@@ -76,8 +76,7 @@ export function InfluencerBanner({
         <div className="flex items-center gap-4">
           {/* Profile Photo */}
           <div className="relative flex-shrink-0">
-            <img
-              src={profilePhotoUrl}
+            <img loading="lazy" src={profilePhotoUrl}
               alt={channelName}
               className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-white shadow-md"
               onError={(e) => {

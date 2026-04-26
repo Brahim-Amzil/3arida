@@ -497,6 +497,19 @@ export default function PetitionDetailPage() {
     }
   };
 
+  const handleCreatorClose = async (closingMessage?: string) => {
+    if (!user || !petition) return;
+
+    try {
+      const { closePetitionByCreator } = await import('@/lib/petitions');
+      await closePetitionByCreator(petition.id, user.uid, closingMessage);
+      // Petition will update via realtime listener
+    } catch (error: any) {
+      console.error('Error closing petition:', error);
+      throw error;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -1054,12 +1067,43 @@ export default function PetitionDetailPage() {
 
                 {/* 6. Action Buttons */}
                 <div className="space-y-3 mb-6 w-full">
+                  {/* Closed Petition Alert */}
+                  {petition.closedByCreator && (
+                    <div className="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <Archive className="h-5 w-5 text-blue-500" />
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <h3 className="text-sm font-medium text-blue-800">
+                            العريضة مغلقة
+                          </h3>
+                          <p className="mt-1 text-sm text-blue-700">
+                            تم إغلاق هذه العريضة من قبل منشئها ولا تقبل توقيعات
+                            جديدة. التوقيعات الحالية والبيانات محفوظة.
+                          </p>
+                          {petition.closingMessage && (
+                            <div className="mt-2 p-2 bg-blue-100 rounded">
+                              <p className="text-sm font-medium text-blue-800">
+                                رسالة من المنشئ:
+                              </p>
+                              <p className="text-sm text-blue-700 italic">
+                                "{petition.closingMessage}"
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Row 1: Sign Button + Badge */}
                   <div className="flex gap-3 w-full">
                     <Button
                       onClick={handleSignPetition}
                       disabled={
                         petition.status !== 'approved' ||
+                        petition.closedByCreator ||
                         signingLoading ||
                         hasUserSigned
                       }
@@ -1086,6 +1130,11 @@ export default function PetitionDetailPage() {
                             />
                           </svg>
                           {t('petition.alreadySigned')}
+                        </>
+                      ) : petition.closedByCreator ? (
+                        <>
+                          <Archive className="w-5 h-5 mr-2 inline" />
+                          العريضة مغلقة
                         </>
                       ) : (
                         t('petition.signPetition')
@@ -1714,6 +1763,7 @@ export default function PetitionDetailPage() {
                   onDelete={handleCreatorDelete}
                   onArchive={handleCreatorArchive}
                   onRequestDeletion={handleCreatorRequestDeletion}
+                  onClose={handleCreatorClose}
                 />
               )}
 

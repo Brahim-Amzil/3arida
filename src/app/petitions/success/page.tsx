@@ -3,9 +3,11 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '@/components/layout/HeaderWrapper';
+import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from '@/hooks/useTranslation';
+import PayWhatYouWant from '@/components/payments/PayWhatYouWant';
 
 function PetitionSuccessPageContent() {
   const router = useRouter();
@@ -57,10 +59,10 @@ function PetitionSuccessPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
-      <div className="max-w-2xl mx-auto px-4 py-12">
+      <div className="flex-grow max-w-2xl mx-auto px-4 py-12 w-full">
         <Card>
           <CardHeader className="text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
@@ -149,7 +151,16 @@ function PetitionSuccessPageContent() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Pay What You Want - Only show if payment was NOT required (Beta users) */}
+        {!needsPayment && !paymentCompleted && (
+          <div className="mt-8">
+            <PayWhatYouWant />
+          </div>
+        )}
       </div>
+
+      <Footer />
     </div>
   );
 }

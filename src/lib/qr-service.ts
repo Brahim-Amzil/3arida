@@ -24,7 +24,7 @@ export const generateQRCodeDataURL = async (
     const baseUrl =
       typeof window !== 'undefined'
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_APP_URL || 'https://3arida.ma';
+        : process.env.NEXT_PUBLIC_APP_URL || 'https://3arida.org';
     const petitionUrl = `${baseUrl}/petitions/${petitionId}${
       includeAnalytics ? '?utm_source=qr' : ''
     }`;
@@ -133,7 +133,7 @@ const addBrandingToQR = async (
     ctx.fillStyle = '#000000';
     ctx.font = `${Math.floor(size * 0.04)}px Arial, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('3arida.ma', size / 2, size + 30);
+    ctx.fillText('3arida.org', size / 2, size + 30);
     ctx.fillText('Petition Platform', size / 2, size + 50);
 
     return canvas.toDataURL('image/png');

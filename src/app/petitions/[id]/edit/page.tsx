@@ -329,11 +329,10 @@ export default function EditPetitionPage() {
                     <div className="grid grid-cols-2 gap-4">
                       {existingMediaUrls.map((url, index) => (
                         <div key={index} className="relative">
-                          <img
-                            src={url}
+                          <img src={url}
                             alt={`Media ${index + 1}`}
                             className="w-full h-32 object-cover rounded-lg"
-                          />
+                           loading="lazy" />
                           <button
                             type="button"
                             onClick={() => handleRemoveMedia(index)}

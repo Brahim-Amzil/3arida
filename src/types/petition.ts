@@ -99,9 +99,24 @@ export interface Petition {
     resubmittedAt?: Date;
   }>;
 
+  // Creator closure
+  closedByCreator?: boolean;
+  closedAt?: Date;
+  closingMessage?: string;
+
   // Public visibility
   isPublic: boolean;
   isActive: boolean;
+
+  // Report tracking
+  reportDownloads?: number;
+  reportDownloadHistory?: Array<{
+    downloadedAt: Date;
+    downloadedBy: string;
+    downloadNumber: number;
+    paymentId?: string;
+    ipAddress?: string;
+  }>;
 }
 
 // Petition Form Data (for creation/editing)

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { logout } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,7 @@ function ProfileDropdown({ user, userProfile, onLogout }: any) {
       {userProfile?.role === 'admin' && (
         <Link
           href="/admin"
-          className="flex items-center gap-1 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+          className="flex items-center gap-1 px-3 py-1.5 bg-red-100 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path
@@ -75,11 +75,10 @@ function ProfileDropdown({ user, userProfile, onLogout }: any) {
       >
         {userProfile?.photoURL || user?.photoURL ? (
           <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
-            <img
-              src={userProfile?.photoURL || user?.photoURL || ''}
+            <img src={userProfile?.photoURL || user?.photoURL || ''}
               alt="Profile"
               className="w-full h-full object-cover"
-            />
+             loading="lazy" />
           </div>
         ) : (
           <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -160,6 +159,11 @@ function HeaderInner() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { t, locale } = useTranslation();
+  const pathname = usePathname();
+
+  // Check if we're in admin or moderator area
+  const isAdminArea =
+    pathname?.startsWith('/admin') || pathname?.startsWith('/moderator');
 
   useEffect(() => {
     // Small delay to ensure hydration is complete
@@ -180,7 +184,9 @@ function HeaderInner() {
   // Don't render until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <header className="bg-white shadow-sm border-b">
+      <header
+        className={`shadow-sm border-b ${isAdminArea ? 'bg-red-50' : 'bg-white'}`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -220,6 +226,12 @@ function HeaderInner() {
               >
                 About
               </Link>
+              <Link
+                href="/influencers"
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              >
+                أفكار عرائض
+              </Link>
             </nav>
             {/* Loading placeholder */}
             <div className="hidden md:flex items-center gap-4">
@@ -250,7 +262,10 @@ function HeaderInner() {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b" suppressHydrationWarning>
+    <header
+      className={`shadow-sm border-b ${isAdminArea ? 'bg-red-200' : 'bg-white'}`}
+      suppressHydrationWarning
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -280,11 +295,10 @@ function HeaderInner() {
               {t('petitions.startPetition')}
             </Link>
             <Link
-              href="/influencers"
+              href="/influencers/petitions-projects"
               className="text-gray-600 hover:text-gray-900 font-medium transition-colors flex items-center gap-1"
             >
-              <span className="text-lg">🌟</span>
-              {t('nav.influencers')}
+              أفكار عرائض
             </Link>
             <Link
               href="/pricing"
@@ -375,14 +389,15 @@ function HeaderInner() {
               >
                 {t('petitions.startPetition')}
               </Link>
-              <Link
+              {/* Influencers link temporarily hidden - page still accessible at /influencers */}
+              {/* <Link
                 href="/influencers"
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors flex items-center gap-1"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <span className="text-lg">🌟</span>
                 {t('nav.influencers')}
-              </Link>
+              </Link> */}
               <Link
                 href="/pricing"
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"

@@ -27,6 +27,7 @@ function PetitionsPage() {
   });
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
+  const [lastDoc, setLastDoc] = useState<any>(undefined);
 
   useEffect(() => {
     setMounted(true);
@@ -63,18 +64,22 @@ function PetitionsPage() {
       setError('');
 
       const currentPage = reset ? 1 : page;
+      const cursor = reset ? undefined : lastDoc;
+      
       const result = await getPetitions(filters, {
         page: currentPage,
         limit: 12,
         total: 0,
         hasMore: false,
-      });
+      }, cursor);
 
       if (reset) {
         setPetitions(result.petitions);
         setPage(1);
+        setLastDoc(result.lastDoc);
       } else {
         setPetitions((prev) => [...prev, ...result.petitions]);
+        setLastDoc(result.lastDoc);
       }
 
       setHasMore(result.pagination.hasMore);
@@ -293,8 +298,16 @@ function PetitionsPage() {
           {!loading && hasMore && (
             <div className="text-center">
               <Button onClick={handleLoadMore} variant="outline" size="lg">
-                Load More Petitions
+                تحميل المزيد من العرائض
               </Button>
+            </div>
+          )}
+          
+          {!loading && !hasMore && petitions.length > 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-600">
+                🎉 لقد وصلت إلى نهاية العرائض
+              </p>
             </div>
           )}
         </main>

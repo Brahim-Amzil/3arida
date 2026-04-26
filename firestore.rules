@@ -46,7 +46,8 @@ service cloud.firestore {
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
         && request.resource.data.description is string
-        && request.resource.data.description.size() > 0;
+        && request.resource.data.description.size() > 0
+        && request.resource.size() < 50000; // 50KB document size limit
       
       // Only creator or admin can update, except for signature count increments
       allow update: if isAuthenticated() 
@@ -78,7 +79,8 @@ service cloud.firestore {
       
       // MVP: Simplified rules - authenticated users can create signatures
       allow create: if isAuthenticated()
-        && request.resource.data.petitionId is string;
+        && request.resource.data.petitionId is string
+        && request.resource.size() < 5000; // 5KB document size limit
       
       // Only signature owner or admin can update/delete
       allow update, delete: if isAuthenticated() 

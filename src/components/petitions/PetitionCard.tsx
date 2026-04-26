@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Petition } from '@/types/petition';
@@ -290,22 +291,8 @@ export default function PetitionCard({
         {/* Action Buttons */}
         {showActions && (
           <div className="px-4 pb-4">
-            <div className="flex gap-2">
-              <Link
-                href={petitionUrl}
-                className="flex-1 bg-green-600 text-white text-center py-2 px-4 rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
-              >
-                {t('petitionCard.viewPetition')}
-              </Link>
-              {!petition.hasQrUpgrade && (
-                <Link
-                  href={`/petitions/${petition.id}/qr`}
-                  className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
-                >
-                  QR
-                </Link>
-              )}
-              <button className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+            <div className="grid grid-cols-2 gap-2">
+              <button className="w-full px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center">
                 <svg
                   className="w-4 h-4 text-gray-600"
                   fill="none"
@@ -320,6 +307,14 @@ export default function PetitionCard({
                   />
                 </svg>
               </button>
+              {!petition.hasQrUpgrade && (
+                <Link
+                  href={`/petitions/${petition.id}/qr`}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700 text-center"
+                >
+                  QR
+                </Link>
+              )}
             </div>
           </div>
         )}

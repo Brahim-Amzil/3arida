@@ -5,7 +5,7 @@ test.describe('Petition Management Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await page.goto('/auth/login');
-    await page.fill('input[type="email"]', 'test@3arida.ma');
+    await page.fill('input[type="email"]', 'test@3arida.org');
     await page.fill('input[type="password"]', 'TestPassword123');
     await page.click('button[type="submit"]');
     await expect(page).toHaveURL('/dashboard');

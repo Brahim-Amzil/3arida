@@ -144,11 +144,10 @@ export function InfluencerInfoForm({
             </label>
             <div className="flex items-center gap-4">
               {photoPreview && (
-                <img
-                  src={photoPreview}
+                <img src={photoPreview}
                   alt="Profile preview"
                   className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
-                />
+                 loading="lazy" />
               )}
               <div className="flex-1">
                 <input

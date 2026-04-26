@@ -19,7 +19,7 @@ jest.mock('next/link', () => {
 
 jest.mock('next/image', () => {
   const MockImage = ({ src, alt, ...props }: any) => (
-    <img src={src} alt={alt} {...props} />
+    <img src={src} alt={alt} {...props}  loading="lazy" />
   );
   MockImage.displayName = 'MockImage';
   return MockImage;

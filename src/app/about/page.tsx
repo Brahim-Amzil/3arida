@@ -15,7 +15,7 @@ export default function AboutPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-4xl mx-auto px-4 lg:px-6 lg:px-8 py-12">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -32,12 +32,75 @@ export default function AboutPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               {t('about.mission.title')}
             </h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
+
+            {/* Original Mission Text */}
+            <p className="text-gray-700 text-lg leading-relaxed mb-4">
               {t('about.mission.paragraph1')}
             </p>
-            <p className="text-gray-700 leading-relaxed">
+            <p className="text-gray-700 text-lg leading-relaxed mb-6">
               {t('about.mission.paragraph2')}
             </p>
+
+            {/* Why 3arida is not free - Exact copy from Help page */}
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              هل #منصة_عريضة مجانية؟
+            </h3>
+
+            {/* Commitment to Free lgall Petitions - FIRST */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <p className="text-blue-900 font-semibold mb-2">
+                ✅ نعم! إلتزامنا الدائم
+              </p>
+              <p className="text-blue-800 text-lg">
+                <strong>نحن ملتزمون بإبقاء </strong>#منصة_عريضة{' '}
+                <strong>مجانية دائماً</strong> للعرائض الصغيرة التي تستهدف حتى{' '}
+                <strong>2500 توقيع</strong>. هدفنا هو دعم القضايا المحلية
+                والمبادرات المجتمعية.
+              </p>
+            </div>
+
+            <p className="text-gray-700 text-lg leading-relaxed mb-4">
+              {' '}
+              <strong> #منصة_عريضة</strong> هي <strong>مبادرة مستقلة</strong>{' '}
+              غير مدعومة من أي منظمة أو مؤسسة جهة عمومية أو خاصة. و لضمان
+              إستمرارية المنصة في أداء مهمتها الإجتماعية، فهي بحاجة لفريق عمل
+              للتطوير و الدعم الفني و الإشراف فضلا عن توفير بيئة تقنية لإستضافة
+              و تدبير آلاف العرائض التي ستحتضن أعداداً جد ضخمة من التوقيعات، و
+              كل هذا مُكلِّف جداً مادياً. و لهذا نحن نعتمد على رسوم رمزية عن
+              الخدمة للمساعدة و لو نسبياً في تغطية تكاليف التشغيل والتطوير.{' '}
+            </p>
+            <p className="text-black-900 font-semibold mb-2 text-lg">
+              ما يميزنا:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-black-800 text-lg">
+              <li>لا نعرض إعلانات على المنصة</li>
+              <li>لا نبيع بيانات المستخدمين</li>
+              <li>استقلالية كاملة في القرارات</li>
+              <li>شفافية في التسعير</li>
+            </ul>
+            <br />
+            <div className=" border border-purple-200 rounded-lg p-4 mb-4">
+              <p className="text-gray-600 text-lg">
+                <strong>ملاحظة:</strong> منصات العرائض الأجنبية مدعومة من منظمات
+                كبيرة وتتلقى تمويلاً من مؤسسات عامة وخاصة بالإضافة إلى إكراميات
+                المستخدمين، مما يسمح لها بتقديم خدمات مجانية.
+              </p>
+            </div>
+            <br />
+            {/* Beta Launch Notice */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <p className="text-green-900 text-lg mb-2">
+                <strong>
+                  🎉 فترة الإطلاق التجريبي - يمكنك إستخذام منصة #عريضة مجاناً
+                  بالكامل
+                </strong>
+              </p>
+              <p className="text-green-800 text-lg">
+                خلال فترة الإطلاق التجريبي (Beta)، يمكنك إنشاء عرائض مجانية
+                بنسبة 100%. يتم تطبيق كوبون BETA100 تلقائياً على جميع العرائض.
+                استفد من هذه الفرصة المحدودة!
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -287,7 +350,7 @@ export default function AboutPage() {
           <p className="text-lg mb-6 text-green-50">
             {t('about.cta.subtitle')}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col lg:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary">
               <Link href="/petitions/create">
                 {t('about.cta.startPetition')}

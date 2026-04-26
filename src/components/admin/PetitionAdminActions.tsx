@@ -188,6 +188,109 @@ export default function PetitionAdminActions({
         // Don't fail the action if notification fails
       }
 
+      // Send email notification if petition was approved
+      if (action === 'approve') {
+        console.log('🔍 Starting approval email process...');
+        try {
+          console.log('🔍 Getting creator info for petition:', petition.id);
+          const creator = await getUserById(petition.creatorId);
+          console.log('🔍 Creator info:', {
+            id: petition.creatorId,
+            name: creator?.name,
+            email: creator?.email,
+            hasEmail: !!creator?.email,
+          });
+
+          if (creator?.email) {
+            console.log('🔍 Importing email notification function...');
+            const { sendPetitionApprovedEmail } =
+              await import('@/lib/email-notifications');
+            console.log('🔍 Sending approval email to:', creator.email);
+            const result = await sendPetitionApprovedEmail(
+              creator.name,
+              creator.email,
+              petition.title,
+              petition.id,
+            );
+            console.log('✅ Petition approved email result:', result);
+            if (result) {
+              console.log(
+                '✅ Petition approved email sent successfully to creator',
+              );
+            } else {
+              console.error('❌ Petition approved email failed to send');
+            }
+          } else {
+            console.warn(
+              '⚠️ Creator email not found, skipping email notification',
+            );
+            console.warn('⚠️ Creator object:', creator);
+          }
+        } catch (emailError) {
+          console.error(
+            '❌ Error sending petition approved email:',
+            emailError,
+          );
+          console.error('❌ Error stack:', emailError);
+          // Don't fail the action if email fails
+        }
+      }
+
+      // Send email notification for reject, pause, or delete actions
+      if (action === 'reject' || action === 'pause' || action === 'delete') {
+        try {
+          const creator = await getUserById(petition.creatorId);
+          if (creator?.email) {
+            const {
+              sendPetitionRejectedEmail,
+              sendPetitionPausedEmail,
+              sendPetitionDeletedEmail,
+            } = await import('@/lib/email-notifications');
+
+            switch (action) {
+              case 'reject':
+                await sendPetitionRejectedEmail(
+                  creator.name,
+                  creator.email,
+                  petition.title,
+                  petition.id,
+                  notes || 'No reason provided',
+                );
+                console.log('✅ Petition rejected email sent to creator');
+                break;
+
+              case 'pause':
+                await sendPetitionPausedEmail(
+                  creator.name,
+                  creator.email,
+                  petition.title,
+                  petition.id,
+                  notes || 'No reason provided',
+                );
+                console.log('✅ Petition paused email sent to creator');
+                break;
+
+              case 'delete':
+                await sendPetitionDeletedEmail(
+                  creator.name,
+                  creator.email,
+                  petition.title,
+                  notes || 'No reason provided',
+                );
+                console.log('✅ Petition deleted email sent to creator');
+                break;
+            }
+          } else {
+            console.warn(
+              '⚠️ Creator email not found, skipping email notification',
+            );
+          }
+        } catch (emailError) {
+          console.error('❌ Error sending petition status email:', emailError);
+          // Don't fail the action if email fails
+        }
+      }
+
       // Update local state
       if (onUpdate) {
         onUpdate(updatedPetition);
