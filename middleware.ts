@@ -16,6 +16,7 @@ const BYPASS_PATHS = [
   '/api',
   '/_next',
   '/favicon',
+  '/.well-known',
 ];
 
 export function middleware(request: NextRequest) {
