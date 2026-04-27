@@ -18,23 +18,23 @@ import { recordDownload } from '@/lib/report-download-tracker';
  */
 function convertFirestoreData(data: any): any {
   const converted: any = {};
-  
+
   for (const [key, value] of Object.entries(data)) {
     if (value && typeof value === 'object' && 'toDate' in value) {
       // Convert Firestore Timestamp to ISO string
-      converted[key] = value.toDate().toISOString();
+      converted[key] = (value as { toDate: () => Date }).toDate().toISOString();
     } else if (Array.isArray(value)) {
       // Handle arrays (might contain timestamps)
-      converted[key] = value.map(item => 
-        item && typeof item === 'object' && 'toDate' in item 
-          ? item.toDate().toISOString() 
-          : item
+      converted[key] = value.map((item) =>
+        item && typeof item === 'object' && 'toDate' in item
+          ? item.toDate().toISOString()
+          : item,
       );
     } else {
       converted[key] = value;
     }
   }
-  
+
   return converted;
 }
 
@@ -53,12 +53,20 @@ export async function GET(
     if (!userId) {
       console.error('[Report Download] No user ID provided');
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'User not authenticated' } },
+        {
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'User not authenticated' },
+        },
         { status: 401 },
       );
     }
 
-    console.log('[Report Download] Looking up petition:', code, 'for user:', userId);
+    console.log(
+      '[Report Download] Looking up petition:',
+      code,
+      'for user:',
+      userId,
+    );
 
     // Try to find petition by reference code first
     let petitionsSnapshot = await adminDb
@@ -74,11 +82,17 @@ export async function GET(
       const rawData = petitionDoc.data();
       const convertedData = convertFirestoreData(rawData);
       petition = { id: petitionDoc.id, ...convertedData } as Petition;
-      console.log('[Report Download] Found petition by referenceCode:', petition.id);
+      console.log(
+        '[Report Download] Found petition by referenceCode:',
+        petition.id,
+      );
     } else {
       // If not found by reference code, try by document ID
       try {
-        const petitionDoc = await adminDb.collection('petitions').doc(code).get();
+        const petitionDoc = await adminDb
+          .collection('petitions')
+          .doc(code)
+          .get();
         if (petitionDoc.exists) {
           const rawData = petitionDoc.data();
           const convertedData = convertFirestoreData(rawData!);
@@ -86,14 +100,20 @@ export async function GET(
           console.log('[Report Download] Found petition by ID:', petition.id);
         }
       } catch (error) {
-        console.error('[Report Download] Error fetching petition by ID:', error);
+        console.error(
+          '[Report Download] Error fetching petition by ID:',
+          error,
+        );
       }
     }
 
     if (!petition) {
       console.error('[Report Download] Petition not found:', code);
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Petition not found' } },
+        {
+          success: false,
+          error: { code: 'NOT_FOUND', message: 'Petition not found' },
+        },
         { status: 404 },
       );
     }
@@ -121,18 +141,26 @@ export async function GET(
     // TODO: If paymentId provided, verify payment before proceeding
 
     // Get IP address
-    const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const ipAddress =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
 
     // Record download
     console.log('[Report Download] Recording download...');
-    await recordDownload(petition.id, userId, paymentId || undefined, ipAddress);
+    await recordDownload(
+      petition.id,
+      userId,
+      paymentId || undefined,
+      ipAddress,
+    );
 
     // Generate PDF
     console.log('[Report Download] Generating PDF report...');
     const downloadNumber = (petition.reportDownloads || 0) + 1;
     // Generate PDF using Puppeteer
     const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/pdf/petition/${petition.id}`;
-    
+
     console.log('[Report Download] Launching Puppeteer...');
     const browser = await puppeteer.launch({
       headless: true,
@@ -147,13 +175,13 @@ export async function GET(
     });
 
     const page = await browser.newPage();
-    
+
     await page.setViewport({
       width: 1200,
       height: 1600,
       deviceScaleFactor: 2,
     });
-    
+
     console.log('[Report Download] Navigating to:', pdfUrl);
     await page.goto(pdfUrl, {
       waitUntil: 'networkidle0',
@@ -162,14 +190,14 @@ export async function GET(
 
     console.log('[Report Download] Waiting for fonts...');
     await page.evaluateHandle('document.fonts.ready');
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
     const fontLoaded = await page.evaluate(() => {
       return document.fonts.check('16px Cairo');
     });
-    
+
     console.log('[Report Download] Cairo font loaded:', fontLoaded);
-    
+
     console.log('[Report Download] Generating PDF...');
     const pdfBuffer = await page.pdf({
       format: 'A4',
@@ -186,10 +214,14 @@ export async function GET(
     await browser.close();
     console.log('[Report Download] PDF generated successfully');
 
-    console.log('[Report Download] PDF generated successfully, size:', pdfBuffer.length, 'bytes');
+    console.log(
+      '[Report Download] PDF generated successfully, size:',
+      pdfBuffer.length,
+      'bytes',
+    );
 
     // Get filename
-    const filename = `petition-report-${petition.referenceCode}-${new Date().toISOString().split("T")[0]}.pdf`;
+    const filename = `petition-report-${petition.referenceCode}-${new Date().toISOString().split('T')[0]}.pdf`;
 
     // Return PDF
     return new NextResponse(pdfBuffer, {
@@ -202,7 +234,10 @@ export async function GET(
     });
   } catch (error) {
     console.error('[Report Download] Error downloading report:', error);
-    console.error('[Report Download] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error(
+      '[Report Download] Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace',
+    );
     return NextResponse.json(
       {
         success: false,
