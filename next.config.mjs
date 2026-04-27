@@ -19,6 +19,7 @@ const nextConfig = {
   compress: true,
   async headers() {
     return [
+      // Images — 1 year cache
       {
         source: '/:all*(svg|jpg|jpeg|png|gif|ico|webp|avif)',
         headers: [
@@ -28,12 +29,33 @@ const nextConfig = {
           },
         ],
       },
+      // Next.js static chunks — 1 year cache (content-hashed filenames)
       {
         source: '/_next/static/:path*',
         headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Fonts — 1 year cache
+      {
+        source: '/:all*(woff|woff2|ttf|otf|eot)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // PWA manifest & service worker
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400',
           },
         ],
       },
