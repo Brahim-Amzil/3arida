@@ -193,80 +193,77 @@ export default function PetitionComments({
     }
   };
 
-  const handleLikeComment = async (commentId: string) => {
-    if (!user) {
-      alert('Please sign in to like comments');
-      return;
-    }
-
-    try {
-      const commentRef = doc(db, 'comments', commentId);
-      const isLiked = likedComments.has(commentId);
-
-      if (isLiked) {
-        // Unlike
-        await updateDoc(commentRef, {
-          likes: increment(-1),
-          likedBy:
-            comments
-              .find((c) => c.id === commentId)
-              ?.likedBy?.filter((id) => id !== user.uid) || [],
-        });
-
-        setLikedComments((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(commentId);
-          return newSet;
-        });
-
-        setComments((prev) =>
-          prev.map((c) =>
-            c.id === commentId
-              ? {
-                  ...c,
-                  likes: c.likes - 1,
-                  likedBy: c.likedBy?.filter((id) => id !== user.uid),
-                }
-              : c,
-          ),
-        );
-      } else {
-        // Like
-        const currentLikedBy =
-          comments.find((c) => c.id === commentId)?.likedBy || [];
-        await updateDoc(commentRef, {
-          likes: increment(1),
-          likedBy: [...currentLikedBy, user.uid],
-        });
-
-        setLikedComments((prev) => new Set(prev).add(commentId));
-
-        setComments((prev) =>
-          prev.map((c) =>
-            c.id === commentId
-              ? {
-                  ...c,
-                  likes: c.likes + 1,
-                  likedBy: [...(c.likedBy || []), user.uid],
-                }
-              : c,
-          ),
-        );
+  const handleLikeComment = useCallback(
+    async (commentId: string) => {
+      if (!user) {
+        alert('Please sign in to like comments');
+        return;
       }
-    } catch (error) {
-      console.error('Error liking comment:', error);
-      alert('Failed to like comment. Please try again.');
-    }
-  };
+
+      try {
+        const commentRef = doc(db, 'comments', commentId);
+        const isLiked = likedComments.has(commentId);
+
+        if (isLiked) {
+          // Unlike
+          await updateDoc(commentRef, {
+            likes: increment(-1),
+            likedBy:
+              comments
+                .find((c) => c.id === commentId)
+                ?.likedBy?.filter((id) => id !== user.uid) || [],
+          });
+
+          setLikedComments((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(commentId);
+            return newSet;
+          });
+
+          setComments((prev) =>
+            prev.map((c) =>
+              c.id === commentId
+                ? {
+                    ...c,
+                    likes: c.likes - 1,
+                    likedBy: c.likedBy?.filter((id) => id !== user.uid),
+                  }
+                : c,
+            ),
+          );
+        } else {
+          // Like
+          const currentLikedBy =
+            comments.find((c) => c.id === commentId)?.likedBy || [];
+          await updateDoc(commentRef, {
+            likes: increment(1),
+            likedBy: [...currentLikedBy, user.uid],
+          });
+
+          setLikedComments((prev) => new Set(prev).add(commentId));
+
+          setComments((prev) =>
+            prev.map((c) =>
+              c.id === commentId
+                ? {
+                    ...c,
+                    likes: c.likes + 1,
+                    likedBy: [...(c.likedBy || []), user.uid],
+                  }
+                : c,
+            ),
+          );
+        }
+      } catch (error) {
+        console.error('Error liking comment:', error);
+        alert('Failed to like comment. Please try again.');
+      }
+    },
+    [user, comments],
+  );
 
   // Throttled like — prevents spam writes (1 second cooldown per comment)
-  const throttledLikeComment = useThrottle(
-    useCallback(
-      (commentId: string) => handleLikeComment(commentId),
-      [handleLikeComment],
-    ),
-    1000,
-  );
+  const throttledLikeComment = useThrottle(handleLikeComment, 1000);
 
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
