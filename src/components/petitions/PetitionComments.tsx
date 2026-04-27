@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useThrottle } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -67,7 +68,7 @@ export default function PetitionComments({
       const commentsQuery = query(
         commentsRef,
         where('petitionId', '==', petitionId),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
       );
 
       const snapshot = await getDocs(commentsQuery);
@@ -114,14 +115,14 @@ export default function PetitionComments({
 
   const sortComments = (
     commentsList: Comment[],
-    sortType: 'latest' | 'mostLiked'
+    sortType: 'latest' | 'mostLiked',
   ) => {
     if (sortType === 'mostLiked') {
       return [...commentsList].sort((a, b) => b.likes - a.likes);
     }
     // Sort by latest (newest first)
     return [...commentsList].sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     );
   };
 
@@ -148,10 +149,10 @@ export default function PetitionComments({
       if (!rateLimit.allowed) {
         const resetDate = new Date(rateLimit.resetTime);
         const timeRemaining = Math.ceil(
-          (rateLimit.resetTime - Date.now()) / 60000
+          (rateLimit.resetTime - Date.now()) / 60000,
         );
         alert(
-          `${rateLimit.message}\n\nYou can comment again in ${timeRemaining} minute${timeRemaining !== 1 ? 's' : ''}.`
+          `${rateLimit.message}\n\nYou can comment again in ${timeRemaining} minute${timeRemaining !== 1 ? 's' : ''}.`,
         );
         setSubmitting(false);
         return;
@@ -226,8 +227,8 @@ export default function PetitionComments({
                   likes: c.likes - 1,
                   likedBy: c.likedBy?.filter((id) => id !== user.uid),
                 }
-              : c
-          )
+              : c,
+          ),
         );
       } else {
         // Like
@@ -248,8 +249,8 @@ export default function PetitionComments({
                   likes: c.likes + 1,
                   likedBy: [...(c.likedBy || []), user.uid],
                 }
-              : c
-          )
+              : c,
+          ),
         );
       }
     } catch (error) {
@@ -257,6 +258,15 @@ export default function PetitionComments({
       alert('Failed to like comment. Please try again.');
     }
   };
+
+  // Throttled like — prevents spam writes (1 second cooldown per comment)
+  const throttledLikeComment = useThrottle(
+    useCallback(
+      (commentId: string) => handleLikeComment(commentId),
+      [handleLikeComment],
+    ),
+    1000,
+  );
 
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
@@ -405,7 +415,7 @@ export default function PetitionComments({
                 href={`/auth/login?redirect=${encodeURIComponent(
                   typeof window !== 'undefined'
                     ? window.location.pathname
-                    : '/petitions'
+                    : '/petitions',
                 )}`}
               >
                 Sign In to Comment
@@ -488,7 +498,7 @@ export default function PetitionComments({
                   {/* Comment Actions */}
                   <div className="flex items-center gap-4">
                     <button
-                      onClick={() => handleLikeComment(comment.id)}
+                      onClick={() => throttledLikeComment(comment.id)}
                       className={`flex items-center gap-1 text-sm transition-colors ${
                         likedComments.has(comment.id)
                           ? 'text-red-500 hover:text-red-600'

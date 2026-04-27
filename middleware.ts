@@ -10,6 +10,7 @@ const RATE_WINDOW = 60 * 1000;
 // Routes that bypass coming soon
 const BYPASS_PATHS = [
   '/coming-soon',
+  '/maintenance',
   '/admin',
   '/auth',
   '/api',
@@ -29,8 +30,29 @@ export function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = '/coming-soon';
       const response = NextResponse.rewrite(url);
-      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      response.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate, proxy-revalidate',
+      );
       response.headers.set('x-coming-soon', 'true');
+      return response;
+    }
+  }
+
+  // --- MAINTENANCE MODE ---
+  // Set MAINTENANCE_MODE=true in Vercel env vars to enable emergency maintenance
+  const isMaintenance = process.env.MAINTENANCE_MODE === 'true';
+
+  if (isMaintenance) {
+    const isBypassed = BYPASS_PATHS.some((p) => pathname.startsWith(p));
+    if (!isBypassed) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/maintenance';
+      const response = NextResponse.rewrite(url);
+      response.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate',
+      );
       return response;
     }
   }
