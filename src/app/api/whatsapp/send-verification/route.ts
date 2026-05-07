@@ -1,4 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyRecaptchaServerToken } from '@/lib/server-recaptcha';
+import {
+  initApiRequestContext,
+  logApiError,
+  logApiInfo,
+  withRequestId,
+} from '@/lib/api-observability';
 
 // Store verification codes temporarily (in production, use Redis or database)
 const verificationCodes = new Map<
@@ -7,13 +14,36 @@ const verificationCodes = new Map<
 >();
 
 export async function POST(request: NextRequest) {
+  const apiContext = initApiRequestContext(
+    request,
+    'api/whatsapp/send-verification',
+  );
+
   try {
-    const { phoneNumber } = await request.json();
+    const { phoneNumber, recaptchaToken } = await request.json();
 
     if (!phoneNumber || !phoneNumber.startsWith('+')) {
-      return NextResponse.json(
+      return withRequestId(
+        NextResponse.json(
         { error: 'Invalid phone number format' },
         { status: 400 }
+        ),
+        apiContext.requestId,
+      );
+    }
+
+    const recaptchaResult = await verifyRecaptchaServerToken(recaptchaToken, {
+      minScore: 0.5,
+      expectedAction: 'whatsapp_send_verification',
+    });
+
+    if (!recaptchaResult.success) {
+      return withRequestId(
+        NextResponse.json(
+        { error: 'Security verification failed' },
+        { status: 400 },
+        ),
+        apiContext.requestId,
       );
     }
 
@@ -26,7 +56,9 @@ export async function POST(request: NextRequest) {
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
 
-    console.log(`📱 Generated code ${code} for ${phoneNumber}`);
+    logApiInfo(apiContext, 'Generated WhatsApp verification code', {
+      phoneNumber,
+    });
 
     // Send via WhatsApp Business API
     const whatsappResponse = await fetch(
@@ -57,7 +89,7 @@ export async function POST(request: NextRequest) {
 
     if (!whatsappResponse.ok) {
       const error = await whatsappResponse.json();
-      console.error('WhatsApp API error:', error);
+      logApiError(apiContext, 'WhatsApp API template send failed', error);
 
       // Fallback: send as text message if template fails
       const fallbackResponse = await fetch(
@@ -84,15 +116,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Verification code sent via WhatsApp',
-    });
+    return withRequestId(
+      NextResponse.json({
+        success: true,
+        message: 'Verification code sent via WhatsApp',
+      }),
+      apiContext.requestId,
+    );
   } catch (error: any) {
-    console.error('Error sending WhatsApp verification:', error);
-    return NextResponse.json(
+    logApiError(apiContext, 'Error sending WhatsApp verification', error);
+    return withRequestId(
+      NextResponse.json(
       { error: error.message || 'Failed to send verification code' },
       { status: 500 }
+      ),
+      apiContext.requestId,
     );
   }
 }

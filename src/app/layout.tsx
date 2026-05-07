@@ -6,6 +6,7 @@ import { ProductionMonitoringProvider } from '@/components/monitoring/Production
 import { BannerProvider } from '@/contexts/BannerContext';
 import InstallPWAPrompt from '@/components/pwa/InstallPWAPrompt';
 import PushNotificationPrompt from '@/components/pwa/PushNotificationPrompt';
+import PwaUpdatePrompt from '@/components/pwa/PwaUpdatePrompt';
 import CookieConsent from '@/components/legal/CookieConsent';
 
 // Latin fonts for English and French
@@ -122,6 +123,7 @@ export default function RootLayout({
               {/* PWA Components */}
               <InstallPWAPrompt />
               <PushNotificationPrompt />
+              <PwaUpdatePrompt />
               {/* Cookie Consent Banner */}
               <CookieConsent />
             </AuthProvider>

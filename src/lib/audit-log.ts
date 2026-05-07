@@ -19,6 +19,7 @@ export type AuditAction =
   | 'petition.deleted'
   | 'petition.archived'
   | 'petition.unarchived'
+  | 'petition.closed'
   // User actions
   | 'user.promoted_to_moderator'
   | 'user.demoted_from_moderator'
@@ -35,7 +36,7 @@ export interface AuditLogEntry {
   actorId: string;
   actorName: string;
   actorEmail: string;
-  actorRole: 'admin' | 'moderator';
+  actorRole: 'admin' | 'moderator' | 'user';
   action: AuditAction;
   targetType: 'petition' | 'user' | 'system';
   targetId: string;

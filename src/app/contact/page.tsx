@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
+import { executeRecaptcha } from '@/lib/recaptcha';
 
 const contactReasons = [
   { value: 'general', label: 'استفسار عام' },
@@ -122,10 +123,23 @@ export default function ContactPage() {
     setErrorMessage('');
 
     try {
+      const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+      if (!siteKey) {
+        throw new Error('reCAPTCHA is not configured');
+      }
+
+      const recaptchaToken = await executeRecaptcha(
+        siteKey,
+        'contact_form_submit',
+      );
+
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          recaptchaToken,
+        }),
       });
 
       if (!response.ok) {

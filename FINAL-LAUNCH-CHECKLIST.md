@@ -344,6 +344,8 @@
 - [ ] Add Resend API key
 - [ ] Add reCAPTCHA keys
 - [ ] Add Stripe keys (if using)
+- [ ] Set `COMING_SOON_MODE=false` in production before public go-live
+- [ ] Confirm `MAINTENANCE_MODE=false` before public go-live
 - [ ] Verify all variables set
 
 **Domain Setup:**
@@ -507,6 +509,7 @@ firebase deploy --only hosting
 
 ### Launch (Afternoon)
 
+- [ ] Final preflight: production `COMING_SOON_MODE=false` (and redeploy if changed)
 - [ ] Announce to beta users (50-100 users)
 - [ ] Monitor Firebase Console
 - [ ] Monitor error logs

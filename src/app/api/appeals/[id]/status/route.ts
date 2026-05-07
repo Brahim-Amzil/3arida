@@ -6,6 +6,7 @@ import {
 // import { sendEmail } from '@/lib/email-service';
 // import { appealStatusChangeEmail } from '@/lib/email-templates';
 import { AppealStatus } from '@/types/appeal';
+import { isModeratorRole } from '@/lib/role-authorization';
 
 export async function PATCH(
   request: NextRequest,
@@ -23,8 +24,8 @@ export async function PATCH(
       );
     }
 
-    // Validate user is moderator/admin
-    if (userRole !== 'moderator' && userRole !== 'admin') {
+    // Validate user is moderator/admin (includes master_admin)
+    if (!isModeratorRole(userRole)) {
       return NextResponse.json(
         { error: 'Only moderators and admins can update appeal status' },
         { status: 403 }

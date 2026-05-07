@@ -14,6 +14,7 @@ import { db } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '@/lib/firebase';
 import { AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 
 const MAX_RESUBMISSIONS = 3;
 
@@ -328,15 +329,18 @@ export default function EditPetitionPage() {
                     </label>
                     <div className="grid grid-cols-2 gap-4">
                       {existingMediaUrls.map((url, index) => (
-                        <div key={index} className="relative">
-                          <img src={url}
+                        <div key={index} className="relative h-32 w-full overflow-hidden rounded-lg">
+                          <Image
+                            src={url}
                             alt={`Media ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg"
-                           loading="lazy" />
+                            fill
+                            className="object-cover"
+                            sizes="50vw"
+                          />
                           <button
                             type="button"
                             onClick={() => handleRemoveMedia(index)}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                           >
                             <svg
                               className="w-4 h-4"

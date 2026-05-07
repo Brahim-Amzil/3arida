@@ -3,6 +3,13 @@ import Stripe from 'stripe';
 import { headers } from 'next/headers';
 import { upgradePetition } from '@/lib/petition-upgrade-service';
 import { logCouponApplication } from '@/lib/beta-coupon-service';
+import {
+  initApiRequestContext,
+  logApiError,
+  logApiInfo,
+  withRequestId,
+} from '@/lib/api-observability';
+import { recordPaymentWebhookFailure } from '@/lib/payment-webhook-alerting';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-12-15.clover',
@@ -11,13 +18,22 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export async function POST(request: NextRequest) {
+  const apiContext = initApiRequestContext(request, 'api/stripe/webhook');
+
   try {
     const body = await request.text();
     const signature = headers().get('stripe-signature');
 
     if (!signature) {
-      console.error('No Stripe signature found');
-      return NextResponse.json({ error: 'No signature' }, { status: 400 });
+      logApiError(apiContext, 'No Stripe signature found');
+      await recordPaymentWebhookFailure('stripe', 'webhook_signature_invalid', {
+        requestId: apiContext.requestId,
+        message: 'Missing stripe-signature header',
+      });
+      return withRequestId(
+        NextResponse.json({ error: 'No signature' }, { status: 400 }),
+        apiContext.requestId,
+      );
     }
 
     let event: Stripe.Event;
@@ -25,10 +41,17 @@ export async function POST(request: NextRequest) {
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err: any) {
-      console.error('Webhook signature verification failed:', err.message);
-      return NextResponse.json(
+      logApiError(apiContext, 'Webhook signature verification failed', err);
+      await recordPaymentWebhookFailure('stripe', 'webhook_signature_invalid', {
+        requestId: apiContext.requestId,
+        message: err?.message,
+      });
+      return withRequestId(
+        NextResponse.json(
         { error: `Webhook Error: ${err.message}` },
         { status: 400 },
+        ),
+        apiContext.requestId,
       );
     }
 
@@ -36,15 +59,18 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('✅ Payment succeeded:', paymentIntent.id);
-        console.log('   Amount:', paymentIntent.amount / 100, 'MAD');
-        console.log('   Metadata:', paymentIntent.metadata);
+        logApiInfo(apiContext, 'Payment succeeded', {
+          paymentIntentId: paymentIntent.id,
+          amountMad: paymentIntent.amount / 100,
+        });
 
         const metadata = paymentIntent.metadata;
 
         // Check if this is an upgrade payment
         if (metadata.isUpgrade === 'true') {
-          console.log('[Webhook] Processing upgrade payment');
+          logApiInfo(apiContext, 'Processing upgrade payment', {
+            paymentIntentId: paymentIntent.id,
+          });
 
           const {
             petitionId,
@@ -68,9 +94,11 @@ export async function POST(request: NextRequest) {
                 currentTier,
                 selectedTier,
               );
-              console.log('[Webhook] Logged beta coupon application');
+              logApiInfo(apiContext, 'Logged beta coupon application', {
+                petitionId,
+              });
             } catch (error) {
-              console.error('[Webhook] Failed to log coupon:', error);
+              logApiError(apiContext, 'Failed to log coupon', error);
               // Continue with upgrade even if logging fails
             }
           }
@@ -85,22 +113,20 @@ export async function POST(request: NextRequest) {
             );
 
             if (result.success) {
-              console.log(
-                `[Webhook] Successfully upgraded petition ${petitionId} to ${selectedTier}`,
-              );
+              logApiInfo(apiContext, 'Successfully upgraded petition', {
+                petitionId,
+                selectedTier,
+              });
             } else {
-              console.error(
-                `[Webhook] Failed to upgrade petition ${petitionId}:`,
-                result.error,
-              );
+              logApiError(apiContext, 'Failed to upgrade petition', result.error);
               // Failed upgrade entry already created by upgradePetition
             }
           } catch (error) {
-            console.error('[Webhook] Error upgrading petition:', error);
+            logApiError(apiContext, 'Error upgrading petition', error);
           }
         } else {
           // Regular petition creation payment
-          console.log('[Webhook] Regular petition payment (not an upgrade)');
+          logApiInfo(apiContext, 'Regular petition payment (not upgrade)');
           // Your existing petition creation logic here
         }
 
@@ -108,22 +134,42 @@ export async function POST(request: NextRequest) {
 
       case 'payment_intent.payment_failed':
         const failedPayment = event.data.object as Stripe.PaymentIntent;
-        console.error('❌ Payment failed:', failedPayment.id);
-        console.error('   Error:', failedPayment.last_payment_error?.message);
+        logApiError(apiContext, 'Payment failed', {
+          paymentIntentId: failedPayment.id,
+          message: failedPayment.last_payment_error?.message,
+        });
+        await recordPaymentWebhookFailure('stripe', 'payment_failed', {
+          requestId: apiContext.requestId,
+          paymentId: failedPayment.id,
+          eventType: event.type,
+          message: failedPayment.last_payment_error?.message,
+        });
 
         // Handle failed payment - maybe send notification to user
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        logApiInfo(apiContext, 'Unhandled stripe event type', {
+          eventType: event.type,
+        });
     }
 
-    return NextResponse.json({ received: true });
+    return withRequestId(
+      NextResponse.json({ received: true }),
+      apiContext.requestId,
+    );
   } catch (error: any) {
-    console.error('Webhook error:', error);
-    return NextResponse.json(
+    logApiError(apiContext, 'Webhook error', error);
+    await recordPaymentWebhookFailure('stripe', 'webhook_processing_failed', {
+      requestId: apiContext.requestId,
+      message: error?.message,
+    });
+    return withRequestId(
+      NextResponse.json(
       { error: error.message || 'Webhook handler failed' },
       { status: 500 },
+      ),
+      apiContext.requestId,
     );
   }
 }

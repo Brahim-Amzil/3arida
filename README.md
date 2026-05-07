@@ -2,6 +2,27 @@
 
 A modern, scalable petition platform designed specifically for Morocco, enabling citizens to create, share, and sign petitions to drive social change.
 
+## Operations
+
+- Full-tree secret scan: `npm run scan:secrets` (also in **CI**); `.secret-scan-ignore` skips legacy paths where rotated or example strings still match heuristics—see `SECURITY.md`
+- [Dependabot config](.github/dependabot.yml) (weekly npm, monthly GitHub Actions)
+- [PR template](.github/pull_request_template.md) (lint/typecheck/test + security checklist)
+- [**Manual launch blockers** (gates, secrets, webhooks — do these in order)](docs/MANUAL-LAUNCH-BLOCKERS.md)
+- [WhatsApp token rotation (post-MVP — **S-04** N/A for MVP launch)](docs/WHATSAPP-TOKEN-ROTATION.md)
+- [Environment variables (production reference)](docs/ENVIRONMENT-VARS.md)
+- [Launch day runbook (go / no-go)](docs/LAUNCH-DAY-RUNBOOK.md)
+- [Staging dry-run checklist](docs/STAGING-DRY-RUN.md)
+- [GitHub branch protection (required checks)](docs/GITHUB-BRANCH-PROTECTION.md)
+- [Monitoring & alerts (post-launch template)](docs/MONITORING-AND-ALERTS.md)
+- [Webhook staging validation (**T-06** — MVP: Stripe + PayPal only)](docs/WEBHOOK-STAGING-VALIDATION.md)
+- [Security gate G-01 checklist](docs/SECURITY-GATE-G01-CHECKLIST.md)
+- [Legal / privacy / cookie QA (**U-05**)](docs/COMPLIANCE-AND-LEGAL-PAGES.md)
+- [A11y smoke checklist (**U-01**)](docs/A11Y-SMOKE-CHECKLIST.md)
+- [Locale / layout / hydration (**U-04**)](docs/LOCALE-LAYOUT-CONTRACT.md)
+- [Performance & bundle notes (**U-03**)](docs/PERFORMANCE-BUNDLE-NOTES.md)
+- [LCP `<img>` candidates (**U-02**)](docs/IMG-LCP-UPGRADE-CANDIDATES.md)
+- [Launch preparation tracker](launch-preparation-tracker.md)
+
 ## 🚀 Project Status
 
 **Current Phase**: Production Ready (90% Complete)
@@ -227,6 +248,8 @@ Ensure all production environment variables are set:
 3. Commit your changes: `git commit -m 'Add amazing feature'`
 4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
+
+Before contributing, read and follow the repository security requirements in [`SECURITY.md`](./SECURITY.md), especially the policy that forbids committing raw environment dumps or real secrets.
 
 ## License
 

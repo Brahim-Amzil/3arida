@@ -10,13 +10,6 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { CreditCard, Check } from 'lucide-react';
 import { Petition } from '@/types/petition';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
 interface ReportPaymentModalProps {
@@ -57,13 +50,31 @@ export function ReportPaymentModal({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('title')}</DialogTitle>
-          <DialogDescription>{t('subtitle')}</DialogDescription>
-        </DialogHeader>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="presentation"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/50"
+        aria-label="Close"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-payment-title"
+        className="relative z-10 w-full max-w-md rounded-lg border bg-background p-6 shadow-lg"
+      >
+        <div className="mb-4 space-y-2">
+          <h2 id="report-payment-title" className="text-lg font-semibold">
+            {t('title')}
+          </h2>
+          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
+        </div>
 
         <div className="space-y-6 py-4">
           {/* Price */}
@@ -123,7 +134,7 @@ export function ReportPaymentModal({
             {t('cancel')}
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

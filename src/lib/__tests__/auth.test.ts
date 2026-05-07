@@ -41,6 +41,26 @@ const mockGetDoc = getDoc as jest.MockedFunction<typeof getDoc>;
 const mockUpdateDoc = updateDoc as jest.MockedFunction<typeof updateDoc>;
 const mockDoc = doc as jest.MockedFunction<typeof doc>;
 
+function authError(code: string) {
+  const err = new Error(code) as Error & { code: string };
+  err.code = code;
+  return err;
+}
+
+function snapshotMissing() {
+  return {
+    exists: () => false,
+    data: () => ({}),
+  };
+}
+
+function snapshotActiveUser() {
+  return {
+    exists: () => true,
+    data: () => ({ isActive: true }),
+  };
+}
+
 describe('Auth Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -70,6 +90,7 @@ describe('Auth Service', () => {
       mockUpdateProfile.mockResolvedValue(undefined);
       mockSendEmailVerification.mockResolvedValue(undefined);
       mockDoc.mockReturnValue({} as any);
+      mockGetDoc.mockResolvedValue(snapshotMissing() as any);
       mockSetDoc.mockResolvedValue(undefined);
 
       const result = await registerWithEmail(userData);
@@ -95,7 +116,7 @@ describe('Auth Service', () => {
       };
 
       mockCreateUserWithEmailAndPassword.mockRejectedValue(
-        new Error('auth/weak-password')
+        authError('auth/weak-password'),
       );
 
       await expect(registerWithEmail(userData)).rejects.toThrow(
@@ -124,6 +145,7 @@ describe('Auth Service', () => {
         mockUserCredential as any
       );
       mockDoc.mockReturnValue({} as any);
+      mockGetDoc.mockResolvedValue(snapshotActiveUser() as any);
       mockUpdateDoc.mockResolvedValue(undefined);
 
       const result = await loginWithEmail(loginData);
@@ -144,7 +166,7 @@ describe('Auth Service', () => {
       };
 
       mockSignInWithEmailAndPassword.mockRejectedValue(
-        new Error('auth/wrong-password')
+        authError('auth/wrong-password'),
       );
 
       await expect(loginWithEmail(loginData)).rejects.toThrow(
@@ -168,7 +190,7 @@ describe('Auth Service', () => {
       const email = 'nonexistent@example.com';
 
       mockSendPasswordResetEmail.mockRejectedValue(
-        new Error('auth/user-not-found')
+        authError('auth/user-not-found'),
       );
 
       await expect(resetPassword(email)).rejects.toThrow(

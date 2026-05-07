@@ -129,6 +129,9 @@ npm run build:analyze
 
 # Test production build locally
 npm run build && npm run start
+
+# Verify generated service worker matches latest build
+npm run pwa:verify-sw-fresh
 ```
 
 ### 2. Deploy Backend Services
@@ -154,8 +157,9 @@ npm run deploy:production
 ### 4. Post-Deployment Verification
 
 ```bash
-# Check health endpoint
+# Check health endpoint (full JSON) or minimal probe for monitors
 curl https://3arida.ma/api/health
+curl -fsS https://3arida.ma/api/health?format=minimal
 
 # Run smoke tests
 curl -f https://3arida.ma/
@@ -198,7 +202,8 @@ curl -f https://3arida.ma/auth/login
 
 ### ✅ Monitoring Setup
 
-- [ ] Health checks responding
+- [ ] Health checks responding (`GET` or `HEAD` `https://<domain>/api/health`; prefer `GET https://<domain>/api/health?format=minimal` for JSON with `ok: true`)
+- [ ] External uptime monitor configured (e.g. UptimeRobot, Better Stack, or Pingdom) hitting the URL above every 1–5 minutes; optional GitHub Actions: set repository secret `HEALTH_CHECK_URL` to the same URL so `.github/workflows/external-health-check.yml` runs on a schedule
 - [ ] Error tracking working
 - [ ] Performance monitoring active
 - [ ] Analytics collecting data
@@ -221,6 +226,8 @@ curl -f https://3arida.ma/auth/login
 # App Configuration
 NEXT_PUBLIC_APP_URL=https://3arida.ma
 NEXT_PUBLIC_APP_NAME=3arida
+COMING_SOON_MODE=false
+MAINTENANCE_MODE=false
 
 # Firebase (Production)
 NEXT_PUBLIC_FIREBASE_API_KEY=your_production_key
@@ -229,6 +236,7 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_VAPID_KEY=your_web_push_certificate_key
 
 # Stripe (Production)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your_key
@@ -251,6 +259,12 @@ NEXT_PUBLIC_SENTRY_DSN=https://your-sentry-dsn
 NEXT_PUBLIC_ENABLE_QR_UPGRADES=true
 NEXT_PUBLIC_ENABLE_PAYMENT_PROCESSING=true
 NEXT_PUBLIC_ENABLE_EMAIL_NOTIFICATIONS=false
+
+# Payment/Webhook Alerting (recommended)
+PAYMENT_ALERT_WEBHOOK_URL=https://your-alert-endpoint.example/webhook
+PAYMENT_ALERT_THRESHOLD_COUNT=3
+PAYMENT_ALERT_WINDOW_MS=600000
+PAYMENT_ALERT_COOLDOWN_MS=900000
 ```
 
 ## Monitoring & Maintenance

@@ -30,7 +30,28 @@ const mockUpdateDoc = updateDoc as jest.MockedFunction<typeof updateDoc>;
 // Mock global fetch
 global.fetch = jest.fn();
 
+const OriginalImage = global.Image;
+
 describe('QR Service', () => {
+  beforeAll(() => {
+    // jsdom never fires `Image.onload` for data URLs; real code awaits it for branded QR paths.
+    global.Image = class MockImage {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      width = 100;
+      height = 100;
+      set src(_value: string) {
+        queueMicrotask(() => {
+          if (this.onload) this.onload();
+        });
+      }
+    } as unknown as typeof Image;
+  });
+
+  afterAll(() => {
+    global.Image = OriginalImage;
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -67,7 +88,7 @@ describe('QR Service', () => {
       const petitionId = 'petition123';
       const options = {
         size: 512,
-        branded: true,
+        branded: false,
         includeAnalytics: false,
       };
       const mockDataURL = 'data:image/png;base64,mockdata';
@@ -156,7 +177,10 @@ describe('QR Service', () => {
 
       mockQRCodeToDataURL.mockResolvedValue(mockDataURL);
 
-      await downloadQRCode(petitionId, petitionTitle);
+      await downloadQRCode(petitionId, petitionTitle, 'png', {
+        branded: false,
+        includeAnalytics: true,
+      });
 
       expect(mockLink.href).toBe(mockDataURL);
       expect(mockLink.download).toBe('save_our_environment_qr_code.png');

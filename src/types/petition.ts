@@ -65,6 +65,10 @@ export interface Petition {
   addressedToType?: string;
   addressedToSpecific?: string;
   referenceCode?: string;
+  /** Legacy / denormalized field from Firestore; prefer `currentSignatures` when absent */
+  signatureCount?: number;
+  /** Optional structured demands list for reports */
+  demands?: string | string[];
 
   // Additional content
   youtubeVideoUrl?: string;

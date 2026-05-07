@@ -76,7 +76,7 @@ export const createNotification = async (
  */
 export const getUserNotifications = async (
   userId: string,
-  limit: number = 20,
+  maxResults: number = 20,
 ): Promise<Notification[]> => {
   try {
     const notificationsRef = collection(db, 'notifications');
@@ -84,7 +84,7 @@ export const getUserNotifications = async (
       notificationsRef,
       where('userId', '==', userId),
       orderBy('createdAt', 'desc'),
-    limit(20),
+      limit(maxResults),
     );
 
     const snapshot = await getDocs(notificationsQuery);
@@ -104,7 +104,7 @@ export const getUserNotifications = async (
       });
     });
 
-    return notifications.slice(0, limit);
+    return notifications.slice(0, maxResults);
   } catch (error) {
     console.error('Error getting notifications:', error);
     throw new Error('Failed to get notifications');

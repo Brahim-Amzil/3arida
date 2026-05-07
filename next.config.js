@@ -1,10 +1,24 @@
 // Next.js automatically loads .env.local - no need for manual dotenv loading
 
+const defaultRuntimeCaching = require('next-pwa/cache');
+
 const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development', // Disabled in dev, enabled in production
+  runtimeCaching: [
+    // Never cache API responses in Service Worker to avoid stale/misleading data.
+    {
+      urlPattern: /^https?.*\/api\/.*$/i,
+      handler: 'NetworkOnly',
+      method: 'GET',
+    },
+    ...defaultRuntimeCaching.filter(
+      (entry) =>
+        !String(entry?.urlPattern || '').includes('pathname.startsWith("/api/")'),
+    ),
+  ],
 });
 
 const createNextIntlPlugin = require('next-intl/plugin');
@@ -44,6 +58,11 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          {
+            key: 'Content-Security-Policy',
+            value:
+              "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://www.paypalobjects.com https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.stripe.com https://www.paypal.com https://www.paypalobjects.com https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://apis.google.com https://www.googletagmanager.com https://*.googleapis.com; frame-src 'self' https://js.stripe.com https://www.paypal.com https://www.google.com https://accounts.google.com https://www.recaptcha.net;",
+          },
         ],
       },
       // Manifest.json specific headers

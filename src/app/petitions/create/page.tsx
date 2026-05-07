@@ -2088,13 +2088,16 @@ function CreatePetitionContent() {
               {formData.mediaUrls.map((url, index) => {
                 const isExcluded = index > 0 && currentTier === 'free';
                 return (
-                  <div key={index} className="relative group">
-                    <img src={url}
+                  <div key={index} className="relative group h-32 w-full overflow-hidden rounded-lg border">
+                    <Image
+                      src={url}
                       alt={`Petition image ${index + 1}`}
-                      className={`w-full h-32 object-cover rounded-lg border transition-all ${
+                      fill
+                      className={`object-cover transition-all ${
                         isExcluded ? 'opacity-40 grayscale' : ''
                       }`}
-                     loading="lazy" />
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                    />
 
                     {/* Red X overlay for excluded images */}
                     {isExcluded && (
@@ -2900,13 +2903,16 @@ function CreatePetitionContent() {
                       calculatePricingTier(formData.targetSignatures) ===
                         'free';
                     return (
-                      <div key={index} className="relative">
-                        <img src={url}
+                      <div key={index} className="relative h-24 w-full overflow-hidden rounded-lg border">
+                        <Image
+                          src={url}
                           alt={`Petition image ${index + 1}`}
-                          className={`w-full h-24 object-cover rounded-lg border transition-all ${
+                          fill
+                          className={`object-cover transition-all ${
                             isExcluded ? 'opacity-40 grayscale' : ''
                           }`}
-                         loading="lazy" />
+                          sizes="(max-width: 768px) 50vw, 33vw"
+                        />
 
                         {/* Red X overlay for excluded images */}
                         {isExcluded && (

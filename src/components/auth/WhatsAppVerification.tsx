@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { executeRecaptcha } from '@/lib/recaptcha';
 
 interface WhatsAppVerificationProps {
   onVerified: (phoneNumber: string) => void;
@@ -37,11 +38,23 @@ export default function WhatsAppVerification({
 
     try {
       console.log('📱 Sending WhatsApp verification to:', cleanPhone);
+      const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+      if (!siteKey) {
+        throw new Error('reCAPTCHA is not configured');
+      }
+
+      const recaptchaToken = await executeRecaptcha(
+        siteKey,
+        'whatsapp_send_verification',
+      );
 
       const response = await fetch('/api/whatsapp/send-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: cleanPhone }),
+        body: JSON.stringify({
+          phoneNumber: cleanPhone,
+          recaptchaToken,
+        }),
       });
 
       const data = await response.json();

@@ -1,0 +1,36 @@
+# Scheduled external ping against production (or staging) health URL.
+# Configure repository secret HEALTH_CHECK_URL, e.g. https://your-domain.com/api/health?format=minimal
+# If unset, the job exits successfully without hitting the network.
+
+name: External health check
+
+on:
+  schedule:
+    - cron: '15 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify health endpoint
+        env:
+          HEALTH_CHECK_URL: ${{ secrets.HEALTH_CHECK_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HEALTH_CHECK_URL:-}" ]; then
+            echo "HEALTH_CHECK_URL secret is not set; skipping external health check."
+            exit 0
+          fi
+          echo "GET $HEALTH_CHECK_URL"
+          code=$(curl -sS -o /tmp/health-body.txt -w "%{http_code}" "$HEALTH_CHECK_URL")
+          echo "HTTP $code"
+          cat /tmp/health-body.txt
+          if [ "$code" != "200" ]; then
+            echo "::error::Health check returned HTTP $code"
+            exit 1
+          fi
+          if ! grep -q '"ok"[[:space:]]*:[[:space:]]*true' /tmp/health-body.txt; then
+            echo "::error::Response missing ok:true (use ?format=minimal or full JSON with ok)"
+            exit 1
+          fi

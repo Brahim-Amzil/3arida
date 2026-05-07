@@ -124,6 +124,7 @@ export default function PetitionCardWithReport({
       <div className="mt-4">
         <ReportDownloadButton
           petition={petition}
+          userId={user?.uid ?? ''}
           onUpgrade={handleUpgrade}
           onPayment={handlePayment}
         />

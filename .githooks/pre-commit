@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "Running secret scan on staged files..."
+node scripts/scan-secrets.js --staged

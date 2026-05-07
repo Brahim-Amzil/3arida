@@ -23,16 +23,18 @@ function convertFirestoreData(data: any): any {
   const converted: any = {};
   
   for (const [key, value] of Object.entries(data)) {
-    if (value && typeof value === 'object' && 'toDate' in value) {
+    const maybeTimestamp = value as { toDate?: () => Date };
+    if (value && typeof value === 'object' && typeof maybeTimestamp.toDate === 'function') {
       // Convert Firestore Timestamp to ISO string
-      converted[key] = value.toDate().toISOString();
+      converted[key] = maybeTimestamp.toDate().toISOString();
     } else if (Array.isArray(value)) {
       // Handle arrays (might contain timestamps)
-      converted[key] = value.map(item => 
-        item && typeof item === 'object' && 'toDate' in item 
-          ? item.toDate().toISOString() 
-          : item
-      );
+      converted[key] = value.map((item) => {
+        const ts = item as { toDate?: () => Date };
+        return item && typeof item === 'object' && typeof ts.toDate === 'function'
+          ? ts.toDate().toISOString()
+          : item;
+      });
     } else {
       converted[key] = value;
     }

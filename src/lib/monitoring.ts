@@ -348,9 +348,43 @@ class ErrorTracker {
         page_url: errorInfo.url,
       });
 
-      // In a real production app, you might also send to Sentry, LogRocket, etc.
+      // Send to server-side ingest so client + server error pipeline stays unified.
+      this.reportToServer(errorInfo);
     } catch (error) {
       console.warn('Failed to report error:', error);
+    }
+  }
+
+  private reportToServer(errorInfo: any) {
+    try {
+      const payload = {
+        message: errorInfo.error?.message || 'Unknown client error',
+        stack: errorInfo.error?.stack,
+        context: errorInfo.context || {},
+        timestamp: errorInfo.timestamp || Date.now(),
+        userId: errorInfo.userId,
+        url: errorInfo.url,
+        source: 'client-runtime',
+      };
+
+      const body = JSON.stringify(payload);
+
+      if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+        const blob = new Blob([body], { type: 'application/json' });
+        navigator.sendBeacon('/api/monitoring/error', blob);
+        return;
+      }
+
+      fetch('/api/monitoring/error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        keepalive: true,
+      }).catch(() => {
+        // Swallow network failures to avoid recursive error cascades.
+      });
+    } catch {
+      // Never throw from the monitoring path.
     }
   }
 

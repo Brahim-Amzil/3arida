@@ -71,6 +71,12 @@ class EnvironmentValidator {
       validator: (value) => value.startsWith('1:'),
       description: 'Firebase app ID',
     },
+    {
+      key: 'NEXT_PUBLIC_FIREBASE_VAPID_KEY',
+      required: true,
+      validator: (value) => value.length > 40,
+      description: 'Firebase Web Push certificate key pair (VAPID public key)',
+    },
 
     // Stripe Configuration
     {

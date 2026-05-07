@@ -223,13 +223,16 @@ export async function GET(
     // Get filename
     const filename = `petition-report-${petition.referenceCode}-${new Date().toISOString().split('T')[0]}.pdf`;
 
-    // Return PDF
-    return new NextResponse(pdfBuffer, {
+    const body = Buffer.isBuffer(pdfBuffer)
+      ? pdfBuffer
+      : Buffer.from(pdfBuffer);
+    const bytes = new Uint8Array(body);
+    return new NextResponse(bytes, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': pdfBuffer.length.toString(),
+        'Content-Length': String(bytes.byteLength),
       },
     });
   } catch (error) {

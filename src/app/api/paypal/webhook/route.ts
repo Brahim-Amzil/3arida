@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import {
+  initApiRequestContext,
+  logApiError,
+  logApiInfo,
+  logApiWarn,
+  withRequestId,
+} from '@/lib/api-observability';
+import { recordPaymentWebhookFailure } from '@/lib/payment-webhook-alerting';
 
 // PayPal API configuration
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
@@ -86,11 +94,15 @@ async function verifyWebhookSignature(
 }
 
 export async function POST(request: NextRequest) {
+  const apiContext = initApiRequestContext(request, 'api/paypal/webhook');
+
   try {
     const body = await request.json();
     const headers = Object.fromEntries(request.headers.entries());
 
-    console.log('📥 PayPal webhook received:', body.event_type);
+    logApiInfo(apiContext, 'PayPal webhook received', {
+      eventType: body.event_type,
+    });
 
     // Verify webhook signature if webhook ID is configured
     if (PAYPAL_WEBHOOK_ID) {
@@ -101,14 +113,25 @@ export async function POST(request: NextRequest) {
       );
 
       if (!isValid) {
-        console.error('❌ Invalid webhook signature');
-        return NextResponse.json(
+        logApiError(apiContext, 'Invalid webhook signature');
+        await recordPaymentWebhookFailure('paypal', 'webhook_signature_invalid', {
+          requestId: apiContext.requestId,
+          message: 'PayPal webhook signature verification failed',
+          eventType: body.event_type,
+        });
+        return withRequestId(
+          NextResponse.json(
           { error: 'Invalid webhook signature' },
           { status: 401 },
+          ),
+          apiContext.requestId,
         );
       }
     } else {
-      console.warn('⚠️ Webhook signature verification skipped (no WEBHOOK_ID)');
+      logApiWarn(
+        apiContext,
+        'Webhook signature verification skipped (no WEBHOOK_ID)',
+      );
     }
 
     const eventType = body.event_type;
@@ -117,35 +140,51 @@ export async function POST(request: NextRequest) {
     // Handle different webhook events
     switch (eventType) {
       case 'CHECKOUT.ORDER.APPROVED':
-        console.log('✅ Order approved:', resource.id);
+        logApiInfo(apiContext, 'Order approved', { resourceId: resource.id });
         // Order approved but not yet captured
         break;
 
       case 'PAYMENT.CAPTURE.COMPLETED':
-        console.log('💰 Payment captured:', resource.id);
+        logApiInfo(apiContext, 'Payment captured', { resourceId: resource.id });
         await handlePaymentCaptured(resource);
         break;
 
       case 'PAYMENT.CAPTURE.DENIED':
-        console.log('❌ Payment denied:', resource.id);
+        logApiWarn(apiContext, 'Payment denied', { resourceId: resource.id });
+        await recordPaymentWebhookFailure('paypal', 'payment_denied', {
+          requestId: apiContext.requestId,
+          paymentId: resource.id,
+          eventType,
+          message: 'Payment capture denied',
+        });
         await handlePaymentFailed(resource, 'denied');
         break;
 
       case 'PAYMENT.CAPTURE.REFUNDED':
-        console.log('💸 Payment refunded:', resource.id);
+        logApiWarn(apiContext, 'Payment refunded', { resourceId: resource.id });
         await handlePaymentRefunded(resource);
         break;
 
       default:
-        console.log('ℹ️ Unhandled event type:', eventType);
+        logApiInfo(apiContext, 'Unhandled event type', { eventType });
     }
 
-    return NextResponse.json({ received: true });
+    return withRequestId(
+      NextResponse.json({ received: true }),
+      apiContext.requestId,
+    );
   } catch (error: any) {
-    console.error('❌ Webhook processing error:', error);
-    return NextResponse.json(
+    logApiError(apiContext, 'Webhook processing error', error);
+    await recordPaymentWebhookFailure('paypal', 'webhook_processing_failed', {
+      requestId: apiContext.requestId,
+      message: error?.message,
+    });
+    return withRequestId(
+      NextResponse.json(
       { error: 'Webhook processing failed', details: error.message },
       { status: 500 },
+      ),
+      apiContext.requestId,
     );
   }
 }

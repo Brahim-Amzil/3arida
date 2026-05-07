@@ -1569,9 +1569,11 @@ export const closePetitionByCreator = async (
       targetId: petitionId,
       targetName: petition.title,
       details: {
-        closingMessage: closingMessage || 'No message provided',
-        currentSignatures: petition.currentSignatures,
-        targetSignatures: petition.targetSignatures,
+        metadata: {
+          closingMessage: closingMessage || 'No message provided',
+          currentSignatures: petition.currentSignatures,
+          targetSignatures: petition.targetSignatures,
+        },
       },
     });
 

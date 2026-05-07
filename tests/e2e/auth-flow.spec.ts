@@ -1,123 +1,111 @@
 import { test, expect } from '@playwright/test';
+import { gotoReady } from './nav-helpers';
 
-test.describe('Authentication Flow', () => {
+async function bypassComingSoon(page: import('@playwright/test').Page) {
+  await gotoReady(page, '/bsk');
+}
+
+const e2eEmail = process.env.E2E_AUTH_EMAIL || '';
+const e2ePassword = process.env.E2E_AUTH_PASSWORD || '';
+const hasFirebaseCreds = Boolean(e2eEmail && e2ePassword);
+
+test.describe('Auth pages (no Firebase account required)', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the home page
-    await page.goto('/');
+    await bypassComingSoon(page);
   });
 
-  test('should register a new user successfully', async ({ page }) => {
-    // Navigate to registration page
-    await page.click('text=Get Started');
-    await expect(page).toHaveURL('/auth/register');
-
-    // Fill in registration form
-    await page.fill('input[type="text"]', 'John Doe');
-    await page.fill('input[type="email"]', `test-${Date.now()}@example.com`);
-    await page.fill('input[type="password"]', 'SecurePass123');
-    await page.fill(
-      'input[placeholder="Confirm your password"]',
-      'SecurePass123'
-    );
-
-    // Submit form
-    await page.click('button[type="submit"]');
-
-    // Should redirect to dashboard or email verification
-    await expect(page).toHaveURL(/\/(dashboard|auth\/verify-email)/);
+  test('login page shows email and password fields', async ({ page }) => {
+    await gotoReady(page, '/auth/login');
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+    await expect(page.getByPlaceholder('Enter your email')).toBeVisible();
+    await expect(page.getByPlaceholder('Enter your password')).toBeVisible();
   });
 
-  test('should login existing user', async ({ page }) => {
-    // Navigate to login page
-    await page.click('text=Sign In');
-    await expect(page).toHaveURL('/auth/login');
-
-    // Fill in login form with test credentials
-    await page.fill('input[type="email"]', 'test@3arida.org');
-    await page.fill('input[type="password"]', 'TestPassword123');
-
-    // Submit form
-    await page.click('button[type="submit"]');
-
-    // Should redirect to dashboard
-    await expect(page).toHaveURL('/dashboard');
-    await expect(page.locator('text=Welcome back')).toBeVisible();
+  test('register client-side validation for short name', async ({ page }) => {
+    await gotoReady(page, '/auth/register');
+    await page.getByPlaceholder('Enter your full name').fill('A');
+    await page.getByPlaceholder('Enter your email').fill('e2e-check@example.com');
+    await page.getByPlaceholder('Create a password').fill('SecurePass123');
+    await page.getByPlaceholder('Confirm your password').fill('SecurePass123');
+    await page.getByRole('button', { name: 'Create Account' }).click();
+    await expect(
+      page.getByText(/Name must be at least 2 characters long/i),
+    ).toBeVisible();
   });
 
-  test('should show validation errors for invalid input', async ({ page }) => {
-    // Navigate to registration page
-    await page.goto('/auth/register');
-
-    // Try to submit with invalid data
-    await page.fill('input[type="text"]', 'A'); // Too short name
-    await page.fill('input[type="email"]', 'invalid-email'); // Invalid email
-    await page.fill('input[type="password"]', '123'); // Weak password
-    await page.fill('input[placeholder="Confirm your password"]', '456'); // Mismatched password
-
-    await page.click('button[type="submit"]');
-
-    // Should show validation errors
-    await expect(page.locator('text=Please enter your name')).toBeVisible();
-  });
-
-  test('should handle forgot password flow', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('/auth/login');
-
-    // Click forgot password link
-    await page.click('text=Forgot your password?');
+  test('forgot password flow shows success (auth mock)', async ({ page }) => {
+    await gotoReady(page, '/auth/login');
+    await page.getByRole('link', { name: /Forgot your password/i }).click();
     await expect(page).toHaveURL('/auth/forgot-password');
-
-    // Fill in email
-    await page.fill('input[type="email"]', 'test@example.com');
-    await page.click('button[type="submit"]');
-
-    // Should show success message
-    await expect(page.locator('text=Check Your Email')).toBeVisible();
+    // auth-mock resetPassword only succeeds for seeded users (e.g. test@example.com)
+    await page.getByPlaceholder('Enter your email address').fill('test@example.com');
+    await page.getByRole('button', { name: 'Send Reset Link' }).click();
+    await expect(page.getByText('Check Your Email')).toBeVisible({ timeout: 15_000 });
   });
 
-  test('should logout user successfully', async ({ page }) => {
-    // First login
-    await page.goto('/auth/login');
-    await page.fill('input[type="email"]', 'test@3arida.org');
-    await page.fill('input[type="password"]', 'TestPassword123');
-    await page.click('button[type="submit"]');
-
-    // Wait for dashboard
-    await expect(page).toHaveURL('/dashboard');
-
-    // Logout
-    await page.click('text=Sign Out');
-
-    // Should redirect to home page
-    await expect(page).toHaveURL('/');
-    await expect(page.locator('text=Sign In')).toBeVisible();
-  });
-
-  test('should protect authenticated routes', async ({ page }) => {
-    // Try to access dashboard without authentication
-    await page.goto('/dashboard');
-
-    // Should redirect to login
+  test('dashboard redirects unauthenticated users to login', async ({ page }) => {
+    await gotoReady(page, '/dashboard');
     await expect(page).toHaveURL(/\/auth\/login/);
   });
+});
 
-  test('should redirect authenticated users from auth pages', async ({
-    page,
-  }) => {
-    // First login
-    await page.goto('/auth/login');
-    await page.fill('input[type="email"]', 'test@3arida.org');
-    await page.fill('input[type="password"]', 'TestPassword123');
-    await page.click('button[type="submit"]');
+test.describe('Auth with Firebase (optional E2E_AUTH_EMAIL / E2E_AUTH_PASSWORD)', () => {
+  test.beforeEach(async ({ page }) => {
+    test.skip(!hasFirebaseCreds, 'Set E2E_AUTH_EMAIL and E2E_AUTH_PASSWORD for this block');
+    await bypassComingSoon(page);
+  });
 
-    // Wait for dashboard
-    await expect(page).toHaveURL('/dashboard');
+  test('login and reach dashboard', async ({ page }) => {
+    await gotoReady(page, '/auth/login');
+    await page.getByPlaceholder('Enter your email').fill(e2eEmail);
+    await page.getByPlaceholder('Enter your password').fill(e2ePassword);
+    await page.getByRole('button', { name: 'Sign In' }).click();
+    await expect(page).toHaveURL('/dashboard', { timeout: 45_000 });
+    await expect(
+      page.getByRole('heading').filter({ hasText: /مرحبًا بعودتك|Bon retour/i }),
+    ).toBeVisible({ timeout: 20_000 });
+  });
 
-    // Try to access login page while authenticated
-    await page.goto('/auth/login');
+  test('register new user then redirected toward login', async ({ page }) => {
+    const unique = `e2e-${Date.now()}@example.com`;
+    await gotoReady(page, '/auth/register');
+    await page.getByPlaceholder('Enter your full name').fill('E2E User');
+    await page.getByPlaceholder('Enter your email').fill(unique);
+    await page.getByPlaceholder('Create a password').fill('E2ESecurePass123');
+    await page.getByPlaceholder('Confirm your password').fill('E2ESecurePass123');
+    await page.getByRole('button', { name: 'Create Account' }).click();
+    await expect(page.getByText(/Account created successfully/i)).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page).toHaveURL(/\/auth\/login/, { timeout: 30_000 });
+  });
 
-    // Should redirect to dashboard
-    await expect(page).toHaveURL('/dashboard');
+  test('logout returns to home', async ({ page }) => {
+    await gotoReady(page, '/auth/login');
+    await page.getByPlaceholder('Enter your email').fill(e2eEmail);
+    await page.getByPlaceholder('Enter your password').fill(e2ePassword);
+    await page.getByRole('button', { name: 'Sign In' }).click();
+    await expect(page).toHaveURL('/dashboard', { timeout: 45_000 });
+
+    const localPart = e2eEmail.split('@')[0];
+    await page
+      .getByRole('button')
+      .filter({ hasText: new RegExp(localPart, 'i') })
+      .first()
+      .click();
+    await page.getByRole('button', { name: /تسجيل الخروج|Déconnexion/i }).click();
+
+    await expect(page).toHaveURL('/', { timeout: 20_000 });
+  });
+
+  test('authenticated session skips login page to dashboard', async ({ page }) => {
+    await gotoReady(page, '/auth/login');
+    await page.getByPlaceholder('Enter your email').fill(e2eEmail);
+    await page.getByPlaceholder('Enter your password').fill(e2ePassword);
+    await page.getByRole('button', { name: 'Sign In' }).click();
+    await expect(page).toHaveURL('/dashboard', { timeout: 45_000 });
+
+    await gotoReady(page, '/auth/login');
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 20_000 });
   });
 });

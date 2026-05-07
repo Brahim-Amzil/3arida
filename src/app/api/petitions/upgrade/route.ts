@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { PricingTier } from '@/types/petition';
 import { UPGRADE_PRICING_TIERS } from '@/lib/petition-upgrade-utils';
-import { isBetaMode, getBetaCouponCode, calculateDiscountedAmount, getBetaMetadata } from '@/lib/beta-coupon-service';
+import { isBetaMode, getBetaCouponCode, calculateDiscountedAmount, getCouponMetadata } from '@/lib/beta-coupon-service';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-12-15.clover',
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       selectedTier,
       userId,
       isUpgrade: 'true',
-      ...getBetaMetadata(originalUpgradePrice),
+      ...getCouponMetadata(petitionId, currentTier, selectedTier, originalUpgradePrice),
     };
 
     const paymentIntent = await stripe.paymentIntents.create({

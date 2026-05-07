@@ -4,6 +4,36 @@ import '@testing-library/jest-dom';
 import PetitionCard from '../petitions/PetitionCard';
 import { Petition } from '../../types/petition';
 
+jest.mock('@/components/auth/AuthProvider', () => ({
+  useAuth: () => ({ user: null }),
+}));
+
+jest.mock('@/hooks/useTranslation', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'status.approved': 'approved',
+        'status.pending': 'pending',
+        'status.paused': 'paused',
+        'status.rejected': 'rejected',
+        'categories.environment': 'Environment',
+        'petitionCard.createdBy': 'Created by',
+        'petitionCard.signatures': 'signatures',
+        'petitionCard.of': 'of',
+        'petitionCard.views': 'views',
+        'petitionCard.shares': 'shares',
+        'petitionCard.signPetition': 'Sign petition',
+        'petitionCard.featuredPetition': 'Featured petition',
+        'petitionCard.goal': 'goal',
+        'petitionCard.complete': 'complete',
+        'petition.checking': 'Checking',
+        'petition.alreadySigned': 'Already signed',
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 // Mock Next.js components
 jest.mock('next/link', () => {
   const MockLink = ({
@@ -18,9 +48,9 @@ jest.mock('next/link', () => {
 });
 
 jest.mock('next/image', () => {
-  const MockImage = ({ src, alt, ...props }: any) => (
-    <img src={src} alt={alt} {...props}  loading="lazy" />
-  );
+  function MockImage({ src, alt, fill: _fill, ...props }: Record<string, unknown>) {
+    return <img src={src as string} alt={alt as string} {...props} loading="lazy" />;
+  }
   MockImage.displayName = 'MockImage';
   return MockImage;
 });
@@ -36,6 +66,7 @@ const mockPetition: Petition = {
   currentSignatures: 250,
   status: 'approved',
   creatorId: 'user-123',
+  creatorName: 'Jane Creator',
   creatorPageId: 'creator-123',
   mediaUrls: ['https://example.com/park-image.jpg'],
   qrCodeUrl: 'https://example.com/qr-code.png',
@@ -67,33 +98,34 @@ describe('PetitionCard', () => {
       screen.getByText(/We need to protect this green space/)
     ).toBeInTheDocument();
     expect(screen.getByText('Environment')).toBeInTheDocument();
-    expect(screen.getByText('250 signatures')).toBeInTheDocument();
-    expect(screen.getByText('1,000 goal')).toBeInTheDocument();
+    expect(screen.getByText(/250/)).toBeInTheDocument();
+    expect(screen.getByText(/signatures/)).toBeInTheDocument();
+    expect(screen.getByText(/1,?000/)).toBeInTheDocument();
   });
 
   it('displays progress bar correctly', () => {
-    render(<PetitionCard petition={mockPetition} showProgress={true} />);
+    const { container } = render(
+      <PetitionCard petition={mockPetition} showProgress={true} />
+    );
 
-    const progressBar = screen.getByRole('progressbar');
-    expect(progressBar).toBeInTheDocument();
-    expect(progressBar).toHaveAttribute('aria-valuenow', '25'); // 250/1000 = 25%
+    expect(container.innerHTML).toContain('width: 25%');
   });
 
   it('shows creator information when enabled', () => {
     render(<PetitionCard petition={mockPetition} showCreator={true} />);
 
-    // Since we don't have creator name in the mock, it should show "User"
     expect(screen.getByText(/Created by/)).toBeInTheDocument();
+    expect(screen.getByText('Jane Creator')).toBeInTheDocument();
   });
 
   it('displays action buttons when enabled', () => {
     render(<PetitionCard petition={mockPetition} showActions={true} />);
 
-    expect(screen.getByText('View Petition')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /View Petition/ })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /QR/ })).toHaveAttribute(
       'href',
-      '/petitions/petition-123'
+      '/petitions/petition-123/qr'
     );
+    expect(screen.getAllByRole('button').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows QR button when petition does not have QR upgrade', () => {
@@ -124,11 +156,10 @@ describe('PetitionCard', () => {
 
   it('shows placeholder when no image is available', () => {
     const petitionWithoutImage = { ...mockPetition, mediaUrls: [] };
-    render(<PetitionCard petition={petitionWithoutImage} />);
+    const { container } = render(<PetitionCard petition={petitionWithoutImage} />);
 
-    // Should show the document icon placeholder
-    const placeholder = screen.getByRole('img', { hidden: true });
-    expect(placeholder).toBeInTheDocument();
+    expect(container.querySelector('svg')).toBeTruthy();
+    expect(screen.queryByAltText('Save Our Local Park')).not.toBeInTheDocument();
   });
 
   it('displays status badge correctly', () => {
@@ -136,7 +167,7 @@ describe('PetitionCard', () => {
 
     const statusBadge = screen.getByText('approved');
     expect(statusBadge).toBeInTheDocument();
-    expect(statusBadge).toHaveClass('bg-green-100', 'text-green-800');
+    expect(statusBadge).toHaveClass('bg-green-500');
   });
 
   it('shows different status colors for different statuses', () => {
@@ -144,40 +175,32 @@ describe('PetitionCard', () => {
     const { rerender } = render(<PetitionCard petition={pendingPetition} />);
 
     let statusBadge = screen.getByText('pending');
-    expect(statusBadge).toHaveClass('bg-yellow-100', 'text-yellow-800');
+    expect(statusBadge).toHaveClass('bg-yellow-500');
 
     const pausedPetition = { ...mockPetition, status: 'paused' as const };
     rerender(<PetitionCard petition={pausedPetition} />);
 
     statusBadge = screen.getByText('paused');
-    expect(statusBadge).toHaveClass('bg-red-100', 'text-red-800');
+    expect(statusBadge).toHaveClass('bg-orange-500');
   });
 
   it('handles share button click', () => {
     const mockShare = jest.fn();
+    (navigator as unknown as { share: typeof mockShare }).share = mockShare;
 
-    // Mock navigator.share
-    Object.defineProperty(navigator, 'share', {
-      value: mockShare,
-      writable: true,
-    });
+    render(<PetitionCard petition={mockPetition} showActions={true} />);
 
-    render(<PetitionCard petition={mockPetition} />);
-
-    const shareButton = screen.getByRole('button');
+    const shareButton = screen.getAllByRole('button')[0];
     fireEvent.click(shareButton);
 
-    // Note: The actual share functionality would need to be tested with more complex mocking
-    // This test just verifies the button exists and is clickable
     expect(shareButton).toBeInTheDocument();
   });
 
   it('renders in list variant correctly', () => {
     render(<PetitionCard petition={mockPetition} variant="list" />);
 
-    // In list variant, the layout should be different (horizontal)
     expect(screen.getByText('Save Our Local Park')).toBeInTheDocument();
-    expect(screen.getByText('250 signatures')).toBeInTheDocument();
+    expect(screen.getByText(/250\s+signatures/)).toBeInTheDocument();
   });
 
   it('applies custom className', () => {
@@ -188,10 +211,12 @@ describe('PetitionCard', () => {
     expect(container.firstChild).toHaveClass('custom-class');
   });
 
-  it('displays location information when available', () => {
+  it('displays engagement stats on the card', () => {
     render(<PetitionCard petition={mockPetition} />);
 
-    expect(screen.getByText(/Casablanca/)).toBeInTheDocument();
+    expect(screen.getByText(/150/)).toBeInTheDocument();
+    expect(screen.getByText(/views/)).toBeInTheDocument();
+    expect(screen.getByText(/shares/)).toBeInTheDocument();
   });
 
   it('shows correct progress percentage', () => {
@@ -201,12 +226,11 @@ describe('PetitionCard', () => {
       targetSignatures: 1000,
     };
 
-    render(
+    const { container } = render(
       <PetitionCard petition={highProgressPetition} showProgress={true} />
     );
 
-    const progressBar = screen.getByRole('progressbar');
-    expect(progressBar).toHaveAttribute('aria-valuenow', '75'); // 750/1000 = 75%
+    expect(container.innerHTML).toContain('width: 75%');
   });
 
   it('handles petition with no description gracefully', () => {

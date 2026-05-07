@@ -19,6 +19,7 @@ import {
   updateDoc,
   increment,
   Timestamp,
+  limit,
 } from 'firebase/firestore';
 import { PetitionFormData, Petition } from '../../types/petition';
 
@@ -35,6 +36,7 @@ const mockCollection = collection as jest.MockedFunction<typeof collection>;
 const mockQuery = query as jest.MockedFunction<typeof query>;
 const mockWhere = where as jest.MockedFunction<typeof where>;
 const mockIncrement = increment as jest.MockedFunction<typeof increment>;
+const mockLimit = limit as jest.MockedFunction<typeof limit>;
 
 describe('Petitions Service', () => {
   beforeEach(() => {
@@ -55,8 +57,18 @@ describe('Petitions Service', () => {
       const userId = 'user123';
       const mockDocRef = { id: 'petition123' };
 
+      mockLimit.mockReturnValue({} as any);
       mockCollection.mockReturnValue({} as any);
+      mockQuery.mockReturnValue({} as any);
+      mockWhere.mockReturnValue({} as any);
+      mockGetDocs.mockResolvedValue({ empty: true } as any);
       mockAddDoc.mockResolvedValue(mockDocRef as any);
+      mockDoc.mockReturnValue({} as any);
+      mockGetDoc.mockResolvedValue({
+        exists: () => true,
+        id: 'petition123',
+        data: () => ({ title: petitionData.title }),
+      } as any);
 
       const result = await createPetition(petitionData, userId, 'Test User');
 
@@ -66,13 +78,19 @@ describe('Petitions Service', () => {
 
     it('should handle creation errors', async () => {
       const petitionData: PetitionFormData = {
-        title: 'Test Petition',
-        description: 'Test description',
+        title: 'Test Petition Title Long Enough',
+        description:
+          'Test description that is at least fifty characters long for validation.',
         category: 'Test',
         targetSignatures: 100,
         mediaUrls: [],
       };
 
+      mockLimit.mockReturnValue({} as any);
+      mockCollection.mockReturnValue({} as any);
+      mockQuery.mockReturnValue({} as any);
+      mockWhere.mockReturnValue({} as any);
+      mockGetDocs.mockResolvedValue({ empty: true } as any);
       mockAddDoc.mockRejectedValue(new Error('Firestore error'));
 
       await expect(
@@ -84,6 +102,7 @@ describe('Petitions Service', () => {
   describe('getPetitionById', () => {
     it('should return petition when found', async () => {
       const petitionId = 'petition123';
+      const now = Timestamp.now();
       const mockPetitionData = {
         title: 'Test Petition',
         description: 'Test description',
@@ -91,8 +110,9 @@ describe('Petitions Service', () => {
         currentSignatures: 50,
         targetSignatures: 1000,
         status: 'approved',
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
+        referenceCode: 'AB12CD34',
+        createdAt: now,
+        updatedAt: now,
       };
 
       const mockDocSnap = {
@@ -107,12 +127,18 @@ describe('Petitions Service', () => {
       const result = await getPetitionById(petitionId);
 
       expect(mockGetDoc).toHaveBeenCalled();
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         id: petitionId,
-        ...mockPetitionData,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
+        title: mockPetitionData.title,
+        description: mockPetitionData.description,
+        category: mockPetitionData.category,
+        currentSignatures: mockPetitionData.currentSignatures,
+        targetSignatures: mockPetitionData.targetSignatures,
+        status: mockPetitionData.status,
+        referenceCode: mockPetitionData.referenceCode,
       });
+      expect(result?.createdAt).toBeInstanceOf(Date);
+      expect(result?.updatedAt).toBeInstanceOf(Date);
     });
 
     it('should return null when petition not found', async () => {

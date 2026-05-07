@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { verifyRecaptchaServerToken } from '@/lib/server-recaptcha';
+import {
+  initApiRequestContext,
+  logApiError,
+  logApiInfo,
+  withRequestId,
+} from '@/lib/api-observability';
 
 const reasonLabels: Record<string, string> = {
   general: 'استفسار عام',
@@ -24,6 +31,8 @@ const platformLabels: Record<string, string> = {
 };
 
 export async function POST(request: NextRequest) {
+  const apiContext = initApiRequestContext(request, 'api/contact');
+
   try {
     const body = await request.json();
     const {
@@ -32,6 +41,7 @@ export async function POST(request: NextRequest) {
       reason,
       subject,
       message,
+      recaptchaToken,
       petitionCode,
       reportDetails,
       platform,
@@ -40,52 +50,91 @@ export async function POST(request: NextRequest) {
       discountTier,
     } = body;
 
+    const recaptchaResult = await verifyRecaptchaServerToken(recaptchaToken, {
+      minScore: 0.5,
+      expectedAction: 'contact_form_submit',
+    });
+
+    if (!recaptchaResult.success) {
+      return withRequestId(
+        NextResponse.json(
+        {
+          error: 'Security verification failed',
+          details:
+            process.env.NODE_ENV === 'development'
+              ? recaptchaResult.error
+              : undefined,
+        },
+        { status: 400 },
+        ),
+        apiContext.requestId,
+      );
+    }
+
     // Validation
     if (!name || !email || !reason || !subject || !message) {
-      return NextResponse.json(
+      return withRequestId(
+        NextResponse.json(
         { error: 'جميع الحقول مطلوبة' },
         { status: 400 },
+        ),
+        apiContext.requestId,
       );
     }
 
     // Additional validation for petition reason
     if (reason === 'petition' && !petitionCode) {
-      return NextResponse.json({ error: 'رمز العريضة مطلوب' }, { status: 400 });
+      return withRequestId(
+        NextResponse.json({ error: 'رمز العريضة مطلوب' }, { status: 400 }),
+        apiContext.requestId,
+      );
     }
 
     // Additional validation for report reason
     if (reason === 'report' && !reportDetails) {
-      return NextResponse.json(
+      return withRequestId(
+        NextResponse.json(
         { error: 'تفاصيل البلاغ مطلوبة' },
         { status: 400 },
+        ),
+        apiContext.requestId,
       );
     }
 
     // Additional validation for influencer coupon reason
     if (reason === 'influencer-coupon') {
       if (!platform || !accountUrl || !followerCount || !discountTier) {
-        return NextResponse.json(
+        return withRequestId(
+          NextResponse.json(
           { error: 'جميع معلومات المؤثر مطلوبة' },
           { status: 400 },
+          ),
+          apiContext.requestId,
         );
       }
     }
 
     // Check if Resend is configured
     if (!process.env.RESEND_API_KEY) {
-      console.error('Resend API key not configured');
-      return NextResponse.json(
+      logApiError(apiContext, 'Resend API key not configured');
+      return withRequestId(
+        NextResponse.json(
         { error: 'خدمة البريد الإلكتروني غير مكونة' },
         { status: 500 },
+        ),
+        apiContext.requestId,
       );
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return NextResponse.json(
+      return withRequestId(
+        NextResponse.json(
         { error: 'البريد الإلكتروني غير صالح' },
         { status: 400 },
+        ),
+        apiContext.requestId,
       );
     }
 
@@ -265,7 +314,7 @@ export async function POST(request: NextRequest) {
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'contact@3arida.org';
     const toEmail = process.env.CONTACT_EMAIL || 'contact@3arida.org';
 
-    console.log('Sending email from:', fromEmail, 'to:', toEmail);
+    logApiInfo(apiContext, 'Sending contact email', { fromEmail, toEmail });
 
     const emailResult = await resend.emails.send({
       from: `3arida Platform <${fromEmail}>`,
@@ -276,26 +325,31 @@ export async function POST(request: NextRequest) {
     });
 
     if (emailResult.error) {
-      console.error('Resend error:', emailResult.error);
+      logApiError(apiContext, 'Resend email send failed', emailResult.error);
       throw new Error(emailResult.error.message);
     }
 
-    return NextResponse.json(
+    return withRequestId(
+      NextResponse.json(
       { success: true, messageId: emailResult.data?.id },
       { status: 200 },
+      ),
+      apiContext.requestId,
     );
   } catch (error) {
-    console.error('Contact form error:', error);
+    logApiError(apiContext, 'Contact form error', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error details:', errorMessage);
-    return NextResponse.json(
+    return withRequestId(
+      NextResponse.json(
       {
         error: 'حدث خطأ في الخادم',
         details:
           process.env.NODE_ENV === 'development' ? errorMessage : undefined,
       },
       { status: 500 },
+      ),
+      apiContext.requestId,
     );
   }
 }

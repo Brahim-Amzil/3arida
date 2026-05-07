@@ -4,34 +4,60 @@
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-// Initialize Firebase in service worker
-firebase.initializeApp({
-  apiKey: "AIzaSyBqJZfJZfJZfJZfJZfJZfJZfJZfJZfJZfJ", // Replace with your actual key
-  authDomain: "arida-c5faf.firebaseapp.com",
-  projectId: "arida-c5faf",
-  storageBucket: "arida-c5faf.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef123456"
-});
+function getFirebaseConfigFromQuery() {
+  const search = self.location.search || '';
+  const params = new URLSearchParams(search);
 
-const messaging = firebase.messaging();
-
-// Handle background messages
-messaging.onBackgroundMessage((payload) => {
-  console.log('Background message received:', payload);
-
-  const notificationTitle = payload.notification?.title || '3arida';
-  const notificationOptions = {
-    body: payload.notification?.body || 'You have a new notification',
-    icon: '/icon-192x192.png',
-    badge: '/icon-192x192.png',
-    data: payload.data,
-    tag: payload.data?.petitionId || 'default',
-    requireInteraction: false,
+  const config = {
+    apiKey: params.get('apiKey') || '',
+    authDomain: params.get('authDomain') || '',
+    projectId: params.get('projectId') || '',
+    storageBucket: params.get('storageBucket') || '',
+    messagingSenderId: params.get('messagingSenderId') || '',
+    appId: params.get('appId') || '',
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
+  if (
+    !config.apiKey ||
+    !config.authDomain ||
+    !config.projectId ||
+    !config.messagingSenderId ||
+    !config.appId
+  ) {
+    console.error(
+      '[firebase-messaging-sw] Missing Firebase config query params. Push background handling disabled.',
+    );
+    return null;
+  }
+
+  return config;
+}
+
+const firebaseConfig = getFirebaseConfigFromQuery();
+const messaging = firebaseConfig
+  ? firebase.messaging.isSupported()
+    ? (firebase.initializeApp(firebaseConfig), firebase.messaging())
+    : null
+  : null;
+
+// Handle background messages
+if (messaging) {
+  messaging.onBackgroundMessage((payload) => {
+    console.log('Background message received:', payload);
+
+    const notificationTitle = payload.notification?.title || '3arida';
+    const notificationOptions = {
+      body: payload.notification?.body || 'You have a new notification',
+      icon: '/icon-192x192.png',
+      badge: '/icon-192x192.png',
+      data: payload.data,
+      tag: payload.data?.petitionId || 'default',
+      requireInteraction: false,
+    };
+
+    self.registration.showNotification(notificationTitle, notificationOptions);
+  });
+}
 
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
