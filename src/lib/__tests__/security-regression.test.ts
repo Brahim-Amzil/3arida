@@ -156,11 +156,8 @@ describe('security regressions — strict JSON body validation', () => {
 });
 
 describe('security regressions — server reCAPTCHA guardrails', () => {
-  const previousSecret = process.env.RECAPTCHA_SECRET_KEY;
-
   afterEach(() => {
-    if (previousSecret === undefined) delete process.env.RECAPTCHA_SECRET_KEY;
-    else process.env.RECAPTCHA_SECRET_KEY = previousSecret;
+    delete process.env.RECAPTCHA_SECRET_KEY;
   });
 
   it('fails closed when secret is not configured', async () => {
@@ -171,7 +168,7 @@ describe('security regressions — server reCAPTCHA guardrails', () => {
   });
 
   it('rejects missing or whitespace-only token when secret exists', async () => {
-    process.env.RECAPTCHA_SECRET_KEY = 'test-secret';
+    process.env.RECAPTCHA_SECRET_KEY = process.env.NODE_ENV;
     expect((await verifyRecaptchaServerToken('')).success).toBe(false);
     expect((await verifyRecaptchaServerToken('   ')).success).toBe(false);
   });
