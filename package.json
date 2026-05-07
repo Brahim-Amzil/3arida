@@ -75,7 +75,7 @@
     "react-email": "^5.0.4",
     "react-firebase-hooks": "^5.1.1",
     "resend": "^6.4.2",
-    "stripe": "^20.1.0",
+    "stripe": "^22.1.1",
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
     "tailwindcss-rtl": "^0.9.0",
