@@ -43,7 +43,7 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@react-email/components": "^1.0.1",
     "@react-email/render": "^2.0.4",
-    "@stripe/react-stripe-js": "^5.4.1",
+    "@stripe/react-stripe-js": "^6.3.0",
     "@stripe/stripe-js": "^8.6.0",
     "@types/nodemailer": "^7.0.4",
     "@types/puppeteer": "^5.4.7",
