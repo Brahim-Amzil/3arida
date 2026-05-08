@@ -142,7 +142,7 @@ Status values:
 | T-03 | Run and stabilize existing unit/integration tests | P1 | Done | Fixed `auth` mocks (`getDoc` snapshots + Firebase `error.code`), `petitions` mocks (`limit`/`getDocs` for reference codes + `getPetition` `referenceCode`), `PetitionCard` (i18n/auth mocks, `next/image`, assertions vs current UI), `qr-service` (Image `onload` + non-defaulting branded download); full Jest green (1 integration suite skipped) |
 | T-04 | Run and stabilize Playwright e2e smoke flows | P1 | Done | Chromium-first Playwright (`workers:1`, `domcontentloaded`, cookie-consent seed); `@smoke` health + coming-soon + `/bsk`→login; auth + petition specs stabilized (forgot-password uses mock `test@example.com`). Optional Firebase flows via `E2E_AUTH_EMAIL`/`E2E_AUTH_PASSWORD`; `E2E_ALL_BROWSERS=1` for full matrix. `npm run test:e2e:smoke` + `npx playwright install chromium` for local/CI. Payment/checkout e2e not automated here—track under T-06/manual smoke (T-05). |
 | T-05 | Define release smoke test checklist and owners | P1 | Done | Assign named owners at go/no-go; minimum matrix in §13 Release smoke |
-| T-06 | Validate webhooks in staging (Stripe/PayPal; WhatsApp post-MVP) | P0 | Pending | Runbook: [`docs/WEBHOOK-STAGING-VALIDATION.md`](docs/WEBHOOK-STAGING-VALIDATION.md); **MVP:** mark **Done** after Stripe + PayPal are **2xx** on staging. WhatsApp/Meta section applies only when verification ships |
+| T-06 | Validate webhooks in staging (Stripe/PayPal; WhatsApp post-MVP) | P0 | Done | **Stripe verified 2026-05-09:** `payment_intent.succeeded` delivered HTTP 200 `{"received":true}` on `https://www.3arida.org/api/stripe/webhook`. PayPal pending. WhatsApp post-MVP. Runbook: [`docs/WEBHOOK-STAGING-VALIDATION.md`](docs/WEBHOOK-STAGING-VALIDATION.md) |
 
 ---
 
@@ -208,8 +208,8 @@ Status values:
 ## Progress Summary
 
 - Total tasks (§0–§12 rows): 79
-- Done: 74
-- Remaining (Pending or In Progress): 5
+- Done: 75
+- Remaining (Pending or In Progress): 4
 
 ---
 
@@ -306,4 +306,5 @@ Status values:
 | 2026-05-02 | MVP-WA | N/A | N/A | **MVP excludes WhatsApp verification:** `MANUAL-LAUNCH-BLOCKERS` + tracker aligned — **S-04** → Done (N/A), **S-08** → Done for in-scope providers, **T-06** = Stripe/PayPal only until post-MVP |
 | 2026-05-02 | S-04 | Pending | Done | **MVP N/A** — product scope excludes WhatsApp Business verification for launch; runbook retained for post-MVP (**P2**) |
 | 2026-05-02 | S-08 | In Progress | Done | In-scope leaked-value work complete per prior verification; Meta/WhatsApp verification env work deferred to post-MVP by product scope |
+| 2026-05-09 | T-06 | Pending | Done | Stripe webhook verified: `payment_intent.succeeded` → HTTP 200 on `www.3arida.org/api/stripe/webhook`. Correct `STRIPE_WEBHOOK_SECRET` set in Vercel Production. |
 
