@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { headers } from 'next/headers';
 import { upgradePetition } from '@/lib/petition-upgrade-service';
 import { logCouponApplication } from '@/lib/beta-coupon-service';
 import {
@@ -24,8 +23,23 @@ export async function POST(request: NextRequest) {
   const apiContext = initApiRequestContext(request, 'api/stripe/webhook');
 
   try {
+    if (!webhookSecret) {
+      logApiError(
+        apiContext,
+        'STRIPE_WEBHOOK_SECRET is missing; cannot verify Stripe signatures',
+      );
+      return withRequestId(
+        NextResponse.json(
+          { error: 'Webhook not configured (missing signing secret)' },
+          { status: 503 },
+        ),
+        apiContext.requestId,
+      );
+    }
+
     const body = await request.text();
-    const signature = headers().get('stripe-signature');
+    // Use the request object headers (Stripe + Next.js App Router); avoid `headers()` helper here.
+    const signature = request.headers.get('stripe-signature');
 
     if (!signature) {
       logApiError(apiContext, 'No Stripe signature found');
