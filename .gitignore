@@ -1,3 +1,6 @@
+# Local reference / scratch folders — never commit
+kotizi-Ref/
+
 # Dependencies
 node_modules/
 .pnp
