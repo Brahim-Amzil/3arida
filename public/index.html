@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3arida - منصة العرائض المغربية</title>
   <meta name="description" content="منصة 3arida للعرائض - أطلق صوتك وأحدث التغيير في مجتمعك">
+  <script>
+    if (location.hostname === '3arida.org') {
+      location.replace(`https://www.3arida.org${location.pathname}${location.search}${location.hash}`);
+    }
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
