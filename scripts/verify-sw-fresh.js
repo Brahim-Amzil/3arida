@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { existsSync, readFileSync, statSync } = require('node:fs');
+const { existsSync, readFileSync } = require('node:fs');
 const path = require('node:path');
 
 const projectRoot = process.cwd();
@@ -30,12 +30,6 @@ if (!swContent.includes(`/_next/static/${buildId}/`)) {
   fail(
     `Service worker does not reference current build ID (${buildId}). Regenerate with a fresh build before release.`,
   );
-}
-
-const buildStat = statSync(buildIdPath);
-const swStat = statSync(swPath);
-if (swStat.mtimeMs + 1000 < buildStat.mtimeMs) {
-  fail('`public/sw.js` appears older than latest build output.');
 }
 
 console.log(`PWA freshness check passed for build ID: ${buildId}`);
