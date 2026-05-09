@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/auth/AuthProvider';
 import {
@@ -9,8 +9,13 @@ import {
   where,
   getDocs,
   orderBy,
+  limit,
+  startAfter,
+  type QueryDocumentSnapshot,
+  type DocumentData,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { DASHBOARD_PETITIONS_PAGE_SIZE } from '@/lib/firestore-page-sizes';
 import { Petition } from '@/types/petition';
 
 interface RealtimeDashboardProps {
@@ -34,6 +39,88 @@ interface ActivityItem {
   petitionTitle?: string;
 }
 
+function generateRecentActivity(petitions: Petition[]): ActivityItem[] {
+  const activities: ActivityItem[] = [];
+
+  petitions
+    .filter((p) => {
+      const daysSinceCreated =
+        (Date.now() - p.createdAt.getTime()) / (1000 * 60 * 60 * 24);
+      return daysSinceCreated <= 7;
+    })
+    .forEach((petition) => {
+      activities.push({
+        id: `created-${petition.id}`,
+        type: 'petition_created',
+        message: `Created petition "${petition.title}"`,
+        timestamp: petition.createdAt,
+        petitionId: petition.id,
+        petitionTitle: petition.title,
+      });
+    });
+
+  petitions
+    .filter((p) => p.approvedAt && p.status === 'approved')
+    .filter((p) => {
+      const daysSinceApproved =
+        (Date.now() - (p.approvedAt?.getTime() || 0)) / (1000 * 60 * 60 * 24);
+      return daysSinceApproved <= 7;
+    })
+    .forEach((petition) => {
+      activities.push({
+        id: `approved-${petition.id}`,
+        type: 'petition_approved',
+        message: `Petition "${petition.title}" was approved`,
+        timestamp: petition.approvedAt!,
+        petitionId: petition.id,
+        petitionTitle: petition.title,
+      });
+    });
+
+  petitions
+    .filter((p) => p.currentSignatures > 0)
+    .forEach((petition) => {
+      const progress =
+        (petition.currentSignatures / petition.targetSignatures) * 100;
+      const milestones = [25, 50, 75, 100];
+
+      milestones.forEach((milestone) => {
+        if (progress >= milestone) {
+          activities.push({
+            id: `milestone-${petition.id}-${milestone}`,
+            type: 'milestone',
+            message: `"${petition.title}" reached ${milestone}% of its goal`,
+            timestamp: petition.updatedAt,
+            petitionId: petition.id,
+            petitionTitle: petition.title,
+          });
+        }
+      });
+    });
+
+  return activities
+    .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+    .slice(0, 10);
+}
+
+function buildDashboardStats(userPetitions: Petition[]): DashboardStats {
+  let totalSignatures = 0;
+  let activePetitions = 0;
+  let pendingPetitions = 0;
+  for (const petition of userPetitions) {
+    totalSignatures += petition.currentSignatures;
+    if (petition.status === 'approved') activePetitions++;
+    if (petition.status === 'pending') pendingPetitions++;
+  }
+  return {
+    totalPetitions: userPetitions.length,
+    activePetitions,
+    pendingPetitions,
+    totalSignatures,
+    recentActivity: generateRecentActivity(userPetitions),
+  };
+}
+
 export default function RealtimeDashboard({
   className = '',
 }: RealtimeDashboardProps) {
@@ -47,161 +134,136 @@ export default function RealtimeDashboard({
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMorePetitions, setLoadingMorePetitions] = useState(false);
   const [petitions, setPetitions] = useState<Petition[]>([]);
+  const [petitionsHasMore, setPetitionsHasMore] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const lastPetitionDocRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(
+    null
+  );
 
-  const fetchPetitions = useCallback(async (isRefresh = false) => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-
-    try {
-      const petitionsRef = collection(db, 'petitions');
-      const userPetitionsQuery = query(
-        petitionsRef,
-        where('creatorId', '==', user.uid),
-        orderBy('createdAt', 'desc')
-      );
-
-      // Use getDocs (one-time read) instead of onSnapshot (real-time listener)
-      const snapshot = await getDocs(userPetitionsQuery);
-
-      const userPetitions: Petition[] = [];
-      let totalSignatures = 0;
-      let activePetitions = 0;
-      let pendingPetitions = 0;
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const petition: Petition = {
-          id: doc.id,
-          title: data.title,
-          description: data.description,
-          category: data.category,
-          subcategory: data.subcategory,
-          targetSignatures: data.targetSignatures,
-          currentSignatures: data.currentSignatures || 0,
-          status: data.status,
-          creatorId: data.creatorId,
-          creatorPageId: data.creatorPageId,
-          mediaUrls: data.mediaUrls || [],
-          qrCodeUrl: data.qrCodeUrl,
-          hasQrCode: data.hasQrCode || false,
-          hasQrUpgrade: data.hasQrUpgrade || false,
-          qrUpgradePaidAt: data.qrUpgradePaidAt?.toDate(),
-          pricingTier: data.pricingTier,
-          amountPaid: data.amountPaid || 0,
-          paymentStatus: data.paymentStatus || 'unpaid',
-          location: data.location,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-          approvedAt: data.approvedAt?.toDate(),
-          pausedAt: data.pausedAt?.toDate(),
-          deletedAt: data.deletedAt?.toDate(),
-          viewCount: data.viewCount || 0,
-          shareCount: data.shareCount || 0,
-          moderatedBy: data.moderatedBy,
-          moderationNotes: data.moderationNotes,
-          isPublic: data.isPublic !== false,
-          isActive: data.isActive !== false,
-        };
-
-        userPetitions.push(petition);
-        totalSignatures += petition.currentSignatures;
-
-        if (petition.status === 'approved') activePetitions++;
-        if (petition.status === 'pending') pendingPetitions++;
-      });
-
-      setPetitions(userPetitions);
-      setStats({
-        totalPetitions: userPetitions.length,
-        activePetitions,
-        pendingPetitions,
-        totalSignatures,
-        recentActivity: generateRecentActivity(userPetitions),
-      });
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [user]);
-
-  // Fetch on mount only
-  useEffect(() => {
-    fetchPetitions();
-  }, [fetchPetitions]);
-
-  const generateRecentActivity = (petitions: Petition[]): ActivityItem[] => {
-    const activities: ActivityItem[] = [];
-
-    petitions
-      .filter((p) => {
-        const daysSinceCreated =
-          (Date.now() - p.createdAt.getTime()) / (1000 * 60 * 60 * 24);
-        return daysSinceCreated <= 7;
-      })
-      .forEach((petition) => {
-        activities.push({
-          id: `created-${petition.id}`,
-          type: 'petition_created',
-          message: `Created petition "${petition.title}"`,
-          timestamp: petition.createdAt,
-          petitionId: petition.id,
-          petitionTitle: petition.title,
-        });
-      });
-
-    petitions
-      .filter((p) => p.approvedAt && p.status === 'approved')
-      .filter((p) => {
-        const daysSinceApproved =
-          (Date.now() - (p.approvedAt?.getTime() || 0)) / (1000 * 60 * 60 * 24);
-        return daysSinceApproved <= 7;
-      })
-      .forEach((petition) => {
-        activities.push({
-          id: `approved-${petition.id}`,
-          type: 'petition_approved',
-          message: `Petition "${petition.title}" was approved`,
-          timestamp: petition.approvedAt!,
-          petitionId: petition.id,
-          petitionTitle: petition.title,
-        });
-      });
-
-    petitions
-      .filter((p) => p.currentSignatures > 0)
-      .forEach((petition) => {
-        const progress =
-          (petition.currentSignatures / petition.targetSignatures) * 100;
-        const milestones = [25, 50, 75, 100];
-
-        milestones.forEach((milestone) => {
-          if (progress >= milestone) {
-            activities.push({
-              id: `milestone-${petition.id}-${milestone}`,
-              type: 'milestone',
-              message: `"${petition.title}" reached ${milestone}% of its goal`,
-              timestamp: petition.updatedAt,
-              petitionId: petition.id,
-              petitionTitle: petition.title,
-            });
-          }
-        });
-      });
-
-    return activities
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, 10);
+  const mapDocToPetition = (docSnap: QueryDocumentSnapshot<DocumentData>) => {
+    const data = docSnap.data();
+    return {
+      id: docSnap.id,
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      subcategory: data.subcategory,
+      targetSignatures: data.targetSignatures,
+      currentSignatures: data.currentSignatures || 0,
+      status: data.status,
+      creatorId: data.creatorId,
+      creatorPageId: data.creatorPageId,
+      mediaUrls: data.mediaUrls || [],
+      qrCodeUrl: data.qrCodeUrl,
+      hasQrCode: data.hasQrCode || false,
+      hasQrUpgrade: data.hasQrUpgrade || false,
+      qrUpgradePaidAt: data.qrUpgradePaidAt?.toDate(),
+      pricingTier: data.pricingTier,
+      amountPaid: data.amountPaid || 0,
+      paymentStatus: data.paymentStatus || 'unpaid',
+      location: data.location,
+      createdAt: data.createdAt?.toDate() || new Date(),
+      updatedAt: data.updatedAt?.toDate() || new Date(),
+      approvedAt: data.approvedAt?.toDate(),
+      pausedAt: data.pausedAt?.toDate(),
+      deletedAt: data.deletedAt?.toDate(),
+      viewCount: data.viewCount || 0,
+      shareCount: data.shareCount || 0,
+      moderatedBy: data.moderatedBy,
+      moderationNotes: data.moderationNotes,
+      isPublic: data.isPublic !== false,
+      isActive: data.isActive !== false,
+    } as Petition;
   };
+
+  const fetchPetitions = useCallback(
+    async (mode: 'initial' | 'refresh' | 'more' = 'initial') => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      if (mode === 'refresh') setRefreshing(true);
+      else if (mode === 'initial') setLoading(true);
+      else setLoadingMorePetitions(true);
+
+      try {
+        if (mode === 'more' && !lastPetitionDocRef.current) {
+          return;
+        }
+
+        const petitionsRef = collection(db, 'petitions');
+        const pageSize = DASHBOARD_PETITIONS_PAGE_SIZE;
+
+        if (mode === 'initial' || mode === 'refresh') {
+          lastPetitionDocRef.current = null;
+        }
+
+        const userPetitionsQuery =
+          mode === 'more' && lastPetitionDocRef.current
+            ? query(
+                petitionsRef,
+                where('creatorId', '==', user.uid),
+                orderBy('createdAt', 'desc'),
+                startAfter(lastPetitionDocRef.current),
+                limit(pageSize)
+              )
+            : query(
+                petitionsRef,
+                where('creatorId', '==', user.uid),
+                orderBy('createdAt', 'desc'),
+                limit(pageSize)
+              );
+
+        const snapshot = await getDocs(userPetitionsQuery);
+
+        const pagePetitions: Petition[] = snapshot.docs.map(mapDocToPetition);
+
+        if (snapshot.docs.length > 0) {
+          lastPetitionDocRef.current =
+            snapshot.docs[snapshot.docs.length - 1] ?? null;
+        }
+
+        setPetitionsHasMore(snapshot.docs.length === pageSize);
+
+        if (mode === 'more') {
+          setPetitions((prev) => {
+            const seen = new Set(prev.map((p) => p.id));
+            const merged = [...prev];
+            for (const p of pagePetitions) {
+              if (!seen.has(p.id)) {
+                seen.add(p.id);
+                merged.push(p);
+              }
+            }
+            setStats(buildDashboardStats(merged));
+            return merged;
+          });
+        } else {
+          setPetitions(pagePetitions);
+          setStats(buildDashboardStats(pagePetitions));
+        }
+
+        setLastUpdated(new Date());
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+        setLoadingMorePetitions(false);
+      }
+    },
+    [user]
+  );
+
+  useEffect(() => {
+    if (!user) return;
+    lastPetitionDocRef.current = null;
+    setPetitionsHasMore(false);
+    void fetchPetitions('initial');
+  }, [user, fetchPetitions]);
 
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
@@ -323,6 +385,13 @@ export default function RealtimeDashboard({
         </Card>
       </div>
 
+      {petitionsHasMore && !loading && (
+        <p className="text-xs text-gray-500 -mt-2">
+          Stats and activity include loaded petitions only. Use &quot;Load more&quot;
+          below to pull older ones into this view.
+        </p>
+      )}
+
       {/* Recent Activity */}
       <Card>
         <CardHeader>
@@ -335,7 +404,7 @@ export default function RealtimeDashboard({
                 </span>
               )}
               <button
-                onClick={() => fetchPetitions(true)}
+                onClick={() => void fetchPetitions('refresh')}
                 disabled={refreshing || loading}
                 className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-green-600 transition-colors disabled:opacity-50"
               >
@@ -398,8 +467,8 @@ export default function RealtimeDashboard({
             <CardTitle>Your Petitions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {petitions.slice(0, 5).map((petition) => {
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
+              {petitions.map((petition) => {
                 const progress = (petition.currentSignatures / petition.targetSignatures) * 100;
                 return (
                   <div key={petition.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -430,6 +499,16 @@ export default function RealtimeDashboard({
                 );
               })}
             </div>
+            {petitionsHasMore && (
+              <button
+                type="button"
+                onClick={() => void fetchPetitions('more')}
+                disabled={loadingMorePetitions || loading}
+                className="mt-4 w-full rounded-lg border border-gray-200 bg-white py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {loadingMorePetitions ? 'Loading…' : 'Load more petitions'}
+              </button>
+            )}
           </CardContent>
         </Card>
       )}

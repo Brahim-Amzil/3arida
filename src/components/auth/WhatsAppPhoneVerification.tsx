@@ -27,19 +27,49 @@ export default function WhatsAppPhoneVerification({
   const [verificationCode, setVerificationCode] = useState('');
   const [whatsappLink, setWhatsappLink] = useState('');
 
-  // Listen for verification status changes
+  // Listen for verification status changes (pause while tab is hidden)
   useEffect(() => {
     if (!user || !verificationCode) return;
 
-    const unsubscribe = onSnapshot(doc(db, 'users', user.uid), (doc) => {
-      const data = doc.data();
-      if (data?.phoneVerified) {
-        console.log('✅ Phone verified via WhatsApp!');
-        onVerified(phoneNumber);
-      }
-    });
+    let unsubscribe: (() => void) | null = null;
 
-    return () => unsubscribe();
+    const detach = () => {
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+    };
+
+    const attach = () => {
+      if (unsubscribe) return;
+      unsubscribe = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
+        const data = docSnap.data();
+        if (data?.phoneVerified) {
+          console.log('✅ Phone verified via WhatsApp!');
+          onVerified(phoneNumber);
+        }
+      });
+    };
+
+    const onVisibility = () => {
+      if (typeof document === 'undefined') return;
+      if (document.visibilityState === 'hidden') detach();
+      else attach();
+    };
+
+    if (typeof document !== 'undefined') {
+      if (!document.hidden) {
+        attach();
+      }
+      document.addEventListener('visibilitychange', onVisibility);
+    }
+
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisibility);
+      }
+      detach();
+    };
   }, [user, verificationCode, phoneNumber, onVerified]);
 
   const handleSendWhatsApp = async () => {

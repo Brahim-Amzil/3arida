@@ -8,6 +8,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   subscribeToUserNotifications,
+  getUserNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   getNotificationIcon,
@@ -39,15 +40,58 @@ export default function NotificationCenter({
       return;
     }
 
-    const unsubscribe = subscribeToUserNotifications(
-      user.uid,
-      (newNotifications) => {
+    let unsubscribe: (() => void) | null = null;
+
+    const detach = () => {
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+    };
+
+    const attach = () => {
+      if (unsubscribe) return;
+      unsubscribe = subscribeToUserNotifications(user.uid, (newNotifications) => {
         setNotifications(newNotifications);
         setLoading(false);
-      }
-    );
+      });
+    };
 
-    return () => unsubscribe();
+    const refreshFromServer = async () => {
+      try {
+        const list = await getUserNotifications(user.uid, 20);
+        setNotifications(list);
+      } catch (e) {
+        console.error('Error refreshing notifications:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const onVisibility = () => {
+      if (typeof document === 'undefined') return;
+      if (document.visibilityState === 'hidden') {
+        detach();
+      } else {
+        void refreshFromServer().then(() => attach());
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      if (document.visibilityState === 'hidden') {
+        void refreshFromServer();
+      } else {
+        attach();
+      }
+      document.addEventListener('visibilitychange', onVisibility);
+    }
+
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisibility);
+      }
+      detach();
+    };
   }, [user]);
 
   // Close dropdown when clicking outside

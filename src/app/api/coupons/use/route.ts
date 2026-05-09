@@ -28,29 +28,21 @@ export async function POST(request: NextRequest) {
       updateDoc,
       arrayUnion,
       increment,
+      limit,
     } = await import('firebase/firestore');
 
-    // Debug: Check if we can read ANY coupons
     const couponsRef = collection(db, 'coupons');
-    const allCouponsSnapshot = await getDocs(couponsRef);
-    console.log('📊 Total coupons in database:', allCouponsSnapshot.size);
-
-    if (allCouponsSnapshot.size > 0) {
-      console.log('📋 Coupons in database:');
-      allCouponsSnapshot.forEach((doc) => {
-        const data = doc.data();
-        console.log(`  - Code: "${data.code}" (type: ${typeof data.code})`);
-      });
-    }
-
     console.log(
       '🔍 Searching for code:',
       `"${code.toUpperCase().trim()}"`,
       `(type: ${typeof code})`,
     );
 
-    // Find the coupon
-    const q = query(couponsRef, where('code', '==', code.toUpperCase().trim()));
+    const q = query(
+      couponsRef,
+      where('code', '==', code.toUpperCase().trim()),
+      limit(1),
+    );
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {

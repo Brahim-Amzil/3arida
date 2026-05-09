@@ -55,7 +55,7 @@ export default function PetitionCard({
 
       setCheckingSignature(true);
       try {
-        const { collection, query, where, getDocs } =
+        const { collection, query, where, getDocs, limit } =
           await import('firebase/firestore');
         const { db } = await import('@/lib/firebase');
 
@@ -63,7 +63,8 @@ export default function PetitionCard({
         const q = query(
           signaturesRef,
           where('petitionId', '==', petition.id),
-          where('userId', '==', user.uid)
+          where('userId', '==', user.uid),
+          limit(1)
         );
 
         const snapshot = await getDocs(q);

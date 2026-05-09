@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useTranslation } from '@/hooks/useTranslation';
 import PetitionCard from '@/components/petitions/PetitionCard';
 import { Button } from '@/components/ui/button';
+import { MY_SIGNATURES_PAGE_SIZE } from '@/lib/firestore-page-sizes';
 import { Petition } from '@/types/petition';
 
 export default function MySignaturesSection() {
@@ -15,13 +16,7 @@ export default function MySignaturesSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
-  useEffect(() => {
-    if (user) {
-      loadSignedPetitions();
-    }
-  }, [user]);
-
-  const loadSignedPetitions = async () => {
+  const loadSignedPetitions = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -29,7 +24,7 @@ export default function MySignaturesSection() {
       setError('');
 
       // Import Firebase functions
-      const { collection, query, where, getDocs, doc, getDoc } =
+      const { collection, query, where, getDocs, doc, getDoc, orderBy, limit } =
         await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
 
@@ -37,7 +32,9 @@ export default function MySignaturesSection() {
       const signaturesRef = collection(db, 'signatures');
       const signaturesQuery = query(
         signaturesRef,
-        where('userId', '==', user.uid)
+        where('userId', '==', user.uid),
+        orderBy('createdAt', 'desc'),
+        limit(MY_SIGNATURES_PAGE_SIZE)
       );
 
       const signaturesSnapshot = await getDocs(signaturesQuery);
@@ -105,11 +102,6 @@ export default function MySignaturesSection() {
       const petitions = await Promise.all(petitionPromises);
       const validPetitions = petitions.filter((p): p is Petition => p !== null);
 
-      // Sort by creation date (most recent first)
-      validPetitions.sort(
-        (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-      );
-
       setSignedPetitions(validPetitions);
     } catch (err) {
       console.error('Error loading signed petitions:', err);
@@ -117,7 +109,13 @@ export default function MySignaturesSection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, t]);
+
+  useEffect(() => {
+    if (user) {
+      void loadSignedPetitions();
+    }
+  }, [user, loadSignedPetitions]);
 
   // Loading State
   if (loading) {
@@ -226,12 +224,19 @@ export default function MySignaturesSection() {
         <h2 className="text-2xl font-bold text-gray-900">
           {t('dashboard.mySignatures.title')}
         </h2>
-        <div className="text-sm text-gray-600">
-          {signedPetitions.length === 1
-            ? t('dashboard.mySignatures.countSingle')
-            : t('dashboard.mySignatures.count', {
-                count: signedPetitions.length,
-              })}
+        <div className="text-sm text-gray-600 space-y-0.5 text-right">
+          <div>
+            {signedPetitions.length === 1
+              ? t('dashboard.mySignatures.countSingle')
+              : t('dashboard.mySignatures.count', {
+                  count: signedPetitions.length,
+                })}
+          </div>
+          {signedPetitions.length >= MY_SIGNATURES_PAGE_SIZE && (
+            <div className="text-xs text-amber-700 font-normal">
+              Showing your {MY_SIGNATURES_PAGE_SIZE} most recent signatures.
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   doc,
@@ -9,7 +9,7 @@ import {
   collection,
   query,
   where,
-  getDocs,
+  getCountFromServer,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
@@ -41,16 +41,7 @@ export default function AdminUserDetailPage() {
 
   const userId = params.id as string;
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-      return;
-    }
-
-    fetchUser();
-  }, [user, userId]);
-
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       // Fetch user data
       const userDoc = await getDoc(doc(db, 'users', userId));
@@ -65,18 +56,17 @@ export default function AdminUserDetailPage() {
       // Fetch user's petition count
       const petitionsQuery = query(
         collection(db, 'petitions'),
-        where('creatorId', '==', userId)
+        where('creatorId', '==', userId),
       );
-      const petitionsSnapshot = await getDocs(petitionsQuery);
-      userData.petitionCount = petitionsSnapshot.size;
+      const petitionsCountSnap = await getCountFromServer(petitionsQuery);
+      userData.petitionCount = petitionsCountSnap.data().count;
 
-      // Fetch user's signature count
       const signaturesQuery = query(
         collection(db, 'signatures'),
-        where('userId', '==', userId)
+        where('userId', '==', userId),
       );
-      const signaturesSnapshot = await getDocs(signaturesQuery);
-      userData.signatureCount = signaturesSnapshot.size;
+      const signaturesCountSnap = await getCountFromServer(signaturesQuery);
+      userData.signatureCount = signaturesCountSnap.data().count;
 
       setTargetUser(userData);
     } catch (error) {
@@ -84,7 +74,15 @@ export default function AdminUserDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, router]);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    void fetchUser();
+  }, [user, router, fetchUser]);
 
   const updateUserRole = async (newRole: string) => {
     if (!targetUser) return;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/HeaderWrapper';
 import AdminNav from '@/components/admin/AdminNav';
@@ -15,6 +15,10 @@ import {
   getDocs,
   orderBy,
   limit,
+  getCountFromServer,
+  getAggregateFromServer,
+  sum,
+  count,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Petition, User } from '@/types/petition';
@@ -49,43 +53,40 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
-  useEffect(() => {
-    if (!authLoading && hasRequiredRole) {
-      loadAdminStats();
-    }
-  }, [authLoading, hasRequiredRole]);
-
-  const loadAdminStats = async () => {
+  const loadAdminStats = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
 
-      // Load petition statistics
       const petitionsRef = collection(db, 'petitions');
+      const usersRef = collection(db, 'users');
+
       const [
-        allPetitions,
+        petitionTotals,
         pendingPetitions,
         approvedPetitions,
         pausedPetitions,
         recentPetitions,
         allUsers,
       ] = await Promise.all([
-        getDocs(query(petitionsRef)),
-        getDocs(query(petitionsRef, where('status', '==', 'pending'))),
-        getDocs(query(petitionsRef, where('status', '==', 'approved'))),
-        getDocs(query(petitionsRef, where('status', '==', 'paused'))),
+        getAggregateFromServer(petitionsRef, {
+          totalPetitions: count(),
+          totalSignatures: sum('currentSignatures'),
+        }),
+        getCountFromServer(
+          query(petitionsRef, where('status', '==', 'pending')),
+        ),
+        getCountFromServer(
+          query(petitionsRef, where('status', '==', 'approved')),
+        ),
+        getCountFromServer(query(petitionsRef, where('status', '==', 'paused'))),
         getDocs(query(petitionsRef, orderBy('createdAt', 'desc'), limit(5))),
-        getDocs(collection(db, 'users')),
+        getCountFromServer(usersRef),
       ]);
 
-      // Calculate total signatures
-      let totalSignatures = 0;
+      const totalSignatures =
+        petitionTotals.data().totalSignatures ?? 0;
       const recentPetitionsList: Petition[] = [];
-
-      allPetitions.forEach((doc) => {
-        const petition = { id: doc.id, ...doc.data() } as Petition;
-        totalSignatures += petition.currentSignatures || 0;
-      });
 
       recentPetitions.forEach((doc) => {
         const data = doc.data();
@@ -99,11 +100,11 @@ export default function AdminDashboard() {
       });
 
       setStats({
-        totalPetitions: allPetitions.size,
-        pendingPetitions: pendingPetitions.size,
-        approvedPetitions: approvedPetitions.size,
-        pausedPetitions: pausedPetitions.size,
-        totalUsers: allUsers.size,
+        totalPetitions: petitionTotals.data().totalPetitions,
+        pendingPetitions: pendingPetitions.data().count,
+        approvedPetitions: approvedPetitions.data().count,
+        pausedPetitions: pausedPetitions.data().count,
+        totalUsers: allUsers.data().count,
         totalSignatures,
         recentPetitions: recentPetitionsList,
       });
@@ -113,7 +114,13 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    if (!authLoading && hasRequiredRole) {
+      void loadAdminStats();
+    }
+  }, [authLoading, hasRequiredRole, loadAdminStats]);
 
   if (authLoading) {
     return (

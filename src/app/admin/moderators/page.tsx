@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   collection,
@@ -9,8 +9,15 @@ import {
   updateDoc,
   query,
   where,
+  orderBy,
+  limit,
+  startAfter,
+  getCountFromServer,
+  type QueryDocumentSnapshot,
+  type DocumentData,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { MODERATORS_PAGE_USER_LIST_SIZE } from '@/lib/firestore-page-sizes';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useTranslation } from '@/hooks/useTranslation';
 import Header from '@/components/layout/HeaderWrapper';
@@ -24,10 +31,141 @@ export default function ModeratorsPage() {
   const router = useRouter();
   const { userProfile, loading: authLoading } = useAuth();
   const { t } = useTranslation();
-  const [users, setUsers] = useState<User[]>([]);
+  const [moderators, setModerators] = useState<User[]>([]);
+  const [regularUsers, setRegularUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMoreUsers, setLoadingMoreUsers] = useState(false);
   const [error, setError] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [stats, setStats] = useState({
+    moderatorTotal: 0,
+    activeModerators: 0,
+    regularUsersTotal: 0,
+  });
+  const [hasMoreRegularUsers, setHasMoreRegularUsers] = useState(false);
+  const lastRegularUserDocRef =
+    useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
+
+  const loadStats = useCallback(async () => {
+    const usersRef = collection(db, 'users');
+    const [modTotal, modActive, userTotal] = await Promise.all([
+      getCountFromServer(query(usersRef, where('role', '==', 'moderator'))),
+      getCountFromServer(
+        query(
+          usersRef,
+          where('role', '==', 'moderator'),
+          where('isActive', '==', true),
+        ),
+      ),
+      getCountFromServer(query(usersRef, where('role', '==', 'user'))),
+    ]);
+    setStats({
+      moderatorTotal: modTotal.data().count,
+      activeModerators: modActive.data().count,
+      regularUsersTotal: userTotal.data().count,
+    });
+  }, []);
+
+  const loadModerators = useCallback(async () => {
+    const usersRef = collection(db, 'users');
+    const q = query(
+      usersRef,
+      where('role', '==', 'moderator'),
+      orderBy('createdAt', 'desc'),
+      limit(500),
+    );
+    const snap = await getDocs(q);
+    const list: User[] = snap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        createdAt: data.createdAt?.toDate?.() || new Date(),
+        updatedAt: data.updatedAt?.toDate?.(),
+        lastLoginAt: data.lastLoginAt?.toDate?.(),
+      } as User;
+    });
+    setModerators(list);
+  }, []);
+
+  const loadRegularUsers = useCallback(
+    async (mode: 'replace' | 'append' = 'replace') => {
+      const usersRef = collection(db, 'users');
+      const pageSize = MODERATORS_PAGE_USER_LIST_SIZE;
+
+      if (mode === 'append') {
+        if (!lastRegularUserDocRef.current) {
+          setLoadingMoreUsers(false);
+          return;
+        }
+        setLoadingMoreUsers(true);
+      } else {
+        lastRegularUserDocRef.current = null;
+      }
+
+      const baseConstraints = [
+        where('role', '==', 'user'),
+        orderBy('createdAt', 'desc'),
+      ];
+      const constraints =
+        mode === 'append' && lastRegularUserDocRef.current
+          ? [
+              ...baseConstraints,
+              startAfter(lastRegularUserDocRef.current),
+              limit(pageSize),
+            ]
+          : [...baseConstraints, limit(pageSize)];
+
+      const snap = await getDocs(query(usersRef, ...constraints));
+      const list: User[] = snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          ...data,
+          createdAt: data.createdAt?.toDate?.() || new Date(),
+          updatedAt: data.updatedAt?.toDate?.(),
+          lastLoginAt: data.lastLoginAt?.toDate?.(),
+        } as User;
+      });
+
+      lastRegularUserDocRef.current =
+        snap.docs.length > 0
+          ? (snap.docs[snap.docs.length - 1] ?? null)
+          : null;
+      setHasMoreRegularUsers(snap.docs.length === pageSize);
+
+      if (mode === 'append') {
+        setRegularUsers((prev) => {
+          const seen = new Set(prev.map((u) => u.id));
+          const merged = [...prev];
+          for (const u of list) {
+            if (!seen.has(u.id)) {
+              seen.add(u.id);
+              merged.push(u);
+            }
+          }
+          return merged;
+        });
+        setLoadingMoreUsers(false);
+      } else {
+        setRegularUsers(list);
+      }
+    },
+    [],
+  );
+
+  const loadAll = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      await Promise.all([loadStats(), loadModerators(), loadRegularUsers('replace')]);
+    } catch (err) {
+      console.error('Error loading users:', err);
+      setError(t('admin.moderators.failedToLoad'));
+    } finally {
+      setLoading(false);
+    }
+  }, [loadStats, loadModerators, loadRegularUsers, t]);
 
   useEffect(() => {
     if (!authLoading && userProfile?.role !== 'admin') {
@@ -37,29 +175,9 @@ export default function ModeratorsPage() {
 
   useEffect(() => {
     if (userProfile?.role === 'admin') {
-      loadUsers();
+      void loadAll();
     }
-  }, [userProfile]);
-
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      const usersSnapshot = await getDocs(collection(db, 'users'));
-      const usersData = usersSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate?.(),
-        lastLoginAt: doc.data().lastLoginAt?.toDate?.(),
-      })) as User[];
-      setUsers(usersData);
-    } catch (err) {
-      console.error('Error loading users:', err);
-      setError(t('admin.moderators.failedToLoad'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [userProfile, loadAll]);
 
   const handlePromoteToModerator = async (userId: string) => {
     if (!confirm(t('admin.users.confirmPromote'))) {
@@ -71,7 +189,7 @@ export default function ModeratorsPage() {
         role: 'moderator',
         updatedAt: new Date(),
       });
-      await loadUsers();
+      await loadAll();
     } catch (err) {
       console.error('Error promoting user:', err);
       alert(t('admin.moderators.failedToPromote'));
@@ -88,7 +206,7 @@ export default function ModeratorsPage() {
         role: 'user',
         updatedAt: new Date(),
       });
-      await loadUsers();
+      await loadAll();
     } catch (err) {
       console.error('Error demoting moderator:', err);
       alert(t('admin.moderators.failedToDemote'));
@@ -110,19 +228,16 @@ export default function ModeratorsPage() {
     return null;
   }
 
-  const moderators = users.filter((u) => u.role === 'moderator');
-  const regularUsers = users.filter((u) => u.role === 'user');
-
   const filteredModerators = moderators.filter(
     (mod) =>
       mod.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mod.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      mod.email?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const filteredUsers = regularUsers.filter(
-    (user) =>
-      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    (u) =>
+      u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -137,7 +252,15 @@ export default function ModeratorsPage() {
           <p className="text-gray-600">{t('admin.moderators.subtitle')}</p>
         </div>
 
-        {/* Stats */}
+        {error && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+            {error}
+            <Button className="mt-2" variant="outline" onClick={() => void loadAll()}>
+              Retry
+            </Button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
@@ -164,7 +287,7 @@ export default function ModeratorsPage() {
                     {t('admin.moderators.totalModerators')}
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {moderators.length}
+                    {stats.moderatorTotal}
                   </p>
                 </div>
               </div>
@@ -196,7 +319,7 @@ export default function ModeratorsPage() {
                     {t('admin.moderators.activeModerators')}
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {moderators.filter((m) => m.isActive).length}
+                    {stats.activeModerators}
                   </p>
                 </div>
               </div>
@@ -228,7 +351,7 @@ export default function ModeratorsPage() {
                     {t('admin.moderators.regularUsers')}
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {regularUsers.length}
+                    {stats.regularUsersTotal}
                   </p>
                 </div>
               </div>
@@ -236,7 +359,6 @@ export default function ModeratorsPage() {
           </Card>
         </div>
 
-        {/* Search */}
         <div className="mb-6">
           <input
             type="text"
@@ -247,13 +369,14 @@ export default function ModeratorsPage() {
           />
         </div>
 
-        {/* Moderator Invitations */}
         <ModeratorInvitations currentUserEmail={userProfile?.email} />
 
-        {/* Current Moderators */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>{t('admin.moderators.currentModerators')}</CardTitle>
+            <p className="text-xs text-gray-500 mt-1">
+              Showing up to 500 moderators (by creation date). Total above is exact.
+            </p>
           </CardHeader>
           <CardContent>
             {filteredModerators.length === 0 ? (
@@ -279,9 +402,7 @@ export default function ModeratorsPage() {
                         <h3 className="font-semibold text-gray-900">
                           {moderator.name || moderator.email || 'Unknown'}
                         </h3>
-                        <p className="text-sm text-gray-600">
-                          {moderator.email}
-                        </p>
+                        <p className="text-sm text-gray-600">{moderator.email}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                             {t('admin.roles.moderator')}
@@ -313,12 +434,14 @@ export default function ModeratorsPage() {
           </CardContent>
         </Card>
 
-        {/* Regular Users (Can be promoted) */}
         <Card>
           <CardHeader>
             <CardTitle>{t('admin.moderators.regularUsers')}</CardTitle>
             <p className="text-sm text-gray-600 mt-1">
               {t('admin.moderators.promoteUsersDesc')}
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              Users load in batches ({MODERATORS_PAGE_USER_LIST_SIZE}); use search within loaded rows or load more.
             </p>
           </CardHeader>
           <CardContent>
@@ -328,53 +451,58 @@ export default function ModeratorsPage() {
               </p>
             ) : (
               <div className="space-y-4">
-                {filteredUsers.slice(0, 10).map((user) => (
+                {filteredUsers.map((u) => (
                   <div
-                    key={user.id}
+                    key={u.id}
                     className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
                   >
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                         <span className="text-gray-600 font-medium text-lg">
-                          {(user.name || user.email || 'U')
-                            .charAt(0)
-                            .toUpperCase()}
+                          {(u.name || u.email || 'U').charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900">
-                          {user.name || user.email || 'Unknown'}
+                          {u.name || u.email || 'Unknown'}
                         </h3>
-                        <p className="text-sm text-gray-600">{user.email}</p>
+                        <p className="text-sm text-gray-600">{u.email}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                             {t('admin.roles.user')}
                           </span>
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              user.isActive
+                              u.isActive
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
                             }`}
                           >
-                            {user.isActive
+                            {u.isActive
                               ? t('admin.userStatus.active')
                               : t('admin.userStatus.inactive')}
                           </span>
                         </div>
                       </div>
                     </div>
-                    <Button onClick={() => handlePromoteToModerator(user.id)}>
+                    <Button onClick={() => handlePromoteToModerator(u.id)}>
                       {t('admin.users.promoteToModerator')}
                     </Button>
                   </div>
                 ))}
-                {filteredUsers.length > 10 && (
-                  <p className="text-sm text-gray-600 text-center pt-4">
-                    {t('admin.moderators.showingUsers', {
-                      total: filteredUsers.length,
-                    })}
-                  </p>
+                {hasMoreRegularUsers && (
+                  <div className="pt-4 text-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void loadRegularUsers('append')}
+                      disabled={loadingMoreUsers}
+                    >
+                      {loadingMoreUsers
+                        ? 'Loading…'
+                        : `Load more users (${MODERATORS_PAGE_USER_LIST_SIZE})`}
+                    </Button>
+                  </div>
                 )}
               </div>
             )}

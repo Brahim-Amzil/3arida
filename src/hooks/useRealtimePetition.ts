@@ -8,6 +8,7 @@ import {
   query,
   where,
   getDocs,
+  limit,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Petition } from '@/types/petition';
@@ -23,47 +24,64 @@ export const useRealtimePetition = (petitionIdOrCode: string) => {
       return;
     }
 
+    let cancelled = false;
     let unsubscribe: (() => void) | null = null;
+    let resolvedDocId: string | null = null;
 
-    const setupListener = async () => {
+    const detach = () => {
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+    };
+
+    const attach = async () => {
+      detach();
+      if (cancelled) return;
       try {
-        let docId = petitionIdOrCode;
+        let docId = resolvedDocId;
+        if (!docId) {
+          let id = petitionIdOrCode;
+          const isReferenceCode =
+            petitionIdOrCode.includes('-') && petitionIdOrCode.length <= 15;
 
-        // Check if it's a reference code (contains dash and is short)
-        // Reference codes are like "3AR-XXXXX" or similar short formats
-        const isReferenceCode =
-          petitionIdOrCode.includes('-') && petitionIdOrCode.length <= 15;
-
-        if (isReferenceCode) {
-          console.log(
-            '🔍 Looking up petition by reference code:',
-            petitionIdOrCode
-          );
-
-          // Query by reference code
-          const q = query(
-            collection(db, 'petitions'),
-            where('referenceCode', '==', petitionIdOrCode)
-          );
-
-          const querySnapshot = await getDocs(q);
-
-          if (!querySnapshot.empty) {
-            docId = querySnapshot.docs[0].id;
-            console.log('✅ Found petition ID:', docId);
-          } else {
+          if (isReferenceCode) {
             console.log(
-              '❌ No petition found with reference code:',
+              '🔍 Looking up petition by reference code:',
               petitionIdOrCode
             );
-            setError('Petition not found');
-            setPetition(null);
-            setLoading(false);
-            return;
+
+            const q = query(
+              collection(db, 'petitions'),
+              where('referenceCode', '==', petitionIdOrCode),
+              limit(1)
+            );
+
+            const querySnapshot = await getDocs(q);
+
+            if (cancelled) return;
+
+            if (!querySnapshot.empty) {
+              id = querySnapshot.docs[0].id;
+              console.log('✅ Found petition ID:', id);
+            } else {
+              console.log(
+                '❌ No petition found with reference code:',
+                petitionIdOrCode
+              );
+              setError('Petition not found');
+              setPetition(null);
+              setLoading(false);
+              return;
+            }
           }
+
+          resolvedDocId = id;
+          docId = id;
         }
 
-        // Set up real-time listener with the resolved document ID
+        if (cancelled) return;
+
         const petitionRef = doc(db, 'petitions', docId);
 
         unsubscribe = onSnapshot(
@@ -99,13 +117,26 @@ export const useRealtimePetition = (petitionIdOrCode: string) => {
       }
     };
 
-    setupListener();
-
-    // Cleanup listener on unmount
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
+    const onVisibilityChange = () => {
+      if (typeof document === 'undefined') return;
+      if (document.visibilityState === 'hidden') {
+        detach();
+      } else {
+        void attach();
       }
+    };
+
+    void attach();
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVisibilityChange);
+    }
+
+    return () => {
+      cancelled = true;
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+      }
+      detach();
     };
   }, [petitionIdOrCode]);
 

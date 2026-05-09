@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -16,11 +16,13 @@ import {
   doc,
   updateDoc,
   increment,
+  getDoc,
   limit,
   startAfter,
   DocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { COMMENT_PAGE_SIZE } from '@/lib/firestore-page-sizes';
 
 interface Comment {
   id: string;
@@ -56,6 +58,49 @@ interface PetitionSupportersProps {
   className?: string;
 }
 
+function buildTopLevelFromCommentMap(map: Map<string, Comment>): Comment[] {
+  const commentsMap = new Map<string, Comment>();
+  const allComments = Array.from(map.values());
+
+  allComments.forEach((comment) => {
+    commentsMap.set(comment.id, {
+      ...comment,
+      replies: [],
+      replyCount: 0,
+    });
+  });
+
+  const topLevelComments: Comment[] = [];
+
+  allComments.forEach((comment) => {
+    const node = commentsMap.get(comment.id)!;
+    if (comment.parentId) {
+      const parent = commentsMap.get(comment.parentId);
+      if (parent) {
+        parent.replies = parent.replies || [];
+        parent.replies.push(node);
+        parent.replyCount = (parent.replyCount || 0) + 1;
+      }
+    }
+  });
+
+  allComments.forEach((comment) => {
+    if (!comment.parentId) {
+      topLevelComments.push(commentsMap.get(comment.id)!);
+    }
+  });
+
+  topLevelComments.forEach((comment) => {
+    if (comment.replies?.length) {
+      comment.replies.sort(
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+      );
+    }
+  });
+
+  return topLevelComments;
+}
+
 export default function PetitionSupporters({
   petitionId,
   className = '',
@@ -87,15 +132,21 @@ export default function PetitionSupporters({
   const [deletingComment, setDeletingComment] = useState<string | null>(null); // Comment ID being deleted (for confirmation)
   const [isDeleting, setIsDeleting] = useState(false); // Loading state for delete action
   const PAGE_SIZE = 20;
+  const loadedCommentsByIdRef = useRef<Map<string, Comment>>(new Map());
+  const [commentsLastDoc, setCommentsLastDoc] =
+    useState<DocumentSnapshot | null>(null);
+  const [commentsHasMore, setCommentsHasMore] = useState(true);
+  const [commentsLoadingMore, setCommentsLoadingMore] = useState(false);
 
   useEffect(() => {
-    loadData();
+    void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when switching petition or tab; loaders close over latest helpers
   }, [petitionId, view]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      await Promise.all([loadComments(), loadSignatures()]);
+      await Promise.all([loadComments(false), loadSignatures(false)]);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -103,30 +154,80 @@ export default function PetitionSupporters({
     }
   };
 
-  const loadComments = async () => {
+  const sortComments = (
+    commentsList: Comment[],
+    sortType: 'latest' | 'mostLiked',
+  ) => {
+    if (sortType === 'mostLiked') {
+      return [...commentsList].sort((a, b) => b.likes - a.likes);
+    }
+    return [...commentsList].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+  };
+
+  const applyCommentMapToState = (map: Map<string, Comment>) => {
+    const topLevel = buildTopLevelFromCommentMap(map);
+    setComments(sortComments(topLevel, sortBy));
+  };
+
+  const loadComments = async (loadMore = false) => {
     try {
+      if (loadMore && !commentsLastDoc) {
+        return;
+      }
+
+      if (loadMore) {
+        setCommentsLoadingMore(true);
+      }
+
+      if (!loadMore) {
+        loadedCommentsByIdRef.current = new Map();
+        setCommentsLastDoc(null);
+        setCommentsHasMore(true);
+      }
+
+      const map = loadedCommentsByIdRef.current;
       const commentsRef = collection(db, 'comments');
-      const commentsQuery = query(
+      let commentsQuery = query(
         commentsRef,
         where('petitionId', '==', petitionId),
         orderBy('createdAt', 'desc'),
+        limit(COMMENT_PAGE_SIZE),
       );
 
-      const snapshot = await getDocs(commentsQuery);
-      const allComments: Comment[] = [];
-      const commentsMap = new Map<string, Comment>();
+      if (loadMore && commentsLastDoc) {
+        commentsQuery = query(
+          commentsRef,
+          where('petitionId', '==', petitionId),
+          orderBy('createdAt', 'desc'),
+          startAfter(commentsLastDoc),
+          limit(COMMENT_PAGE_SIZE),
+        );
+      }
 
-      // First pass: Create all comment objects
-      snapshot.forEach((doc) => {
-        const commentData = doc.data();
+      const snapshot = await getDocs(commentsQuery);
+
+      if (snapshot.empty) {
+        if (loadMore) {
+          setCommentsHasMore(false);
+        } else {
+          map.clear();
+          setComments([]);
+        }
+        return;
+      }
+
+      snapshot.forEach((docSnap) => {
+        const commentData = docSnap.data();
         const likedBy = commentData.likedBy || [];
 
         if (user && likedBy.includes(user.uid)) {
-          setLikedComments((prev) => new Set(prev).add(doc.id));
+          setLikedComments((prev) => new Set(prev).add(docSnap.id));
         }
 
         const comment: Comment = {
-          id: doc.id,
+          id: docSnap.id,
           petitionId: commentData.petitionId,
           authorId: commentData.authorId,
           authorName: commentData.authorName,
@@ -143,45 +244,72 @@ export default function PetitionSupporters({
           deletedBy: commentData.deletedBy,
         };
 
-        commentsMap.set(doc.id, comment);
-        allComments.push(comment);
+        map.set(docSnap.id, comment);
       });
 
-      // Second pass: Organize into parent-child structure
-      const topLevelComments: Comment[] = [];
-
-      allComments.forEach((comment) => {
-        if (comment.parentId) {
-          // This is a reply
-          const parent = commentsMap.get(comment.parentId);
-          if (parent) {
-            parent.replies = parent.replies || [];
-            parent.replies.push(comment);
-            parent.replyCount = (parent.replyCount || 0) + 1;
+      const MAX_PARENT_CHAIN = 10;
+      for (let depth = 0; depth < MAX_PARENT_CHAIN; depth++) {
+        const missing = new Set<string>();
+        map.forEach((c) => {
+          if (c.parentId && !map.has(c.parentId)) {
+            missing.add(c.parentId);
           }
-        } else {
-          // This is a top-level comment
-          topLevelComments.push(comment);
+        });
+        if (missing.size === 0) {
+          break;
         }
-      });
+        await Promise.all(
+          Array.from(missing).map(async (parentId) => {
+            const pSnap = await getDoc(doc(db, 'comments', parentId));
+            if (!pSnap.exists()) {
+              return;
+            }
+            const d = pSnap.data();
+            if (d.petitionId !== petitionId) {
+              return;
+            }
+            const likedBy = d.likedBy || [];
+            if (user && likedBy.includes(user.uid)) {
+              setLikedComments((prev) => new Set(prev).add(pSnap.id));
+            }
+            map.set(pSnap.id, {
+              id: pSnap.id,
+              petitionId: d.petitionId,
+              authorId: d.authorId,
+              authorName: d.authorName,
+              content: d.content,
+              createdAt: d.createdAt?.toDate() || new Date(),
+              isAnonymous: d.isAnonymous || false,
+              likes: d.likes || 0,
+              likedBy,
+              parentId: d.parentId || null,
+              replies: [],
+              replyCount: 0,
+              deleted: d.deleted || false,
+              deletedAt: d.deletedAt?.toDate(),
+              deletedBy: d.deletedBy,
+            });
+          }),
+        );
+      }
 
-      // Sort replies by date (oldest first for natural conversation flow)
-      topLevelComments.forEach((comment) => {
-        if (comment.replies && comment.replies.length > 0) {
-          comment.replies.sort(
-            (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
-          );
-        }
-      });
-
-      setComments(sortComments(topLevelComments, sortBy));
+      applyCommentMapToState(map);
+      setCommentsLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+      setCommentsHasMore(snapshot.docs.length === COMMENT_PAGE_SIZE);
     } catch (error) {
       console.error('Error loading comments:', error);
+    } finally {
+      setCommentsLoadingMore(false);
     }
   };
 
   const loadSignatures = async (loadMore = false) => {
     try {
+      if (!loadMore) {
+        setLastDoc(null);
+        setHasMore(true);
+      }
+
       if (loadMore) {
         setLoadingMore(true);
       }
@@ -238,21 +366,12 @@ export default function PetitionSupporters({
     }
   };
 
-  const sortComments = (
-    commentsList: Comment[],
-    sortType: 'latest' | 'mostLiked',
-  ) => {
-    if (sortType === 'mostLiked') {
-      return [...commentsList].sort((a, b) => b.likes - a.likes);
-    }
-    return [...commentsList].sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    );
-  };
-
   useEffect(() => {
-    if (comments.length > 0) {
-      setComments(sortComments(comments, sortBy));
+    if (loadedCommentsByIdRef.current.size > 0) {
+      const topLevel = buildTopLevelFromCommentMap(
+        loadedCommentsByIdRef.current,
+      );
+      setComments(sortComments(topLevel, sortBy));
     }
   }, [sortBy]);
 
@@ -284,7 +403,8 @@ export default function PetitionSupporters({
         replyCount: 0,
       };
 
-      setComments((prev) => [newCommentObj, ...prev]);
+      loadedCommentsByIdRef.current.set(docRef.id, newCommentObj);
+      applyCommentMapToState(loadedCommentsByIdRef.current);
       setNewComment('');
       setShowCommentForm(false);
     } catch (error) {
@@ -320,19 +440,12 @@ export default function PetitionSupporters({
         createdAt: new Date(),
       };
 
-      // Update local state
-      setComments((prev) =>
-        prev.map((comment) => {
-          if (comment.id === parentId) {
-            return {
-              ...comment,
-              replies: [...(comment.replies || []), newReply],
-              replyCount: (comment.replyCount || 0) + 1,
-            };
-          }
-          return comment;
-        }),
-      );
+      loadedCommentsByIdRef.current.set(newReply.id, {
+        ...newReply,
+        replies: [],
+        replyCount: 0,
+      });
+      applyCommentMapToState(loadedCommentsByIdRef.current);
 
       // Expand replies to show the new reply
       setExpandedReplies((prev) => new Set(prev).add(parentId));
@@ -370,13 +483,14 @@ export default function PetitionSupporters({
       const commentRef = doc(db, 'comments', commentId);
       const isLiked = likedComments.has(commentId);
 
+      const existing = loadedCommentsByIdRef.current.get(commentId);
+
       if (isLiked) {
+        const nextLikedBy =
+          existing?.likedBy?.filter((id) => id !== user.uid) || [];
         await updateDoc(commentRef, {
           likes: increment(-1),
-          likedBy:
-            comments
-              .find((c) => c.id === commentId)
-              ?.likedBy?.filter((id) => id !== user.uid) || [],
+          likedBy: nextLikedBy,
         });
 
         setLikedComments((prev) => {
@@ -385,20 +499,16 @@ export default function PetitionSupporters({
           return newSet;
         });
 
-        setComments((prev) =>
-          prev.map((c) =>
-            c.id === commentId
-              ? {
-                  ...c,
-                  likes: c.likes - 1,
-                  likedBy: c.likedBy?.filter((id) => id !== user.uid),
-                }
-              : c,
-          ),
-        );
+        if (existing) {
+          loadedCommentsByIdRef.current.set(commentId, {
+            ...existing,
+            likes: Math.max(0, existing.likes - 1),
+            likedBy: nextLikedBy,
+          });
+          applyCommentMapToState(loadedCommentsByIdRef.current);
+        }
       } else {
-        const currentLikedBy =
-          comments.find((c) => c.id === commentId)?.likedBy || [];
+        const currentLikedBy = existing?.likedBy || [];
         await updateDoc(commentRef, {
           likes: increment(1),
           likedBy: [...currentLikedBy, user.uid],
@@ -406,17 +516,14 @@ export default function PetitionSupporters({
 
         setLikedComments((prev) => new Set(prev).add(commentId));
 
-        setComments((prev) =>
-          prev.map((c) =>
-            c.id === commentId
-              ? {
-                  ...c,
-                  likes: c.likes + 1,
-                  likedBy: [...(c.likedBy || []), user.uid],
-                }
-              : c,
-          ),
-        );
+        if (existing) {
+          loadedCommentsByIdRef.current.set(commentId, {
+            ...existing,
+            likes: existing.likes + 1,
+            likedBy: [...currentLikedBy, user.uid],
+          });
+          applyCommentMapToState(loadedCommentsByIdRef.current);
+        }
       }
     } catch (error) {
       console.error('Error liking comment:', error);
@@ -441,36 +548,16 @@ export default function PetitionSupporters({
         deletedBy: user.uid,
       });
 
-      // Update local state
-      setComments((prev) =>
-        prev.map((comment) => {
-          if (comment.id === commentId) {
-            // Deleting a top-level comment
-            return {
-              ...comment,
-              deleted: true,
-              deletedAt: new Date(),
-              deletedBy: user.uid,
-            };
-          } else if (comment.replies) {
-            // Check if it's a reply being deleted
-            return {
-              ...comment,
-              replies: comment.replies.map((reply) =>
-                reply.id === commentId
-                  ? {
-                      ...reply,
-                      deleted: true,
-                      deletedAt: new Date(),
-                      deletedBy: user.uid,
-                    }
-                  : reply,
-              ),
-            };
-          }
-          return comment;
-        }),
-      );
+      const existing = loadedCommentsByIdRef.current.get(commentId);
+      if (existing) {
+        loadedCommentsByIdRef.current.set(commentId, {
+          ...existing,
+          deleted: true,
+          deletedAt: new Date(),
+          deletedBy: user.uid,
+        });
+        applyCommentMapToState(loadedCommentsByIdRef.current);
+      }
 
       // Clear the confirmation state
       setDeletingComment(null);
@@ -502,6 +589,12 @@ export default function PetitionSupporters({
   const handleLoadMore = () => {
     if (!loadingMore && hasMore) {
       loadSignatures(true);
+    }
+  };
+
+  const handleLoadMoreComments = () => {
+    if (!commentsLoadingMore && commentsHasMore) {
+      loadComments(true);
     }
   };
 
@@ -1576,6 +1669,28 @@ export default function PetitionSupporters({
               ))}
           </div>
         )}
+
+        {(view === 'comments' || view === 'all') &&
+          commentsHasMore &&
+          comments.length > 0 && (
+            <div className="flex justify-center pt-4">
+              <button
+                type="button"
+                onClick={handleLoadMoreComments}
+                disabled={commentsLoadingMore}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {commentsLoadingMore ? (
+                  <span className="flex items-center gap-2">
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    {t('supporters.loading')}
+                  </span>
+                ) : (
+                  t('supporters.loadMore')
+                )}
+              </button>
+            </div>
+          )}
 
         {/* Load More for Signatures */}
         {view === 'signatures' && hasMore && signatures.length > 0 && (

@@ -13,7 +13,12 @@ import {
   where,
   getDocs,
   orderBy,
+  limit,
   Timestamp,
+  getCountFromServer,
+  getAggregateFromServer,
+  sum,
+  count,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Petition } from '@/types/petition';
@@ -90,99 +95,136 @@ export default function AdminAnalyticsPage() {
 
       const petitionsRef = collection(db, 'petitions');
       const usersRef = collection(db, 'users');
+      const categoriesRef = collection(db, 'categories');
 
-      // Get all petitions
-      const allPetitionsSnapshot = await getDocs(petitionsRef);
-      const allUsers = await getDocs(usersRef);
-
-      let totalSignatures = 0;
-      let totalViews = 0;
-      let totalShares = 0;
-      const petitionsByStatus = {
-        pending: 0,
-        approved: 0,
-        rejected: 0,
-        paused: 0,
-        deleted: 0,
-        archived: 0,
-      };
-      const petitionsByCategory: { [key: string]: number } = {};
-      const topPetitions: Petition[] = [];
-
-      // Calculate date ranges for growth metrics
       const now = new Date();
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+      const oneWeekAgoTs = Timestamp.fromDate(oneWeekAgo);
+      const twoWeeksAgoTs = Timestamp.fromDate(twoWeeksAgo);
 
-      let petitionsThisWeek = 0;
-      let petitionsLastWeek = 0;
-      let signaturesThisWeek = 0;
-      let signaturesLastWeek = 0;
+      const statusKeys = [
+        'pending',
+        'approved',
+        'rejected',
+        'paused',
+        'deleted',
+        'archived',
+      ] as const;
 
-      allPetitionsSnapshot.forEach((doc) => {
-        const data = doc.data();
-        const petition = {
-          id: doc.id,
+      const statusCountPromises = statusKeys.map((status) =>
+        getCountFromServer(
+          query(petitionsRef, where('status', '==', status)),
+        ),
+      );
+
+      const [
+        totalsAgg,
+        usersCountSnap,
+        thisWeekAgg,
+        lastWeekAgg,
+        topSnap,
+        categoriesSnap,
+        ...statusCountSnaps
+      ] = await Promise.all([
+        getAggregateFromServer(petitionsRef, {
+          totalPetitions: count(),
+          totalSignatures: sum('currentSignatures'),
+          totalViews: sum('viewCount'),
+          totalShares: sum('shareCount'),
+        }),
+        getCountFromServer(usersRef),
+        getAggregateFromServer(
+          query(petitionsRef, where('createdAt', '>=', oneWeekAgoTs)),
+          {
+            petitionsThisWeek: count(),
+            signaturesThisWeek: sum('currentSignatures'),
+          },
+        ),
+        getAggregateFromServer(
+          query(
+            petitionsRef,
+            where('createdAt', '>=', twoWeeksAgoTs),
+            where('createdAt', '<', oneWeekAgoTs),
+          ),
+          {
+            petitionsLastWeek: count(),
+            signaturesLastWeek: sum('currentSignatures'),
+          },
+        ),
+        getDocs(
+          query(
+            petitionsRef,
+            orderBy('currentSignatures', 'desc'),
+            limit(10),
+          ),
+        ),
+        getDocs(categoriesRef),
+        ...statusCountPromises,
+      ]);
+
+      const totalPetitions = totalsAgg.data().totalPetitions;
+      const totalSignatures = totalsAgg.data().totalSignatures ?? 0;
+      const totalViews = totalsAgg.data().totalViews ?? 0;
+      const totalShares = totalsAgg.data().totalShares ?? 0;
+
+      const petitionsByStatus = {
+        pending: statusCountSnaps[0].data().count,
+        approved: statusCountSnaps[1].data().count,
+        rejected: statusCountSnaps[2].data().count,
+        paused: statusCountSnaps[3].data().count,
+        deleted: statusCountSnaps[4].data().count,
+        archived: statusCountSnaps[5].data().count,
+      };
+
+      const petitionsByCategory: { [key: string]: number } = {};
+      const categoryNames = categoriesSnap.docs
+        .map((d) => d.data().name as string)
+        .filter(Boolean);
+
+      const categoryCountPairs = await Promise.all(
+        categoryNames.map(async (name) => {
+          const snap = await getCountFromServer(
+            query(petitionsRef, where('category', '==', name)),
+          );
+          return [name, snap.data().count] as const;
+        }),
+      );
+      for (const [name, c] of categoryCountPairs) {
+        if (c > 0) petitionsByCategory[name] = c;
+      }
+
+      const topPetitions: Petition[] = topSnap.docs.map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
           ...data,
           currentSignatures: data.currentSignatures || 0,
           viewCount: data.viewCount || 0,
           shareCount: data.shareCount || 0,
-          createdAt: (data.createdAt as any)?.toDate?.() || new Date(),
-          updatedAt: (data.updatedAt as any)?.toDate?.() || new Date(),
+          createdAt: (data.createdAt as { toDate?: () => Date })?.toDate?.() || new Date(),
+          updatedAt: (data.updatedAt as { toDate?: () => Date })?.toDate?.() || new Date(),
         } as Petition;
-
-        // Accumulate totals
-        totalSignatures += petition.currentSignatures;
-        totalViews += petition.viewCount;
-        totalShares += petition.shareCount;
-
-        // Count by status
-        const status = petition.status as keyof typeof petitionsByStatus;
-        if (petitionsByStatus[status] !== undefined) {
-          petitionsByStatus[status]++;
-        }
-
-        // Count by category
-        if (petition.category) {
-          petitionsByCategory[petition.category] =
-            (petitionsByCategory[petition.category] || 0) + 1;
-        }
-
-        // Track for top petitions
-        topPetitions.push(petition);
-
-        // Growth metrics
-        const createdAt = petition.createdAt;
-        if (createdAt >= oneWeekAgo) {
-          petitionsThisWeek++;
-          signaturesThisWeek += petition.currentSignatures || 0;
-        } else if (createdAt >= twoWeeksAgo) {
-          petitionsLastWeek++;
-          signaturesLastWeek += petition.currentSignatures || 0;
-        }
       });
 
-      // Sort top petitions by signatures
-      topPetitions.sort((a, b) => b.currentSignatures - a.currentSignatures);
-
       setAnalytics({
-        totalPetitions: allPetitionsSnapshot.size,
+        totalPetitions,
         totalSignatures,
-        totalUsers: allUsers.size,
+        totalUsers: usersCountSnap.data().count,
         totalViews,
         totalShares,
         avgSignaturesPerPetition:
-          allPetitionsSnapshot.size > 0
-            ? Math.round(totalSignatures / allPetitionsSnapshot.size)
+          totalPetitions > 0
+            ? Math.round(totalSignatures / totalPetitions)
             : 0,
         petitionsByStatus,
         petitionsByCategory,
-        topPetitions: topPetitions.slice(0, 10),
+        topPetitions,
         recentGrowth: {
-          petitionsThisWeek,
-          petitionsLastWeek,
-          signaturesThisWeek,
-          signaturesLastWeek,
+          petitionsThisWeek: thisWeekAgg.data().petitionsThisWeek,
+          petitionsLastWeek: lastWeekAgg.data().petitionsLastWeek,
+          signaturesThisWeek: thisWeekAgg.data().signaturesThisWeek ?? 0,
+          signaturesLastWeek: lastWeekAgg.data().signaturesLastWeek ?? 0,
         },
       });
     } catch (err: any) {

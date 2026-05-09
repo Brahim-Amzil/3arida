@@ -16,10 +16,12 @@ import {
   doc,
   updateDoc,
   increment,
-  getDoc,
-  setDoc,
+  limit,
+  startAfter,
+  type DocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { COMMENT_PAGE_SIZE } from '@/lib/firestore-page-sizes';
 
 interface Comment {
   id: string;
@@ -32,6 +34,18 @@ interface Comment {
   likes: number;
   likedBy?: string[]; // Array of user IDs who liked this comment
   replies: Comment[];
+}
+
+function sortDiscussionComments(
+  commentsList: Comment[],
+  sortType: 'latest' | 'mostLiked',
+) {
+  if (sortType === 'mostLiked') {
+    return [...commentsList].sort((a, b) => b.likes - a.likes);
+  }
+  return [...commentsList].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  );
 }
 
 interface PetitionCommentsProps {
@@ -54,39 +68,67 @@ export default function PetitionComments({
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [sortBy, setSortBy] = useState<'latest' | 'mostLiked'>('latest');
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
+  const [lastCommentDoc, setLastCommentDoc] =
+    useState<DocumentSnapshot | null>(null);
+  const [hasMoreComments, setHasMoreComments] = useState(true);
+  const [loadingMoreComments, setLoadingMoreComments] = useState(false);
 
   useEffect(() => {
-    loadComments();
+    void loadComments(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when petition id changes; pagination state lives inside loadComments
   }, [petitionId]);
 
-  const loadComments = async () => {
+  const loadComments = async (loadMore = false) => {
     try {
-      setLoading(true);
-      console.log('🔍 Loading comments for petition:', petitionId);
+      if (loadMore) {
+        setLoadingMoreComments(true);
+      } else {
+        setLoading(true);
+        setLastCommentDoc(null);
+        setHasMoreComments(true);
+      }
 
       const commentsRef = collection(db, 'comments');
-      const commentsQuery = query(
+      let commentsQuery = query(
         commentsRef,
         where('petitionId', '==', petitionId),
         orderBy('createdAt', 'desc'),
+        limit(COMMENT_PAGE_SIZE),
       );
+
+      if (loadMore && lastCommentDoc) {
+        commentsQuery = query(
+          commentsRef,
+          where('petitionId', '==', petitionId),
+          orderBy('createdAt', 'desc'),
+          startAfter(lastCommentDoc),
+          limit(COMMENT_PAGE_SIZE),
+        );
+      }
 
       const snapshot = await getDocs(commentsQuery);
       const commentsList: Comment[] = [];
 
-      console.log('📊 Found comments:', snapshot.size);
+      if (snapshot.empty) {
+        if (loadMore) {
+          setHasMoreComments(false);
+        } else {
+          setComments([]);
+          onCommentsCountChange?.(0);
+        }
+        return;
+      }
 
-      snapshot.forEach((doc) => {
-        const commentData = doc.data();
+      snapshot.forEach((docSnap) => {
+        const commentData = docSnap.data();
         const likedBy = commentData.likedBy || [];
 
-        // Check if current user has liked this comment
         if (user && likedBy.includes(user.uid)) {
-          setLikedComments((prev) => new Set(prev).add(doc.id));
+          setLikedComments((prev) => new Set(prev).add(docSnap.id));
         }
 
         commentsList.push({
-          id: doc.id,
+          id: docSnap.id,
           petitionId: commentData.petitionId,
           authorId: commentData.authorId,
           authorName: commentData.authorName,
@@ -95,42 +137,43 @@ export default function PetitionComments({
           isAnonymous: commentData.isAnonymous || false,
           likes: commentData.likes || 0,
           likedBy: likedBy,
-          replies: [], // TODO: Implement nested replies
+          replies: [],
         });
       });
 
-      console.log('✅ Loaded comments:', commentsList.length);
+      if (loadMore) {
+        setComments((prev) => {
+          const byId = new Map<string, Comment>();
+          prev.forEach((c) => byId.set(c.id, c));
+          commentsList.forEach((c) => byId.set(c.id, c));
+          const merged = Array.from(byId.values());
+          const sortedComments = sortDiscussionComments(merged, sortBy);
+          onCommentsCountChange?.(sortedComments.length);
+          return sortedComments;
+        });
+      } else {
+        const sortedComments = sortDiscussionComments(commentsList, sortBy);
+        setComments(sortedComments);
+        onCommentsCountChange?.(sortedComments.length);
+      }
 
-      // Sort comments based on selected filter
-      const sortedComments = sortComments(commentsList, sortBy);
-      setComments(sortedComments);
-      onCommentsCountChange?.(commentsList.length);
+      setLastCommentDoc(snapshot.docs[snapshot.docs.length - 1]);
+      setHasMoreComments(snapshot.docs.length === COMMENT_PAGE_SIZE);
     } catch (error) {
       console.error('❌ Error loading comments:', error);
       alert('Failed to load comments. Check console for details.');
     } finally {
       setLoading(false);
+      setLoadingMoreComments(false);
     }
-  };
-
-  const sortComments = (
-    commentsList: Comment[],
-    sortType: 'latest' | 'mostLiked',
-  ) => {
-    if (sortType === 'mostLiked') {
-      return [...commentsList].sort((a, b) => b.likes - a.likes);
-    }
-    // Sort by latest (newest first)
-    return [...commentsList].sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    );
   };
 
   // Re-sort when sortBy changes
   useEffect(() => {
-    if (comments.length > 0) {
-      setComments(sortComments(comments, sortBy));
-    }
+    setComments((prev) => {
+      if (prev.length === 0) return prev;
+      return sortDiscussionComments(prev, sortBy);
+    });
   }, [sortBy]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
@@ -259,7 +302,7 @@ export default function PetitionComments({
         alert('Failed to like comment. Please try again.');
       }
     },
-    [user, comments],
+    [user, comments, likedComments],
   );
 
   // Throttled like — prevents spam writes (1 second cooldown per comment)
@@ -283,7 +326,10 @@ export default function PetitionComments({
     <Card className={className}>
       <CardHeader>
         <div className="flex items-center justify-between mb-4">
-          <CardTitle>Discussion ({comments.length})</CardTitle>
+          <CardTitle>
+            Discussion ({comments.length}
+            {hasMoreComments ? '+' : ''})
+          </CardTitle>
           {user && !showCommentForm && (
             <Button onClick={() => setShowCommentForm(true)} size="sm">
               Add Comment
@@ -541,11 +587,16 @@ export default function PetitionComments({
           </div>
         )}
 
-        {/* Load More */}
-        {comments.length > 0 && comments.length % 10 === 0 && (
-          <div className="text-center">
-            <Button variant="outline" size="sm">
-              Load More Comments
+        {hasMoreComments && comments.length > 0 && (
+          <div className="flex justify-center pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={loadingMoreComments}
+              onClick={() => loadComments(true)}
+            >
+              {loadingMoreComments ? 'Loading…' : 'Load more comments'}
             </Button>
           </div>
         )}

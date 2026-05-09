@@ -107,7 +107,7 @@ export default function PetitionDetailPage() {
       }
 
       try {
-        const { collection, query, where, getDocs } =
+        const { collection, query, where, getDocs, limit } =
           await import('firebase/firestore');
         const { db } = await import('@/lib/firebase');
 
@@ -116,6 +116,7 @@ export default function PetitionDetailPage() {
           signaturesRef,
           where('petitionId', '==', petition.id),
           where('userId', '==', user.uid),
+          limit(1),
         );
 
         const snapshot = await getDocs(q);
@@ -236,7 +237,7 @@ export default function PetitionDetailPage() {
     } else {
       console.log('ℹ️ No notification type found in URL');
     }
-  }, [petition, searchParams]);
+  }, [petition, searchParams, t]);
 
   const handleSignPetition = async () => {
     if (!user) {
@@ -250,7 +251,7 @@ export default function PetitionDetailPage() {
 
     // Check if user already signed this petition (MVP: only check by user ID)
     try {
-      const { collection, query, where, getDocs } =
+      const { collection, query, where, getDocs, limit } =
         await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
 
@@ -259,6 +260,7 @@ export default function PetitionDetailPage() {
         signaturesRef,
         where('petitionId', '==', petition?.id),
         where('userId', '==', user.uid),
+        limit(1),
       );
 
       const snapshot = await getDocs(q);

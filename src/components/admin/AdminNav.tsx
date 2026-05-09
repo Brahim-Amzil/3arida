@@ -233,7 +233,7 @@ export default function AdminNav() {
 
     const fetchPendingPetitionsCount = async () => {
       try {
-        const { collection, query, where, getDocs } =
+        const { collection, query, where, getCountFromServer } =
           await import('firebase/firestore');
         const { db } = await import('@/lib/firebase');
 
@@ -242,8 +242,8 @@ export default function AdminNav() {
           petitionsRef,
           where('status', '==', 'pending'),
         );
-        const snapshot = await getDocs(pendingQuery);
-        setPendingPetitionsCount(snapshot.size);
+        const countSnap = await getCountFromServer(pendingQuery);
+        setPendingPetitionsCount(countSnap.data().count);
       } catch (error) {
         console.error('Error fetching pending petitions count:', error);
       }

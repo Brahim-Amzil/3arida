@@ -74,8 +74,8 @@
     ],
     "redirects": [
       {
-        "source": "/home",
-        "destination": "/",
+        "source": "/:path*",
+        "destination": "https://www.3arida.org/:path*",
         "type": 301
       }
     ]

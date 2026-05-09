@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from '@/components/layout/HeaderWrapper';
@@ -10,9 +10,48 @@ import { Button } from '@/components/ui/button';
 import { useModeratorGuard } from '@/lib/auth-guards';
 import { useTranslation } from '@/hooks/useTranslation';
 import PetitionAdminActions from '@/components/admin/PetitionAdminActions';
-import { collection, query, where, getDocs, orderBy, doc, deleteDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  orderBy,
+  doc,
+  deleteDoc,
+  getCountFromServer,
+  limit,
+  startAfter,
+  type QueryDocumentSnapshot,
+  type DocumentSnapshot,
+  type DocumentData,
+} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { ADMIN_PETITIONS_PAGE_SIZE } from '@/lib/firestore-page-sizes';
 import { Petition } from '@/types/petition';
+
+const MODERATION_STATUS_FILTERS = [
+  'pending',
+  'approved',
+  'rejected',
+  'paused',
+  'archived',
+  'deleted',
+] as const;
+
+type ModerationStatusFilter = (typeof MODERATION_STATUS_FILTERS)[number];
+
+function mapFirestorePetitionDoc(
+  docSnap: QueryDocumentSnapshot<DocumentData> | DocumentSnapshot<DocumentData>,
+): Petition {
+  const data = docSnap.data()!;
+  return {
+    id: docSnap.id,
+    ...data,
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+    updatedAt: data.updatedAt?.toDate?.() || new Date(),
+  } as Petition;
+}
 
 export default function AdminPetitionsPage() {
   const { t } = useTranslation();
@@ -42,129 +81,306 @@ export default function AdminPetitionsPage() {
   const [itemsPerPage] = useState(10);
   const [deletionRequests, setDeletionRequests] = useState<any[]>([]);
   const [deletionRequestsCount, setDeletionRequestsCount] = useState(0);
-
-  useEffect(() => {
-    if (!authLoading && hasRequiredRole) {
-      loadPetitions();
-      loadDeletionRequests();
-    }
-  }, [authLoading, hasRequiredRole]);
-
-  useEffect(() => {
-    if (allPetitions.length > 0) {
-      filterAndSearchPetitions(
-        allPetitions,
-        filter,
-        searchQuery,
-        searchCategory
-      );
-    }
-  }, [filter, searchQuery, searchCategory]);
-
-  useEffect(() => {
-    // Reset to page 1 when filters change
-    setCurrentPage(1);
-  }, [filter, searchQuery, searchCategory]);
+  const [statusCounts, setStatusCounts] = useState<
+    Record<ModerationStatusFilter, number>
+  >({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    paused: 0,
+    archived: 0,
+    deleted: 0,
+  });
+  const [totalPetitionCount, setTotalPetitionCount] = useState(0);
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [hasMorePetitions, setHasMorePetitions] = useState(false);
+  const [loadingMorePetitions, setLoadingMorePetitions] = useState(false);
+  const lastPetitionDocRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(
+    null,
+  );
 
   const filterAndSearchPetitions = (
     petitionsList: Petition[],
     statusFilter: string,
     search: string,
-    category: string
+    category: string,
   ) => {
     let filtered = petitionsList;
 
-    // Filter by status
-    if (statusFilter !== 'all') {
+    if (
+      statusFilter !== 'all' &&
+      statusFilter !== 'deletion-requests'
+    ) {
       filtered = filtered.filter((p) => p.status === statusFilter);
     }
 
-    // Filter by category
     if (category !== 'all') {
       filtered = filtered.filter((p) => p.category === category);
     }
 
-    // Filter by search query
-    if (search.trim()) {
+    const serverIndexedSearch =
+      statusFilter === 'all' && search.trim().length > 0;
+
+    if (search.trim() && !serverIndexedSearch) {
       const searchLower = search.toLowerCase();
       const searchUpper = search.toUpperCase();
       filtered = filtered.filter(
         (p) =>
           p.title.toLowerCase().includes(searchLower) ||
           p.description.toLowerCase().includes(searchLower) ||
-          p.category.toLowerCase().includes(searchLower) ||
+          (p.category?.toLowerCase() ?? '').includes(searchLower) ||
           p.publisherName?.toLowerCase().includes(searchLower) ||
-          p.referenceCode?.toUpperCase().includes(searchUpper) // Search by reference code
+          (p.referenceCode?.toUpperCase() ?? '').includes(searchUpper),
       );
     }
 
     setPetitions(filtered);
   };
 
-  const loadPetitions = async () => {
+  const loadStatusCounts = async () => {
+    const petitionsRef = collection(db, 'petitions');
+    const [totalSnap, ...statusSnaps] = await Promise.all([
+      getCountFromServer(petitionsRef),
+      ...MODERATION_STATUS_FILTERS.map((s) =>
+        getCountFromServer(
+          query(petitionsRef, where('status', '==', s)),
+        ),
+      ),
+    ]);
+    setTotalPetitionCount(totalSnap.data().count);
+    setStatusCounts(
+      Object.fromEntries(
+        MODERATION_STATUS_FILTERS.map((s, i) => [s, statusSnaps[i].data().count]),
+      ) as Record<ModerationStatusFilter, number>,
+    );
+  };
+
+  const loadCategoryOptions = async () => {
+    const snap = await getDocs(collection(db, 'categories'));
+    const names = snap.docs
+      .map((d) => d.data().name as string)
+      .filter(Boolean);
+    setCategoryOptions(names.sort((a, b) => a.localeCompare(b)));
+  };
+
+  useEffect(() => {
+    if (!authLoading && hasRequiredRole) {
+      void loadCategoryOptions();
+      void loadStatusCounts();
+      void loadDeletionRequests();
+    }
+  }, [authLoading, hasRequiredRole]);
+
+  const loadPetitionsPage = useCallback(
+    async (mode: 'replace' | 'append' = 'replace') => {
+      if (filter === 'deletion-requests') return;
+
+      try {
+        if (mode === 'replace') {
+          setLoading(true);
+          lastPetitionDocRef.current = null;
+        } else {
+          if (!lastPetitionDocRef.current) return;
+          setLoadingMorePetitions(true);
+        }
+        setError('');
+
+        const petitionsRef = collection(db, 'petitions');
+        const pageSize = ADMIN_PETITIONS_PAGE_SIZE;
+
+        const constraints = [];
+        if (filter !== 'all') {
+          constraints.push(where('status', '==', filter));
+        }
+        constraints.push(orderBy('createdAt', 'desc'));
+        if (mode === 'append' && lastPetitionDocRef.current) {
+          constraints.push(startAfter(lastPetitionDocRef.current));
+        }
+        constraints.push(limit(pageSize));
+
+        const snapshot = await getDocs(query(petitionsRef, ...constraints));
+        const page = snapshot.docs.map(mapFirestorePetitionDoc);
+
+        lastPetitionDocRef.current =
+          snapshot.docs.length > 0
+            ? (snapshot.docs[snapshot.docs.length - 1] ?? null)
+            : null;
+        setHasMorePetitions(snapshot.docs.length === pageSize);
+
+        if (mode === 'append') {
+          setAllPetitions((prev) => {
+            const seen = new Set(prev.map((p) => p.id));
+            const merged = [...prev];
+            for (const p of page) {
+              if (!seen.has(p.id)) {
+                seen.add(p.id);
+                merged.push(p);
+              }
+            }
+            return merged;
+          });
+        } else {
+          setAllPetitions(page);
+        }
+      } catch (err: unknown) {
+        console.error('Error loading petitions:', err);
+        setError('Failed to load petitions');
+      } finally {
+        setLoading(false);
+        setLoadingMorePetitions(false);
+      }
+    },
+    [filter],
+  );
+
+  const loadIndexedSearchAll = useCallback(async () => {
+    if (filter !== 'all') return;
+    const raw = searchQuery.trim();
+    if (!raw) return;
+
     try {
       setLoading(true);
       setError('');
+      setHasMorePetitions(false);
+      lastPetitionDocRef.current = null;
 
       const petitionsRef = collection(db, 'petitions');
+      const merged: Petition[] = [];
+      const seen = new Set<string>();
 
-      // Always load ALL petitions for accurate counts
-      const allPetitionsQuery = query(
-        petitionsRef,
-        orderBy('createdAt', 'desc')
+      const pushPetition = (p: Petition) => {
+        if (!seen.has(p.id)) {
+          seen.add(p.id);
+          merged.push(p);
+        }
+      };
+
+      const upperRef = raw.toUpperCase().trim();
+      const refSnap = await getDocs(
+        query(
+          petitionsRef,
+          where('referenceCode', '==', upperRef),
+          limit(5),
+        ),
       );
-      const allSnapshot = await getDocs(allPetitionsQuery);
-      const allPetitionsList: Petition[] = [];
+      refSnap.docs.forEach((d) => pushPetition(mapFirestorePetitionDoc(d)));
 
-      allSnapshot.forEach((doc) => {
-        const data = doc.data();
-        const petition = {
-          id: doc.id,
-          ...data,
-          createdAt: data.createdAt?.toDate?.() || new Date(),
-          updatedAt: data.updatedAt?.toDate?.() || new Date(),
-        } as Petition;
-        allPetitionsList.push(petition);
-      });
+      if (/^[a-zA-Z0-9_-]{10,}$/.test(raw)) {
+        try {
+          const d = await getDoc(doc(db, 'petitions', raw));
+          if (d.exists()) {
+            pushPetition(mapFirestorePetitionDoc(d));
+          }
+        } catch {
+          /* ignore invalid id */
+        }
+      }
 
-      setAllPetitions(allPetitionsList);
+      const prefix = raw.slice(0, 120);
+      if (prefix.length >= 1) {
+        try {
+          const titleSnap = await getDocs(
+            query(
+              petitionsRef,
+              orderBy('title'),
+              where('title', '>=', prefix),
+              where('title', '<=', `${prefix}\uf8ff`),
+              limit(40),
+            ),
+          );
+          titleSnap.docs.forEach((d) => pushPetition(mapFirestorePetitionDoc(d)));
+        } catch (titleErr) {
+          console.warn('Admin title prefix search skipped:', titleErr);
+        }
+      }
 
-      // Filter for display
-      filterAndSearchPetitions(
-        allPetitionsList,
-        filter,
-        searchQuery,
-        searchCategory
-      );
-    } catch (err: any) {
-      console.error('Error loading petitions:', err);
-      setError('Failed to load petitions');
+      setAllPetitions(merged);
+    } catch (err: unknown) {
+      console.error('Error searching petitions:', err);
+      setError('Failed to search petitions');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, searchQuery]);
+
+  const refreshPetitionsAndCounts = useCallback(async () => {
+    await loadStatusCounts();
+    if (filter === 'deletion-requests') return;
+    if (filter === 'all' && searchQuery.trim()) {
+      await loadIndexedSearchAll();
+    } else {
+      await loadPetitionsPage('replace');
+    }
+  }, [filter, searchQuery, loadIndexedSearchAll, loadPetitionsPage]);
+
+  useEffect(() => {
+    if (!authLoading || !hasRequiredRole) return;
+
+    if (filter === 'deletion-requests') {
+      setAllPetitions([]);
+      return;
+    }
+
+    const debounceMs = searchQuery.trim() && filter === 'all' ? 400 : 0;
+    const timer = setTimeout(() => {
+      lastPetitionDocRef.current = null;
+      if (filter === 'all' && searchQuery.trim()) {
+        void loadIndexedSearchAll();
+      } else {
+        void loadPetitionsPage('replace');
+      }
+    }, debounceMs);
+
+    return () => clearTimeout(timer);
+  }, [
+    authLoading,
+    hasRequiredRole,
+    filter,
+    searchQuery,
+    loadIndexedSearchAll,
+    loadPetitionsPage,
+  ]);
+
+  useEffect(() => {
+    filterAndSearchPetitions(
+      allPetitions,
+      filter,
+      searchQuery,
+      searchCategory,
+    );
+  }, [filter, searchQuery, searchCategory, allPetitions]);
+
+  useEffect(() => {
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
+  }, [filter, searchQuery, searchCategory]);
 
   const loadDeletionRequests = async () => {
     try {
       const requestsRef = collection(db, 'deletionRequests');
+      const pendingCountSnap = await getCountFromServer(
+        query(requestsRef, where('status', '==', 'pending')),
+      );
+      setDeletionRequestsCount(pendingCountSnap.data().count);
+
       const requestsQuery = query(
         requestsRef,
         where('status', '==', 'pending'),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        limit(100),
       );
       const snapshot = await getDocs(requestsQuery);
       const requests: any[] = [];
 
-      snapshot.forEach((doc) => {
+      snapshot.forEach((docSnap) => {
         requests.push({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+          id: docSnap.id,
+          ...docSnap.data(),
+          createdAt: docSnap.data().createdAt?.toDate?.() || new Date(),
         });
       });
 
       setDeletionRequests(requests);
-      setDeletionRequestsCount(requests.length);
     } catch (err) {
       console.error('Error loading deletion requests:', err);
     }
@@ -224,7 +440,7 @@ export default function AdminPetitionsPage() {
 
       alert('Deletion request approved');
       loadDeletionRequests();
-      loadPetitions();
+      void refreshPetitionsAndCounts();
     } catch (error) {
       console.error('Error approving deletion:', error);
       alert('Failed to approve deletion request');
@@ -344,8 +560,13 @@ export default function AdminPetitionsPage() {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             >
               <option value="all">{t('admin.moderation.allCategories')}</option>
-              {Array.from(new Set(allPetitions.map((p) => p.category)))
-                .sort()
+              {Array.from(
+                new Set([
+                  ...categoryOptions,
+                  ...allPetitions.map((p) => p.category).filter(Boolean),
+                ] as string[]),
+              )
+                .sort((a, b) => a.localeCompare(b))
                 .map((category) => (
                   <option key={category} value={category}>
                     {category}
@@ -366,6 +587,14 @@ export default function AdminPetitionsPage() {
           </div>
         </div>
 
+        {filter !== 'deletion-requests' && (
+          <p className="text-xs text-gray-500 mb-4 max-w-3xl">
+            {filter === 'all' && searchQuery.trim()
+              ? 'With the All tab and a search term, we match exact reference code, petition document ID, and title prefix (up to 40 hits). Category still filters those results. Clear search to browse by date in batches.'
+              : `Petitions load in batches of ${ADMIN_PETITIONS_PAGE_SIZE} (newest first). Use “Load more” for older rows; tab counts show full totals.`}
+          </p>
+        )}
+
         {/* Filter Tabs */}
         <div className="mb-6">
           <div className="border-b border-gray-200">
@@ -374,38 +603,32 @@ export default function AdminPetitionsPage() {
                 {
                   key: 'pending',
                   label: t('admin.moderation.tabs.pendingReview'),
-                  count: allPetitions.filter((p) => p.status === 'pending')
-                    .length,
+                  count: statusCounts.pending,
                 },
                 {
                   key: 'approved',
                   label: t('admin.moderation.tabs.approved'),
-                  count: allPetitions.filter((p) => p.status === 'approved')
-                    .length,
+                  count: statusCounts.approved,
                 },
                 {
                   key: 'rejected',
                   label: t('admin.moderation.tabs.rejected'),
-                  count: allPetitions.filter((p) => p.status === 'rejected')
-                    .length,
+                  count: statusCounts.rejected,
                 },
                 {
                   key: 'paused',
                   label: t('admin.moderation.tabs.paused'),
-                  count: allPetitions.filter((p) => p.status === 'paused')
-                    .length,
+                  count: statusCounts.paused,
                 },
                 {
                   key: 'archived',
                   label: t('admin.moderation.tabs.archived'),
-                  count: allPetitions.filter((p) => p.status === 'archived')
-                    .length,
+                  count: statusCounts.archived,
                 },
                 {
                   key: 'deleted',
                   label: t('admin.moderation.tabs.deleted'),
-                  count: allPetitions.filter((p) => p.status === 'deleted')
-                    .length,
+                  count: statusCounts.deleted,
                 },
                 {
                   key: 'deletion-requests',
@@ -415,7 +638,7 @@ export default function AdminPetitionsPage() {
                 {
                   key: 'all',
                   label: t('admin.moderation.tabs.allPetitions'),
-                  count: allPetitions.length,
+                  count: totalPetitionCount,
                 },
               ].map((tab) => (
                 <button
@@ -457,7 +680,11 @@ export default function AdminPetitionsPage() {
         ) : error ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <p className="text-red-600">{error}</p>
-            <Button onClick={loadPetitions} className="mt-4" variant="outline">
+            <Button
+              onClick={() => void refreshPetitionsAndCounts()}
+              className="mt-4"
+              variant="outline"
+            >
               Try Again
             </Button>
           </div>
@@ -604,10 +831,14 @@ export default function AdminPetitionsPage() {
                         <div className="flex-shrink-0">
                           {petition.mediaUrls &&
                           petition.mediaUrls.length > 0 ? (
-                            <img src={petition.mediaUrls[0]}
+                            <Image
+                              src={petition.mediaUrls[0]}
                               alt={petition.title}
+                              width={192}
+                              height={128}
                               className="w-48 h-32 object-cover rounded-lg"
-                             loading="lazy" />
+                              loading="lazy"
+                            />
                           ) : (
                             <div className="w-48 h-32 bg-gray-100 rounded-lg flex items-center justify-center">
                               <svg
@@ -767,7 +998,7 @@ export default function AdminPetitionsPage() {
                                         const petitionRef = doc(db, 'petitions', petition.id);
                                         await deleteDoc(petitionRef);
                                         alert('✅ تم الحذف النهائي بنجاح');
-                                        loadPetitions();
+                                        void refreshPetitionsAndCounts();
                                       } catch (error) {
                                         console.error('Error permanently deleting:', error);
                                         alert('❌ فشل الحذف النهائي');
@@ -787,12 +1018,10 @@ export default function AdminPetitionsPage() {
                                       p.id === petition.id ? updatedPetition : p
                                     )
                                   );
-                                  // Reload if filtering by status and status changed
                                   if (
-                                    filter !== 'all' &&
                                     updatedPetition.status !== petition.status
                                   ) {
-                                    loadPetitions();
+                                    void refreshPetitionsAndCounts();
                                   }
                                 }}
                                 size="sm"
@@ -921,6 +1150,21 @@ export default function AdminPetitionsPage() {
                 </div>
               </div>
             )}
+
+            {!searchQuery.trim() && hasMorePetitions && (
+                <div className="mt-4 flex justify-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void loadPetitionsPage('append')}
+                    disabled={loadingMorePetitions || loading}
+                  >
+                    {loadingMorePetitions
+                      ? 'Loading…'
+                      : `Load more (${ADMIN_PETITIONS_PAGE_SIZE})`}
+                  </Button>
+                </div>
+              )}
           </>
         )}
       </div>

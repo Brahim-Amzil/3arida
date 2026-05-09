@@ -10,6 +10,11 @@ import {
   doc,
   Timestamp,
   onSnapshot,
+  writeBatch,
+  startAfter,
+  documentId,
+  type QueryDocumentSnapshot,
+  type DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -131,23 +136,32 @@ export const markNotificationAsRead = async (
 /**
  * Mark all user notifications as read
  */
+const MARK_ALL_NOTIFICATIONS_BATCH_SIZE = 450;
+
 export const markAllNotificationsAsRead = async (
   userId: string,
 ): Promise<void> => {
   try {
     const notificationsRef = collection(db, 'notifications');
-    const unreadQuery = query(
-      notificationsRef,
-      where('userId', '==', userId),
-      where('read', '==', false),
-    );
 
-    const snapshot = await getDocs(unreadQuery);
-    const updatePromises = snapshot.docs.map((doc) =>
-      updateDoc(doc.ref, { read: true }),
-    );
+    while (true) {
+      const unreadQuery = query(
+        notificationsRef,
+        where('userId', '==', userId),
+        where('read', '==', false),
+        orderBy('createdAt', 'desc'),
+        limit(MARK_ALL_NOTIFICATIONS_BATCH_SIZE),
+      );
 
-    await Promise.all(updatePromises);
+      const snapshot = await getDocs(unreadQuery);
+      if (snapshot.empty) break;
+
+      const batch = writeBatch(db);
+      snapshot.docs.forEach((d) => {
+        batch.update(d.ref, { read: true });
+      });
+      await batch.commit();
+    }
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
     throw new Error('Failed to mark all notifications as read');
@@ -453,6 +467,8 @@ export const getNotificationColor = (type: NotificationType): string => {
 /**
  * Notify admins when a creator requests petition deletion
  */
+const ADMIN_NOTIFY_PAGE_SIZE = 100;
+
 export const notifyAdminsOfDeletionRequest = async (
   petitionId: string,
   petitionTitle: string,
@@ -461,35 +477,57 @@ export const notifyAdminsOfDeletionRequest = async (
   signatureCount: number,
 ): Promise<void> => {
   try {
-    // Get all admin and moderator users
     const usersRef = collection(db, 'users');
-    const adminsQuery = query(
-      usersRef,
-      where('role', 'in', ['admin', 'moderator']),
-    );
-    const adminsSnapshot = await getDocs(adminsQuery);
+    let lastDoc: QueryDocumentSnapshot<DocumentData> | null = null;
+    let totalNotified = 0;
 
-    // Create notification for each admin/moderator
-    const notificationPromises = adminsSnapshot.docs.map((adminDoc) =>
-      createNotification(
-        adminDoc.id,
-        'petition_status_change',
-        'Deletion Request',
-        `${creatorId} requested deletion of "${petitionTitle}" (${signatureCount} signatures). Reason: ${reason}`,
-        {
-          petitionId,
-          petitionTitle,
-          creatorId,
-          reason,
-          signatureCount,
-          actionType: 'deletion_request',
-        },
-      ),
-    );
+    while (true) {
+      let adminsQuery = query(
+        usersRef,
+        where('role', 'in', ['admin', 'moderator']),
+        orderBy(documentId()),
+        limit(ADMIN_NOTIFY_PAGE_SIZE),
+      );
+      if (lastDoc) {
+        adminsQuery = query(
+          usersRef,
+          where('role', 'in', ['admin', 'moderator']),
+          orderBy(documentId()),
+          startAfter(lastDoc),
+          limit(ADMIN_NOTIFY_PAGE_SIZE),
+        );
+      }
 
-    await Promise.all(notificationPromises);
+      const adminsSnapshot = await getDocs(adminsQuery);
+      if (adminsSnapshot.empty) break;
+
+      const notificationPromises = adminsSnapshot.docs.map((adminDoc) =>
+        createNotification(
+          adminDoc.id,
+          'petition_status_change',
+          'Deletion Request',
+          `${creatorId} requested deletion of "${petitionTitle}" (${signatureCount} signatures). Reason: ${reason}`,
+          {
+            petitionId,
+            petitionTitle,
+            creatorId,
+            reason,
+            signatureCount,
+            actionType: 'deletion_request',
+          },
+        ),
+      );
+
+      await Promise.all(notificationPromises);
+      totalNotified += adminsSnapshot.size;
+
+      lastDoc =
+        adminsSnapshot.docs[adminsSnapshot.docs.length - 1] ?? null;
+      if (adminsSnapshot.size < ADMIN_NOTIFY_PAGE_SIZE) break;
+    }
+
     console.log(
-      `✅ Notified ${adminsSnapshot.size} admins of deletion request`,
+      `✅ Notified ${totalNotified} admins of deletion request`,
     );
   } catch (error) {
     console.error('Error notifying admins of deletion request:', error);

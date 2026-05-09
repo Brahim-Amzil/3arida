@@ -17,24 +17,15 @@ export async function POST(request: NextRequest) {
 
     // Import Firebase client SDK dynamically to avoid SSR issues
     const { db } = await import('@/lib/firebase');
-    const { collection, query, where, getDocs } =
+    const { collection, query, where, getDocs, limit } =
       await import('firebase/firestore');
 
-    // First, let's check if we can read ANY coupons
     const couponsRef = collection(db, 'coupons');
-    const allCouponsSnapshot = await getDocs(couponsRef);
-    console.log('📊 Total coupons in database:', allCouponsSnapshot.size);
-
-    if (allCouponsSnapshot.size > 0) {
-      console.log('📋 Available coupon codes:');
-      allCouponsSnapshot.forEach((doc) => {
-        const data = doc.data();
-        console.log(`  - ${data.code} (status: ${data.status})`);
-      });
-    }
-
-    // Query Firestore for the coupon
-    const q = query(couponsRef, where('code', '==', code.toUpperCase().trim()));
+    const q = query(
+      couponsRef,
+      where('code', '==', code.toUpperCase().trim()),
+      limit(1),
+    );
     const querySnapshot = await getDocs(q);
 
     console.log('✅ Query complete. Found:', querySnapshot.size, 'documents');

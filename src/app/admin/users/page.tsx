@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/HeaderWrapper';
 import AdminNav from '@/components/admin/AdminNav';
@@ -12,12 +12,18 @@ import {
   collection,
   query,
   getDocs,
+  getCountFromServer,
   orderBy,
   updateDoc,
   doc,
   where,
+  limit,
+  startAfter,
+  type QueryDocumentSnapshot,
+  type DocumentData,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { ADMIN_USERS_PAGE_SIZE } from '@/lib/firestore-page-sizes';
 import { User } from '@/types/petition';
 
 export default function AdminUsersPage() {
@@ -30,75 +36,143 @@ export default function AdminUsersPage() {
   const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string>('');
   const [filter, setFilter] = useState<
     'all' | 'active' | 'inactive' | 'moderators'
   >('all');
   const [actionLoading, setActionLoading] = useState<string>('');
+  const [hasMoreUsers, setHasMoreUsers] = useState(false);
+  const [tabCounts, setTabCounts] = useState({
+    all: 0,
+    active: 0,
+    inactive: 0,
+    moderators: 0,
+  });
+  const lastUserDocRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(
+    null,
+  );
+
+  const loadTabCounts = useCallback(async () => {
+    const usersRef = collection(db, 'users');
+    const [allSnap, activeSnap, inactiveSnap, modSnap] = await Promise.all([
+      getCountFromServer(usersRef),
+      getCountFromServer(
+        query(usersRef, where('isActive', '==', true)),
+      ),
+      getCountFromServer(
+        query(usersRef, where('isActive', '==', false)),
+      ),
+      getCountFromServer(
+        query(usersRef, where('role', 'in', ['moderator', 'admin'])),
+      ),
+    ]);
+    setTabCounts({
+      all: allSnap.data().count,
+      active: activeSnap.data().count,
+      inactive: inactiveSnap.data().count,
+      moderators: modSnap.data().count,
+    });
+  }, []);
+
+  const loadUsers = useCallback(
+    async (mode: 'replace' | 'append' = 'replace') => {
+      try {
+        if (mode === 'replace') {
+          setLoading(true);
+          lastUserDocRef.current = null;
+        } else {
+          if (!lastUserDocRef.current) {
+            setLoadingMore(false);
+            return;
+          }
+          setLoadingMore(true);
+        }
+        setError('');
+
+        const usersRef = collection(db, 'users');
+        const pageSize = ADMIN_USERS_PAGE_SIZE;
+
+        const constraints = [];
+        switch (filter) {
+          case 'active':
+            constraints.push(where('isActive', '==', true));
+            constraints.push(orderBy('createdAt', 'desc'));
+            break;
+          case 'inactive':
+            constraints.push(where('isActive', '==', false));
+            constraints.push(orderBy('createdAt', 'desc'));
+            break;
+          case 'moderators':
+            constraints.push(where('role', 'in', ['moderator', 'admin']));
+            constraints.push(orderBy('createdAt', 'desc'));
+            break;
+          default:
+            constraints.push(orderBy('createdAt', 'desc'));
+        }
+        if (mode === 'append' && lastUserDocRef.current) {
+          constraints.push(startAfter(lastUserDocRef.current));
+        }
+        constraints.push(limit(pageSize));
+
+        const snapshot = await getDocs(query(usersRef, ...constraints));
+        const usersList: User[] = [];
+
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const userData = {
+            id: docSnap.id,
+            ...data,
+            createdAt: (data.createdAt as { toDate?: () => Date })?.toDate?.() || new Date(),
+            updatedAt: (data.updatedAt as { toDate?: () => Date })?.toDate?.() || new Date(),
+            lastLoginAt: (data.lastLoginAt as { toDate?: () => Date })?.toDate?.(),
+          } as User;
+          usersList.push(userData);
+        });
+
+        lastUserDocRef.current =
+          snapshot.docs.length > 0
+            ? (snapshot.docs[snapshot.docs.length - 1] ?? null)
+            : null;
+        setHasMoreUsers(snapshot.docs.length === pageSize);
+
+        if (mode === 'append') {
+          setUsers((prev) => {
+            const seen = new Set(prev.map((u) => u.id));
+            const merged = [...prev];
+            for (const u of usersList) {
+              if (!seen.has(u.id)) {
+                seen.add(u.id);
+                merged.push(u);
+              }
+            }
+            return merged;
+          });
+        } else {
+          setUsers(usersList);
+        }
+      } catch (err: unknown) {
+        console.error('Error loading users:', err);
+        setError(t('admin.users.failedToLoad'));
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [filter, t],
+  );
 
   useEffect(() => {
     if (!authLoading && hasRequiredRole) {
-      loadUsers();
+      void loadTabCounts();
     }
-  }, [authLoading, hasRequiredRole, filter]);
+  }, [authLoading, hasRequiredRole, loadTabCounts]);
 
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      const usersRef = collection(db, 'users');
-      let usersQuery;
-
-      switch (filter) {
-        case 'active':
-          usersQuery = query(
-            usersRef,
-            where('isActive', '==', true),
-            orderBy('createdAt', 'desc')
-          );
-          break;
-        case 'inactive':
-          usersQuery = query(
-            usersRef,
-            where('isActive', '==', false),
-            orderBy('createdAt', 'desc')
-          );
-          break;
-        case 'moderators':
-          usersQuery = query(
-            usersRef,
-            where('role', 'in', ['moderator', 'admin']),
-            orderBy('createdAt', 'desc')
-          );
-          break;
-        default:
-          usersQuery = query(usersRef, orderBy('createdAt', 'desc'));
-      }
-
-      const snapshot = await getDocs(usersQuery);
-      const usersList: User[] = [];
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const userData = {
-          id: doc.id,
-          ...data,
-          createdAt: (data.createdAt as any)?.toDate?.() || new Date(),
-          updatedAt: (data.updatedAt as any)?.toDate?.() || new Date(),
-          lastLoginAt: (data.lastLoginAt as any)?.toDate?.(),
-        } as User;
-        usersList.push(userData);
-      });
-
-      setUsers(usersList);
-    } catch (err: any) {
-      console.error('Error loading users:', err);
-      setError(t('admin.users.failedToLoad'));
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!authLoading && hasRequiredRole) {
+      void loadUsers('replace');
     }
-  };
+  }, [authLoading, hasRequiredRole, filter, loadUsers]);
 
   const handleUserAction = async (
     userId: string,
@@ -136,9 +210,9 @@ export default function AdminUsersPage() {
         prev.map((u) => (u.id === userId ? { ...u, ...updateData } : u))
       );
 
-      // Reload if filtering by status
+      void loadTabCounts();
       if (filter !== 'all') {
-        loadUsers();
+        void loadUsers('replace');
       }
     } catch (err: any) {
       console.error(`Error ${action}ing user:`, err);
@@ -184,24 +258,22 @@ export default function AdminUsersPage() {
                 {
                   key: 'all',
                   label: t('admin.users.allUsers'),
-                  count: users.length,
+                  count: tabCounts.all,
                 },
                 {
                   key: 'active',
                   label: t('admin.users.active'),
-                  count: users.filter((u) => u.isActive).length,
+                  count: tabCounts.active,
                 },
                 {
                   key: 'inactive',
                   label: t('admin.users.inactive'),
-                  count: users.filter((u) => !u.isActive).length,
+                  count: tabCounts.inactive,
                 },
                 {
                   key: 'moderators',
                   label: t('admin.users.staff'),
-                  count: users.filter((u) =>
-                    ['moderator', 'admin'].includes(u.role)
-                  ).length,
+                  count: tabCounts.moderators,
                 },
               ].map((tab) => (
                 <button
@@ -214,11 +286,9 @@ export default function AdminUsersPage() {
                   }`}
                 >
                   {tab.label}
-                  {!loading && (
-                    <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs">
-                      {tab.count}
-                    </span>
-                  )}
+                  <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs">
+                    {tab.count}
+                  </span>
                 </button>
               ))}
             </nav>
@@ -243,7 +313,14 @@ export default function AdminUsersPage() {
         ) : error ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <p className="text-red-600">{error}</p>
-            <Button onClick={loadUsers} className="mt-4" variant="outline">
+            <Button
+              onClick={() => {
+                void loadTabCounts();
+                void loadUsers('replace');
+              }}
+              className="mt-4"
+              variant="outline"
+            >
               {t('admin.users.tryAgain')}
             </Button>
           </div>
@@ -439,6 +516,24 @@ export default function AdminUsersPage() {
                 </CardContent>
               </Card>
             ))}
+            {hasMoreUsers && (
+              <div className="mt-6 flex flex-col items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void loadUsers('append')}
+                  disabled={loadingMore}
+                >
+                  {loadingMore
+                    ? 'Loading…'
+                    : `Load more (${ADMIN_USERS_PAGE_SIZE} per batch)`}
+                </Button>
+                <p className="text-xs text-gray-500 text-center max-w-md">
+                  Tab numbers are full totals. This list loads in batches to
+                  limit Firestore reads.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

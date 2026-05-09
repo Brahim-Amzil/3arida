@@ -4,6 +4,7 @@ import {
   addDoc,
   getDoc,
   getDocs,
+  getCountFromServer,
   updateDoc,
   deleteDoc,
   query,
@@ -1314,24 +1315,21 @@ export const getCategories = async (): Promise<Category[]> => {
       }));
     }
 
-    // Calculate actual petition counts for each category
     const petitionsRef = collection(db, PETITIONS_COLLECTION);
-    const petitionsQuery = query(
-      petitionsRef,
-      where('status', '==', 'approved'),
+    const categoryCountPairs = await Promise.all(
+      categories.map(async (cat) => {
+        const countSnap = await getCountFromServer(
+          query(
+            petitionsRef,
+            where('status', '==', 'approved'),
+            where('category', '==', cat.name),
+          ),
+        );
+        return [cat.name, countSnap.data().count] as const;
+      }),
     );
-    const petitionsSnapshot = await getDocs(petitionsQuery);
+    const categoryCounts = Object.fromEntries(categoryCountPairs);
 
-    // Count petitions by category
-    const categoryCounts: Record<string, number> = {};
-    petitionsSnapshot.forEach((doc) => {
-      const category = doc.data().category;
-      if (category) {
-        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
-      }
-    });
-
-    // Update petition counts
     categories.forEach((cat) => {
       cat.petitionCount = categoryCounts[cat.name] || 0;
     });

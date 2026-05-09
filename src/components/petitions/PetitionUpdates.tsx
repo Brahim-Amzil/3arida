@@ -6,6 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Clock } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { UpgradeModal } from '@/components/ui/UpgradeModal';
+import type { DocumentSnapshot } from 'firebase/firestore';
+import { PETITION_UPDATES_PAGE_SIZE } from '@/lib/firestore-page-sizes';
 
 interface PetitionUpdate {
   id: string;
@@ -42,42 +44,92 @@ export default function PetitionUpdates({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [updatesLastDoc, setUpdatesLastDoc] =
+    useState<DocumentSnapshot | null>(null);
+  const [updatesHasMore, setUpdatesHasMore] = useState(true);
+  const [loadingMoreUpdates, setLoadingMoreUpdates] = useState(false);
 
   // Check if user can add updates based on tier
   const canAddUpdates = pricingTier !== 'free';
 
   useEffect(() => {
-    fetchUpdates();
+    setLoading(true);
+    void fetchUpdates(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial fetch when petition changes; cursor reset inside fetchUpdates(false)
   }, [petitionId]);
 
-  const fetchUpdates = async () => {
+  const fetchUpdates = async (loadMore = false) => {
     try {
-      const { collection, query, where, orderBy, getDocs } =
+      if (loadMore) {
+        if (!updatesLastDoc) {
+          return;
+        }
+        setLoadingMoreUpdates(true);
+      }
+
+      const { collection, query, where, orderBy, getDocs, limit, startAfter } =
         await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
 
       const updatesRef = collection(db, 'petitionUpdates');
-      const q = query(
+      let q = query(
         updatesRef,
         where('petitionId', '==', petitionId),
         orderBy('createdAt', 'desc'),
+        limit(PETITION_UPDATES_PAGE_SIZE),
       );
 
+      if (loadMore && updatesLastDoc) {
+        q = query(
+          updatesRef,
+          where('petitionId', '==', petitionId),
+          orderBy('createdAt', 'desc'),
+          startAfter(updatesLastDoc),
+          limit(PETITION_UPDATES_PAGE_SIZE),
+        );
+      }
+
       const snapshot = await getDocs(q);
-      const updatesData = snapshot.docs.map((doc) => {
-        const data = doc.data();
+
+      if (snapshot.empty) {
+        if (loadMore) {
+          setUpdatesHasMore(false);
+        } else {
+          setUpdates([]);
+          setUpdatesHasMore(false);
+          setUpdatesLastDoc(null);
+        }
+        return;
+      }
+
+      const updatesData = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
         return {
-          id: doc.id,
+          id: docSnap.id,
           ...data,
           createdAt: data.createdAt?.toDate() || new Date(),
         } as PetitionUpdate;
       });
 
-      setUpdates(updatesData);
+      if (loadMore) {
+        setUpdates((prev) => {
+          const byId = new Map(prev.map((u) => [u.id, u]));
+          updatesData.forEach((u) => byId.set(u.id, u));
+          return Array.from(byId.values()).sort(
+            (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+          );
+        });
+      } else {
+        setUpdates(updatesData);
+      }
+
+      setUpdatesLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+      setUpdatesHasMore(snapshot.docs.length === PETITION_UPDATES_PAGE_SIZE);
     } catch (error) {
       console.error('Error fetching updates:', error);
     } finally {
       setLoading(false);
+      setLoadingMoreUpdates(false);
     }
   };
 
@@ -112,7 +164,7 @@ export default function PetitionUpdates({
 
       setNewUpdate({ title: '', content: '' });
       setShowAddForm(false);
-      await fetchUpdates();
+      await fetchUpdates(false);
     } catch (error) {
       console.error('Error adding update:', error);
       alert(t('updates.addFailed'));
@@ -148,7 +200,7 @@ export default function PetitionUpdates({
 
       setEditingUpdate(null);
       setEditForm({ title: '', content: '' });
-      await fetchUpdates();
+      await fetchUpdates(false);
     } catch (error) {
       console.error('Error updating:', error);
       alert(t('updates.updateFailed'));
@@ -173,7 +225,7 @@ export default function PetitionUpdates({
       await deleteDoc(updateRef);
 
       setDeleteConfirmId(null);
-      await fetchUpdates();
+      await fetchUpdates(false);
     } catch (error) {
       console.error('Error deleting update:', error);
       alert(t('updates.deleteFailed'));
@@ -377,7 +429,8 @@ export default function PetitionUpdates({
 
           {/* Updates Timeline */}
           {updates.length > 0 ? (
-            <div className="space-y-6">
+            <>
+              <div className="space-y-6">
               {updates.map((update, index) => (
                 <div key={update.id} className="relative">
                   {/* Timeline line */}
@@ -549,7 +602,22 @@ export default function PetitionUpdates({
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+              {updatesHasMore && (
+                <div className="flex justify-center pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fetchUpdates(true)}
+                    disabled={loadingMoreUpdates}
+                  >
+                    {loadingMoreUpdates
+                      ? t('updates.loadingMore')
+                      : t('updates.loadMore')}
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-8 text-gray-500">
               <svg
