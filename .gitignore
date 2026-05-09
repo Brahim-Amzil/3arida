@@ -1,6 +1,9 @@
 # Local reference / scratch folders — never commit
 kotizi-Ref/
 
+# Git history backup bundles (filter-repo, manual exports) — never commit
+*.bundle
+
 # Dependencies
 node_modules/
 .pnp
