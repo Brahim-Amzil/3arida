@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useCallback, useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { sendEmailVerification, applyActionCode } from 'firebase/auth';
@@ -28,36 +28,38 @@ function VerifyEmailPageContent() {
     setActionCode(searchParams?.get('oobCode'));
   }, [searchParams]);
 
+  const handleEmailVerification = useCallback(
+    async (code: string) => {
+      try {
+        setLoading(true);
+        setError('');
+
+        await applyActionCode(auth, code);
+        setSuccess(
+          'Email verified successfully! You can now access all features.',
+        );
+
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 3000);
+      } catch (err: any) {
+        console.error('Email verification error:', err);
+        setError(
+          'Invalid or expired verification link. Please request a new one.',
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [router],
+  );
+
   // Handle email verification link
   useEffect(() => {
     if (mounted && mode === 'verifyEmail' && actionCode) {
-      handleEmailVerification(actionCode);
+      void handleEmailVerification(actionCode);
     }
-  }, [mounted, mode, actionCode]);
-
-  const handleEmailVerification = async (code: string) => {
-    try {
-      setLoading(true);
-      setError('');
-
-      await applyActionCode(auth, code);
-      setSuccess(
-        'Email verified successfully! You can now access all features.'
-      );
-
-      // Redirect to dashboard after 3 seconds
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 3000);
-    } catch (err: any) {
-      console.error('Email verification error:', err);
-      setError(
-        'Invalid or expired verification link. Please request a new one.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [mounted, mode, actionCode, handleEmailVerification]);
 
   const sendVerificationEmail = async () => {
     if (!user) {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/HeaderWrapper';
 import AdminNav from '@/components/admin/AdminNav';
@@ -19,7 +19,6 @@ export default function AdminAppealsPage() {
     hasRequiredRole,
   } = useModeratorGuard();
   const { t } = useTranslation();
-  const [appeals, setAppeals] = useState<Appeal[]>([]);
   const [allAppeals, setAllAppeals] = useState<Appeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -28,23 +27,7 @@ export default function AdminAppealsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  useEffect(() => {
-    if (!authLoading && hasRequiredRole && user) {
-      loadAppeals();
-    }
-  }, [authLoading, hasRequiredRole, user]);
-
-  useEffect(() => {
-    if (allAppeals.length > 0) {
-      filterAppeals();
-    }
-  }, [statusFilter, searchQuery, allAppeals]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter, searchQuery]);
-
-  const loadAppeals = async () => {
+  const loadAppeals = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -56,24 +39,27 @@ export default function AdminAppealsPage() {
       const fetchedAppeals = await getAppealsForUser(user.uid, 'moderator');
 
       setAllAppeals(fetchedAppeals);
-      setAppeals(fetchedAppeals);
     } catch (err) {
       console.error('Error loading appeals:', err);
       setError(t('appeals.failedToLoad'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, t]);
 
-  const filterAppeals = () => {
+  useEffect(() => {
+    if (!authLoading && hasRequiredRole && user) {
+      void loadAppeals();
+    }
+  }, [authLoading, hasRequiredRole, user, loadAppeals]);
+
+  const appeals = useMemo(() => {
     let filtered = allAppeals;
 
-    // Filter by status
     if (statusFilter !== 'all') {
       filtered = filtered.filter((a) => a.status === statusFilter);
     }
 
-    // Filter by search query
     if (searchQuery.trim()) {
       const searchLower = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -84,8 +70,12 @@ export default function AdminAppealsPage() {
       );
     }
 
-    setAppeals(filtered);
-  };
+    return filtered;
+  }, [allAppeals, statusFilter, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchQuery]);
 
   const getStatusBadge = (status: AppealStatus) => {
     const statusConfig = {

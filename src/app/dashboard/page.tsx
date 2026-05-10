@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/layout/HeaderWrapper';
@@ -71,15 +71,7 @@ export default function DashboardPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Load user petitions
-  useEffect(() => {
-    if (user) {
-      loadUserPetitions();
-      loadAppealsCount();
-    }
-  }, [user]);
-
-  const loadUserPetitions = async () => {
+  const loadUserPetitions = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -93,9 +85,9 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const loadAppealsCount = async () => {
+  const loadAppealsCount = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -104,9 +96,16 @@ export default function DashboardPage() {
       setAppealsCount(appeals.length);
     } catch (err) {
       console.error('Error loading appeals count:', err);
-      // Silently fail - just keep count at 0
     }
-  };
+  }, [user]);
+
+  // Load user petitions
+  useEffect(() => {
+    if (user) {
+      void loadUserPetitions();
+      void loadAppealsCount();
+    }
+  }, [user, loadUserPetitions, loadAppealsCount]);
 
   if (authLoading) {
     return (

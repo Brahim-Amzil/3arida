@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/layout/HeaderWrapper';
@@ -20,13 +20,9 @@ export default function PetitionAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
-  useEffect(() => {
-    if (user && petitionId) {
-      loadPetition();
-    }
-  }, [user, petitionId]);
+  const loadPetition = useCallback(async () => {
+    if (!user || !petitionId) return;
 
-  const loadPetition = async () => {
     try {
       setLoading(true);
       setError('');
@@ -37,8 +33,7 @@ export default function PetitionAnalyticsPage() {
         return;
       }
 
-      // Check if user owns this petition
-      if (petitionData.creatorId !== user?.uid) {
+      if (petitionData.creatorId !== user.uid) {
         setError('You can only view analytics for your own petitions');
         return;
       }
@@ -50,7 +45,13 @@ export default function PetitionAnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, petitionId]);
+
+  useEffect(() => {
+    if (user && petitionId) {
+      void loadPetition();
+    }
+  }, [user, petitionId, loadPetition]);
 
   if (loading) {
     return (

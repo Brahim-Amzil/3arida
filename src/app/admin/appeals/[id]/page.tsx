@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/HeaderWrapper';
 import AdminNav from '@/components/admin/AdminNav';
@@ -29,13 +29,7 @@ export default function AdminAppealDetailPage({
   const [internalNote, setInternalNote] = useState('');
   const [showInternalNotes, setShowInternalNotes] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && hasRequiredRole && user) {
-      loadAppeal();
-    }
-  }, [authLoading, hasRequiredRole, user, params.id]);
-
-  const loadAppeal = async () => {
+  const loadAppeal = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -59,7 +53,13 @@ export default function AdminAppealDetailPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, params.id]);
+
+  useEffect(() => {
+    if (!authLoading && hasRequiredRole && user) {
+      void loadAppeal();
+    }
+  }, [authLoading, hasRequiredRole, user, loadAppeal]);
 
   const handleReply = async (message: string) => {
     if (!user || !userProfile) return;

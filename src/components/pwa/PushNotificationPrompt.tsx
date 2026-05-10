@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import {
   requestNotificationPermission,
@@ -19,6 +19,23 @@ export default function PushNotificationPrompt() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleEnableNotifications = useCallback(async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      const token = await requestNotificationPermission();
+      if (token) {
+        await saveFCMToken(user.uid, token);
+        setShowPrompt(false);
+      }
+    } catch (error) {
+      console.error('Error enabling notifications:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     // Check if we should show the prompt
@@ -45,10 +62,9 @@ export default function PushNotificationPrompt() {
       }, 5000);
       return () => clearTimeout(timer);
     } else if (permission === 'granted') {
-      // Already granted, get token
-      handleEnableNotifications();
+      void handleEnableNotifications();
     }
-  }, [mounted, user]);
+  }, [mounted, user, handleEnableNotifications]);
 
   useEffect(() => {
     // Listen for foreground messages
@@ -63,23 +79,6 @@ export default function PushNotificationPrompt() {
       if (unsubscribe) unsubscribe();
     };
   }, [mounted, user]);
-
-  const handleEnableNotifications = async () => {
-    if (!user) return;
-
-    setIsLoading(true);
-    try {
-      const token = await requestNotificationPermission();
-      if (token) {
-        await saveFCMToken(user.uid, token);
-        setShowPrompt(false);
-      }
-    } catch (error) {
-      console.error('Error enabling notifications:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleDismiss = () => {
     setShowPrompt(false);

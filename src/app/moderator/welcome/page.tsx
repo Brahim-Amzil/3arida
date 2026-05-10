@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,23 +20,9 @@ function ModeratorWelcomeContent() {
 
   const token = searchParams.get('token');
 
-  useEffect(() => {
-    if (!token) {
-      setError('Invalid invitation link');
-      setLoading(false);
-      return;
-    }
+  const validateInvitation = useCallback(async () => {
+    if (!token) return;
 
-    // If user is already logged in and is already a moderator, redirect
-    if (userProfile?.role === 'moderator' || userProfile?.role === 'admin') {
-      router.push('/admin');
-      return;
-    }
-
-    validateInvitation();
-  }, [token, userProfile]);
-
-  const validateInvitation = async () => {
     try {
       const response = await fetch(
         `/api/moderator/validate-invitation?token=${token}`
@@ -55,7 +41,22 @@ function ModeratorWelcomeContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) {
+      setError('Invalid invitation link');
+      setLoading(false);
+      return;
+    }
+
+    if (userProfile?.role === 'moderator' || userProfile?.role === 'admin') {
+      router.push('/admin');
+      return;
+    }
+
+    void validateInvitation();
+  }, [token, userProfile, router, validateInvitation]);
 
   const acceptInvitation = async () => {
     if (!user || !token) {

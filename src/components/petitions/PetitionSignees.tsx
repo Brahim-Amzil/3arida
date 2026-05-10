@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   collection,
   query,
@@ -37,75 +37,88 @@ export default function PetitionSignees({ petitionId }: PetitionSigneesProps) {
   const [totalCount, setTotalCount] = useState(0);
   const PAGE_SIZE = 20;
 
-  useEffect(() => {
-    fetchSignatures();
-  }, [petitionId]);
+  const fetchSignatures = useCallback(
+    async (loadMore = false) => {
+      try {
+        if (loadMore) {
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+        }
 
-  const fetchSignatures = async (loadMore = false) => {
-    try {
-      if (loadMore) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
-
-      const signaturesRef = collection(db, 'signatures');
-      let q = query(
-        signaturesRef,
-        where('petitionId', '==', petitionId),
-        orderBy('createdAt', 'desc'),
-        limit(PAGE_SIZE)
-      );
-
-      if (loadMore && lastDoc) {
-        q = query(
+        const signaturesRef = collection(db, 'signatures');
+        let q = query(
           signaturesRef,
           where('petitionId', '==', petitionId),
           orderBy('createdAt', 'desc'),
-          startAfter(lastDoc),
-          limit(PAGE_SIZE)
+          limit(PAGE_SIZE),
         );
+
+        if (loadMore && lastDoc) {
+          q = query(
+            signaturesRef,
+            where('petitionId', '==', petitionId),
+            orderBy('createdAt', 'desc'),
+            startAfter(lastDoc),
+            limit(PAGE_SIZE),
+          );
+        }
+
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          if (!loadMore) {
+            setSignatures([]);
+            setTotalCount(0);
+            setLastDoc(null);
+          }
+          setHasMore(false);
+          return;
+        }
+
+        const newSignatures = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.signerName || data.name || 'Anonymous',
+            location: data.signerLocation || data.location,
+            comment: data.comment,
+            signedAt:
+              data.createdAt?.toDate() ||
+              data.verifiedAt?.toDate() ||
+              new Date(),
+          };
+        });
+
+        if (loadMore) {
+          setSignatures((prev) => [...prev, ...newSignatures]);
+        } else {
+          setSignatures(newSignatures);
+          setTotalCount(newSignatures.length);
+        }
+
+        setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+        setHasMore(snapshot.docs.length === PAGE_SIZE);
+      } catch (error) {
+        console.error('Error fetching signatures:', error);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
+    },
+    [petitionId, lastDoc],
+  );
 
-      const snapshot = await getDocs(q);
+  const fetchSignaturesRef = useRef(fetchSignatures);
+  fetchSignaturesRef.current = fetchSignatures;
 
-      if (snapshot.empty) {
-        setHasMore(false);
-        return;
-      }
-
-      const newSignatures = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          name: data.signerName || data.name || 'Anonymous',
-          location: data.signerLocation || data.location,
-          comment: data.comment,
-          signedAt:
-            data.createdAt?.toDate() || data.verifiedAt?.toDate() || new Date(),
-        };
-      });
-
-      if (loadMore) {
-        setSignatures((prev) => [...prev, ...newSignatures]);
-      } else {
-        setSignatures(newSignatures);
-        setTotalCount(newSignatures.length);
-      }
-
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
-      setHasMore(snapshot.docs.length === PAGE_SIZE);
-    } catch (error) {
-      console.error('Error fetching signatures:', error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
+  useEffect(() => {
+    void fetchSignaturesRef.current(false);
+  }, [petitionId]);
 
   const handleLoadMore = () => {
     if (!loadingMore && hasMore) {
-      fetchSignatures(true);
+      void fetchSignatures(true);
     }
   };
 

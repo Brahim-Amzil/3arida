@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,55 +9,41 @@ import { useAuth } from '@/components/auth/AuthProvider';
 
 export default function CreatorAppealsSection() {
   const { user } = useAuth();
-  const [appeals, setAppeals] = useState<Appeal[]>([]);
   const [allAppeals, setAllAppeals] = useState<Appeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<AppealStatus | 'all'>('all');
 
-  useEffect(() => {
-    if (user) {
-      loadAppeals();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (allAppeals.length > 0) {
-      filterAppeals();
-    }
-  }, [statusFilter, allAppeals]);
-
-  const filterAppeals = () => {
-    if (statusFilter === 'all') {
-      setAppeals(allAppeals);
-    } else {
-      setAppeals(allAppeals.filter((a) => a.status === statusFilter));
-    }
-  };
-
-  const loadAppeals = async () => {
+  const loadAppeals = useCallback(async () => {
     if (!user) return;
 
     try {
       setLoading(true);
       setError('');
 
-      // Use client SDK directly instead of API route
       const { getAppealsForUser } = await import('@/lib/appeals-service');
       const fetchedAppeals = await getAppealsForUser(user.uid, 'user');
 
       setAllAppeals(fetchedAppeals);
-      setAppeals(fetchedAppeals);
     } catch (err) {
       console.error('Error loading appeals:', err);
-      // Gracefully handle errors - just show empty state
       setError('');
       setAllAppeals([]);
-      setAppeals([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      void loadAppeals();
+    }
+  }, [user, loadAppeals]);
+
+  const appeals = useMemo(() => {
+    if (statusFilter === 'all') return allAppeals;
+    return allAppeals.filter((a) => a.status === statusFilter);
+  }, [allAppeals, statusFilter]);
 
   const getStatusBadge = (status: AppealStatus) => {
     const statusConfig = {

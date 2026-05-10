@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Header from '@/components/layout/HeaderWrapper';
@@ -39,26 +39,20 @@ function PetitionsPage() {
     });
   }, [searchParams]);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  useEffect(() => {
-    if (mounted) {
-      loadPetitions(true);
-    }
-  }, [filters, mounted]);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       const categoriesData = await getCategories();
       setCategories(categoriesData);
     } catch (err) {
       console.error('Error loading categories:', err);
     }
-  };
+  }, []);
 
-  const loadPetitions = async (reset = false) => {
+  useEffect(() => {
+    void loadCategories();
+  }, [loadCategories]);
+
+  const loadPetitions = useCallback(async (reset = false) => {
     try {
       setLoading(true);
       setError('');
@@ -89,7 +83,16 @@ function PetitionsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, page, lastDoc]);
+
+  const loadPetitionsRef = useRef(loadPetitions);
+  loadPetitionsRef.current = loadPetitions;
+
+  useEffect(() => {
+    if (mounted) {
+      void loadPetitionsRef.current(true);
+    }
+  }, [mounted, filters]);
 
   const handleFilterChange = (newFilters: Partial<PetitionFilters>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));

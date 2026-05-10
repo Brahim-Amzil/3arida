@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/layout/HeaderWrapper';
@@ -26,13 +26,7 @@ export default function AppealDetailPage({
     }
   }, [authLoading, isAuthenticated, router]);
 
-  useEffect(() => {
-    if (user) {
-      loadAppeal();
-    }
-  }, [user, params.id]);
-
-  const loadAppeal = async () => {
+  const loadAppeal = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -56,7 +50,13 @@ export default function AppealDetailPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, params.id]);
+
+  useEffect(() => {
+    if (user) {
+      void loadAppeal();
+    }
+  }, [user, loadAppeal]);
 
   const handleReply = async (message: string) => {
     if (!user) return;

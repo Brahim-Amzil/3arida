@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Petition } from '@/types/petition';
 import { calculateProgress } from '@/lib/petition-utils';
@@ -38,11 +38,7 @@ export default function PetitionAnalytics({
     petition.targetSignatures
   );
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [petition.id, timeRange]);
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -126,7 +122,11 @@ export default function PetitionAnalytics({
     } finally {
       setLoading(false);
     }
-  };
+  }, [petition, timeRange]);
+
+  useEffect(() => {
+    void loadAnalytics();
+  }, [loadAnalytics]);
 
   const generateMockDailyData = (
     total: number,
