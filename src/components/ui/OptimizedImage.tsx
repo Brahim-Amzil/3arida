@@ -93,7 +93,6 @@ export function OptimizedImage({
 
   const imageProps = {
     src,
-    alt,
     onLoad: handleLoad,
     onError: handleError,
     quality,
@@ -116,7 +115,7 @@ export function OptimizedImage({
 
   return (
     <div className="relative">
-      <Image {...imageProps} />
+      <Image {...imageProps} alt={alt} />
 
       {/* Loading skeleton */}
       {isLoading && (
