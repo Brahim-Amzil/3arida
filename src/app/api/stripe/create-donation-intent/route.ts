@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-12-15.clover',
-});
+import { getStripeServer } from '@/lib/stripe-server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create payment intent for platform support (tips)
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await getStripeServer().paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents (Stripe format)
       currency: 'mad', // Moroccan Dirham
       metadata: {

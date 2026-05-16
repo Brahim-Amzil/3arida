@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-
-// Initialize Firebase Admin if not already initialized
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  });
-}
+import '@/lib/firebase-admin';
+import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = getFirestore();
+    const db = adminDb;
 
     // Find invitation by token
     const invitationSnapshot = await db
@@ -54,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user information
-    const userRecord = await getAuth().getUser(userId);
+    const userRecord = await adminAuth.getUser(userId);
 
     // Verify the email matches the invitation
     if (userRecord.email !== invitationData.email) {

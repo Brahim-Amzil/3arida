@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { PricingTier } from '@/types/petition';
 import { UPGRADE_PRICING_TIERS } from '@/lib/petition-upgrade-utils';
 import { isBetaMode, getBetaCouponCode, calculateDiscountedAmount, getCouponMetadata } from '@/lib/beta-coupon-service';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-12-15.clover',
-});
+import { getStripeServer } from '@/lib/stripe-server';
 
 export async function POST(request: NextRequest) {
   console.log('[Upgrade API] ========== UPGRADE REQUEST RECEIVED ==========');
@@ -102,7 +98,7 @@ export async function POST(request: NextRequest) {
       ...getCouponMetadata(petitionId, currentTier, selectedTier, originalUpgradePrice),
     };
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await getStripeServer().paymentIntents.create({
       amount: amountInCents,
       currency: 'mad',
       metadata,

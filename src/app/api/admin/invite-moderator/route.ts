@@ -1,21 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { Resend } from 'resend';
+import '@/lib/firebase-admin';
+import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
-// Initialize Firebase Admin if not already initialized
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  });
+function getResendClient(): Resend {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY is not configured');
+  }
+  return new Resend(apiKey);
 }
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,11 +31,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = getFirestore();
+    const db = adminDb;
 
     // Check if user already exists in Firebase Auth
     try {
-      const existingUser = await getAuth().getUserByEmail(email);
+      const existingUser = await adminAuth.getUserByEmail(email);
       if (existingUser) {
         return NextResponse.json(
           { error: 'User with this email already exists' },
@@ -180,7 +174,7 @@ export async function POST(request: NextRequest) {
       </div>
     `;
 
-    await resend.emails.send({
+    await getResendClient().emails.send({
       from: 'noreply@3arida.org',
       to: email,
       subject: emailSubject,
@@ -205,7 +199,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const db = getFirestore();
+    const db = adminDb;
 
     // Get all pending invitations
     const invitationsSnapshot = await db

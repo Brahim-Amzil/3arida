@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { getStripeServer } from '@/lib/stripe-server';
 import { upgradePetition } from '@/lib/petition-upgrade-service';
 import { logCouponApplication } from '@/lib/beta-coupon-service';
 import {
@@ -9,10 +10,6 @@ import {
   withRequestId,
 } from '@/lib/api-observability';
 import { recordPaymentWebhookFailure } from '@/lib/payment-webhook-alerting';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-12-15.clover',
-});
 
 const webhookSecret = (process.env.STRIPE_WEBHOOK_SECRET || '').trim();
 
@@ -56,7 +53,11 @@ export async function POST(request: NextRequest) {
     let event: Stripe.Event;
 
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = getStripeServer().webhooks.constructEvent(
+        body,
+        signature,
+        webhookSecret,
+      );
     } catch (err: any) {
       logApiError(apiContext, 'Webhook signature verification failed', err);
       await recordPaymentWebhookFailure('stripe', 'webhook_signature_invalid', {
