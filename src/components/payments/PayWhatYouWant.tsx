@@ -188,33 +188,11 @@ export default function PayWhatYouWant() {
 
   const handlePaymentSuccess = async () => {
     const donationAmount = parseInt(amount, 10);
-    const donorEmail = getDonorEmail();
 
     setShowPayment(false);
     setThankYouAmount(donationAmount);
     setShowThankYou(true);
-
-    // Client-side send for fast delivery; Stripe webhook also sends (deduped via metadata)
-    if (donorEmail && donationAmount > 0) {
-      try {
-        const response = await fetch('/api/email/platform-support-thanks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userName: getDonorName(),
-            amount: donationAmount,
-            userEmail: donorEmail,
-          }),
-        });
-
-        if (!response.ok) {
-          const data = await response.json();
-          console.error('Failed to send thank you email:', data);
-        }
-      } catch (error) {
-        console.error('Error sending thank you email:', error);
-      }
-    }
+    // Thank-you email is sent once via Stripe webhook (avoids duplicate with client call)
   };
 
   const handleCancel = () => {
@@ -242,7 +220,8 @@ export default function PayWhatYouWant() {
           </p>
           {donorEmail ? (
             <p className="text-sm text-green-700 mb-4">
-              سيتم إرسال رسالة شكر إلى {donorEmail}
+              ستصلك رسالة شكر على {donorEmail} خلال دقائق (تحقق من البريد الوارد
+              والرسائل غير المرغوب فيها)
             </p>
           ) : (
             <p className="text-sm text-amber-700 mb-4">

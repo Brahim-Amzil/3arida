@@ -14,9 +14,27 @@ export interface EmailOptions {
   to: string;
   subject: string;
   html: string;
+  text?: string;
+  replyTo?: string;
 }
 
-export async function sendEmail({ to, subject, html }: EmailOptions) {
+function getFromAddress() {
+  const address =
+    process.env.RESEND_FROM_EMAIL ||
+    process.env.EMAIL_FROM ||
+    process.env.FROM_EMAIL ||
+    'onboarding@resend.dev';
+  const name = process.env.RESEND_FROM_NAME || '3arida';
+  return name ? `${name} <${address}>` : address;
+}
+
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+  replyTo,
+}: EmailOptions) {
   const client = getResendClient();
 
   if (!client) {
@@ -24,16 +42,20 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
     return { success: false, error: 'Email service not configured' };
   }
 
+  const replyToAddress =
+    replyTo ||
+    process.env.CONTACT_EMAIL ||
+    process.env.RESEND_FROM_EMAIL ||
+    undefined;
+
   try {
     const data = await client.emails.send({
-      from:
-        process.env.RESEND_FROM_EMAIL ||
-        process.env.EMAIL_FROM ||
-        process.env.FROM_EMAIL ||
-        'onboarding@resend.dev',
+      from: getFromAddress(),
       to,
       subject,
       html,
+      ...(text ? { text } : {}),
+      ...(replyToAddress ? { replyTo: replyToAddress } : {}),
     });
 
     console.log('Email sent successfully:', data);
