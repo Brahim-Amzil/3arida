@@ -131,7 +131,7 @@ export default function PayWhatYouWant() {
   function getDonorName() {
     return (
       user?.displayName ||
-      userProfile?.displayName ||
+      userProfile?.name ||
       user?.email?.split('@')[0] ||
       userProfile?.email?.split('@')[0] ||
       'Supporter'
