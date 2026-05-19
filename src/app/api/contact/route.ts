@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 import { verifyRecaptchaServerToken } from '@/lib/server-recaptcha';
+import { sendEmail } from '@/lib/email-service';
 import {
   initApiRequestContext,
   logApiError,
@@ -19,6 +19,16 @@ const reasonLabels: Record<string, string> = {
   'influencer-coupon': 'طلب كوبون مؤثر',
   other: 'أخرى',
 };
+
+const CONTACT_INBOX_EMAIL = 'contact@3arida.org';
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
 const platformLabels: Record<string, string> = {
   instagram: 'Instagram',
@@ -51,21 +61,27 @@ export async function POST(request: NextRequest) {
     } = body;
 
     const recaptchaResult = await verifyRecaptchaServerToken(recaptchaToken, {
-      minScore: 0.5,
+      minScore: 0.3,
       expectedAction: 'contact_form_submit',
     });
 
     if (!recaptchaResult.success) {
+      logApiError(apiContext, 'Contact form reCAPTCHA failed', {
+        error: recaptchaResult.error,
+        score: recaptchaResult.score,
+      });
       return withRequestId(
         NextResponse.json(
-        {
-          error: 'Security verification failed',
-          details:
-            process.env.NODE_ENV === 'development'
-              ? recaptchaResult.error
-              : undefined,
-        },
-        { status: 400 },
+          {
+            error:
+              'فشل التحقق الأمني. يرجى تحديث الصفحة والمحاولة مرة أخرى.',
+            code: 'recaptcha_failed',
+            details:
+              process.env.NODE_ENV === 'development'
+                ? recaptchaResult.error
+                : undefined,
+          },
+          { status: 400 },
         ),
         apiContext.requestId,
       );
@@ -139,6 +155,27 @@ export async function POST(request: NextRequest) {
     }
 
     const reasonLabel = reasonLabels[reason] || reason;
+    const safeName = escapeHtml(String(name));
+    const safeEmail = escapeHtml(String(email));
+    const safeSubject = escapeHtml(String(subject));
+    const safeMessage = escapeHtml(String(message));
+    const safeReasonLabel = escapeHtml(reasonLabel);
+    const safePetitionCode = petitionCode
+      ? escapeHtml(String(petitionCode))
+      : '';
+    const safeReportDetails = reportDetails
+      ? escapeHtml(String(reportDetails))
+      : '';
+    const safeAccountUrl = accountUrl ? escapeHtml(String(accountUrl)) : '';
+    const safeFollowerCount = followerCount
+      ? escapeHtml(String(followerCount))
+      : '';
+    const safeDiscountTier = discountTier
+      ? escapeHtml(String(discountTier))
+      : '';
+    const safePlatformLabel = platform
+      ? escapeHtml(platformLabels[platform] || String(platform))
+      : '';
 
     const emailHtml = `
         <!DOCTYPE html>
@@ -210,22 +247,22 @@ export async function POST(request: NextRequest) {
             <div class="content">
               <div class="field">
                 <span class="label">الاسم:</span>
-                <div class="value">${name}</div>
+                <div class="value">${safeName}</div>
               </div>
               
               <div class="field">
                 <span class="label">البريد الإلكتروني:</span>
-                <div class="value">${email}</div>
+                <div class="value">${safeEmail}</div>
               </div>
               
               <div class="field">
                 <span class="label">سبب التواصل:</span>
-                <div class="value">${reasonLabel}</div>
+                <div class="value">${safeReasonLabel}</div>
               </div>
               
               <div class="field">
                 <span class="label">الموضوع:</span>
-                <div class="value">${subject}</div>
+                <div class="value">${safeSubject}</div>
               </div>
               
               ${
@@ -233,7 +270,7 @@ export async function POST(request: NextRequest) {
                   ? `
               <div class="field">
                 <span class="label">رمز العريضة:</span>
-                <div class="value">${petitionCode}</div>
+                <div class="value">${safePetitionCode}</div>
               </div>
               `
                   : ''
@@ -244,7 +281,7 @@ export async function POST(request: NextRequest) {
                   ? `
               <div class="field">
                 <span class="label">تفاصيل البلاغ:</span>
-                <div class="message-box">${reportDetails}</div>
+                <div class="message-box">${safeReportDetails}</div>
               </div>
               `
                   : ''
@@ -259,22 +296,22 @@ export async function POST(request: NextRequest) {
                 <div class="field">
                   <span class="label">فئة الخصم المطلوبة:</span>
                   <div class="value" style="background-color: white; font-size: 18px; font-weight: bold; color: #7c3aed;">
-                    ${discountTier}% خصم
+                    ${safeDiscountTier}% خصم
                   </div>
                 </div>
                 
                 <div class="field">
                   <span class="label">المنصة:</span>
                   <div class="value" style="background-color: white;">
-                    ${platformLabels[platform] || platform}
+                    ${safePlatformLabel}
                   </div>
                 </div>
                 
                 <div class="field">
                   <span class="label">رابط الحساب / القناة:</span>
                   <div class="value" style="background-color: white; direction: ltr; text-align: left;">
-                    <a href="${accountUrl}" target="_blank" style="color: #2563eb; text-decoration: none;">
-                      ${accountUrl}
+                    <a href="${safeAccountUrl}" target="_blank" style="color: #2563eb; text-decoration: none;">
+                      ${safeAccountUrl}
                     </a>
                   </div>
                 </div>
@@ -282,7 +319,7 @@ export async function POST(request: NextRequest) {
                 <div class="field">
                   <span class="label">عدد المتابعين:</span>
                   <div class="value" style="background-color: white; font-size: 16px; font-weight: bold;">
-                    ${followerCount}
+                    ${safeFollowerCount}
                   </div>
                 </div>
                 
@@ -294,12 +331,12 @@ export async function POST(request: NextRequest) {
               
               <div class="field">
                 <span class="label">الرسالة:</span>
-                <div class="message-box">${message}</div>
+                <div class="message-box">${safeMessage}</div>
               </div>
               
               <div class="footer">
                 <p>تم إرسال هذه الرسالة من نموذج الاتصال على موقع 3arida.org</p>
-                <p>للرد، استخدم البريد الإلكتروني: ${email}</p>
+                <p>للرد، استخدم البريد الإلكتروني: ${safeEmail}</p>
               </div>
             </div>
           </div>
@@ -307,32 +344,44 @@ export async function POST(request: NextRequest) {
         </html>
       `;
 
-    // Send email using Resend
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const toEmail = process.env.CONTACT_EMAIL || CONTACT_INBOX_EMAIL;
 
-    // Use verified domain for sender, configurable recipient
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'contact@3arida.org';
-    const toEmail = process.env.CONTACT_EMAIL || 'contact@3arida.org';
+    logApiInfo(apiContext, 'Sending contact email', { toEmail });
 
-    logApiInfo(apiContext, 'Sending contact email', { fromEmail, toEmail });
-
-    const emailResult = await resend.emails.send({
-      from: `3arida Platform <${fromEmail}>`,
+    const emailResult = await sendEmail({
       to: toEmail,
       subject: `[${reasonLabel}] ${subject}`,
-      replyTo: email,
       html: emailHtml,
+      replyTo: email,
     });
 
-    if (emailResult.error) {
-      logApiError(apiContext, 'Resend email send failed', emailResult.error);
-      throw new Error(emailResult.error.message);
+    if (!emailResult.success) {
+      const resendMessage =
+        emailResult.error &&
+        typeof emailResult.error === 'object' &&
+        'message' in emailResult.error
+          ? String((emailResult.error as { message: string }).message)
+          : 'Email send failed';
+      logApiError(apiContext, 'Contact email send failed', emailResult.error);
+      return withRequestId(
+        NextResponse.json(
+          {
+            error:
+              'تعذر إرسال الرسالة حالياً. يرجى المحاولة لاحقاً أو مراسلتنا على contact@3arida.org',
+            code: 'email_send_failed',
+            details:
+              process.env.NODE_ENV === 'development' ? resendMessage : undefined,
+          },
+          { status: 500 },
+        ),
+        apiContext.requestId,
+      );
     }
 
     return withRequestId(
       NextResponse.json(
-      { success: true, messageId: emailResult.data?.id },
-      { status: 200 },
+        { success: true, messageId: emailResult.data?.id },
+        { status: 200 },
       ),
       apiContext.requestId,
     );

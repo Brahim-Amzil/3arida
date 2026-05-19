@@ -49,7 +49,7 @@ export async function sendEmail({
     undefined;
 
   try {
-    const data = await client.emails.send({
+    const result = await client.emails.send({
       from: getFromAddress(),
       to,
       subject,
@@ -58,8 +58,13 @@ export async function sendEmail({
       ...(replyToAddress ? { replyTo: replyToAddress } : {}),
     });
 
-    console.log('Email sent successfully:', data);
-    return { success: true, data };
+    if (result.error) {
+      console.error('Resend rejected email:', result.error);
+      return { success: false, error: result.error };
+    }
+
+    console.log('Email sent successfully:', result.data?.id);
+    return { success: true, data: result.data };
   } catch (error) {
     console.error('Failed to send email:', error);
     return { success: false, error };

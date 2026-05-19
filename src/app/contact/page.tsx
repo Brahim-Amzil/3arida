@@ -142,8 +142,14 @@ export default function ContactPage() {
         }),
       });
 
+      const result = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        throw new Error('فشل إرسال الرسالة');
+        const apiError =
+          typeof result?.error === 'string'
+            ? result.error
+            : 'فشل إرسال الرسالة';
+        throw new Error(apiError);
       }
 
       setStatus('success');
@@ -163,7 +169,11 @@ export default function ContactPage() {
       setPetitionData(null);
     } catch (error) {
       setStatus('error');
-      setErrorMessage('حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.');
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.';
+      setErrorMessage(message);
     }
   };
 

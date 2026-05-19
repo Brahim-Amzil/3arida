@@ -49,6 +49,6 @@ export async function sendPlatformSupportThankYouEmail(params: {
     subject: `شكراً على دعمك لمنصة عريضة (${amount} DH)`,
     html,
     text,
-    replyTo: process.env.CONTACT_EMAIL,
+    replyTo: process.env.CONTACT_EMAIL || 'contact@3arida.org',
   });
 }
