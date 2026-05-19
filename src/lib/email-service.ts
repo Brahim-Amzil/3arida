@@ -27,6 +27,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
   try {
     const data = await client.emails.send({
       from:
+        process.env.RESEND_FROM_EMAIL ||
         process.env.EMAIL_FROM ||
         process.env.FROM_EMAIL ||
         'onboarding@resend.dev',

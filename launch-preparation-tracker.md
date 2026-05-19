@@ -17,9 +17,9 @@ Status values:
 | ID | Task | Priority | Status | Notes |
 |---|---|---|---|---|
 | G-01 | No critical security findings remain unresolved | P0 | Pending | Includes secrets, authz, SSRF, XSS — pre-flight: [`docs/SECURITY-GATE-G01-CHECKLIST.md`](docs/SECURITY-GATE-G01-CHECKLIST.md) |
-| G-02 | Production build passes on clean environment | P0 | Pending | Evidence: GitHub Actions workflow `CI` (`ubuntu-latest`, `npm ci`, `npm run build`); mark **Done** after org sign-off on first green run on protected `main` |
-| G-03 | Core user journeys pass smoke tests in production-like env | P0 | Pending | §13 smoke + `npm run test:e2e:smoke` (optional Firebase creds); payments/webhooks: [`docs/WEBHOOK-STAGING-VALIDATION.md`](docs/WEBHOOK-STAGING-VALIDATION.md) |
-| G-04 | Incident rollback plan documented and tested | P0 | Pending | Docs: tracker §13 + [`docs/STAGING-DRY-RUN.md`](docs/STAGING-DRY-RUN.md) rollback row; mark **Done** after signed drill |
+| G-02 | Production build passes on clean environment | P0 | Done | CI #32 green on `main` @ `efad0c9` (2026-05-16): lint, type-check, test, production build |
+| G-03 | Core user journeys pass smoke tests in production-like env | P0 | In Progress | **Automated (2026-05-16):** `www.3arida.org` health 200, `/auth/login` `/petitions` `/sw.js` 200; Stripe webhook reachable (400 w/o sig). **Manual still needed:** auth, petition create/sign, admin/mod (§13 rows 2–3, 5) |
+| G-04 | Incident rollback plan documented and tested | P0 | Pending | Docs: tracker §13 + [`docs/STAGING-DRY-RUN.md`](docs/STAGING-DRY-RUN.md) rollback row; mark **Done** after signed drill in Vercel UI |
 
 ---
 
@@ -142,7 +142,7 @@ Status values:
 | T-03 | Run and stabilize existing unit/integration tests | P1 | Done | Fixed `auth` mocks (`getDoc` snapshots + Firebase `error.code`), `petitions` mocks (`limit`/`getDocs` for reference codes + `getPetition` `referenceCode`), `PetitionCard` (i18n/auth mocks, `next/image`, assertions vs current UI), `qr-service` (Image `onload` + non-defaulting branded download); full Jest green (1 integration suite skipped) |
 | T-04 | Run and stabilize Playwright e2e smoke flows | P1 | Done | Chromium-first Playwright (`workers:1`, `domcontentloaded`, cookie-consent seed); `@smoke` health + coming-soon + `/bsk`→login; auth + petition specs stabilized (forgot-password uses mock `test@example.com`). Optional Firebase flows via `E2E_AUTH_EMAIL`/`E2E_AUTH_PASSWORD`; `E2E_ALL_BROWSERS=1` for full matrix. `npm run test:e2e:smoke` + `npx playwright install chromium` for local/CI. Payment/checkout e2e not automated here—track under T-06/manual smoke (T-05). |
 | T-05 | Define release smoke test checklist and owners | P1 | Done | Assign named owners at go/no-go; minimum matrix in §13 Release smoke |
-| T-06 | Validate webhooks in staging (Stripe/PayPal; WhatsApp post-MVP) | P0 | In Progress | **Stripe done (live + real charge, 2026-05-09):** checkout succeeded, Stripe `payment_intent.succeeded` delivery HTTP 200, and Vercel payment flow logs returned 200. **PayPal pending**. WhatsApp post-MVP. Runbook: [`docs/WEBHOOK-STAGING-VALIDATION.md`](docs/WEBHOOK-STAGING-VALIDATION.md) |
+| T-06 | Validate webhooks in staging (Stripe/PayPal; WhatsApp post-MVP) | P0 | In Progress | **Stripe done (2026-05-09):** live `payment_intent.succeeded` → HTTP 200. **PayPal pending:** production env missing PayPal vars (2026-05-16 audit); configure Vercel + dashboard webhook per [`docs/WEBHOOK-STAGING-VALIDATION.md`](docs/WEBHOOK-STAGING-VALIDATION.md). WhatsApp post-MVP. |
 
 ---
 
@@ -208,8 +208,8 @@ Status values:
 ## Progress Summary
 
 - Total tasks (§0–§12 rows): 79
-- Done: 74
-- Remaining (Pending or In Progress): 5
+- Done: 75
+- Remaining (Pending or In Progress): 4
 
 ---
 
@@ -308,4 +308,7 @@ Status values:
 | 2026-05-02 | S-08 | In Progress | Done | In-scope leaked-value work complete per prior verification; Meta/WhatsApp verification env work deferred to post-MVP by product scope |
 | 2026-05-09 | T-06 | Pending | Done | Stripe webhook verified: `payment_intent.succeeded` → HTTP 200 on `www.3arida.org/api/stripe/webhook`. Correct `STRIPE_WEBHOOK_SECRET` set in Vercel Production. |
 | 2026-05-09 | T-06 | Done | In Progress | Split status per launch scope: **Stripe done** (live real payment + webhook 200), **PayPal pending**. |
+| 2026-05-16 | G-02 | Pending | Done | CI #32 success on `efad0c9` (quality job: scan, lint, type-check, test, build) |
+| 2026-05-16 | G-03 | Pending | In Progress | Production automated smoke on `www.3arida.org`: health/login/petitions/sw 200; Stripe webhook 400 without sig (expected) |
+| 2026-05-16 | T-06 | In Progress | In Progress | **PayPal blocker:** no `PAYPAL_*` / `NEXT_PUBLIC_PAYPAL_*` in Vercel production env; webhook accepts POST but skips signature verification — add creds + `PAYPAL_WEBHOOK_ID`, then simulator 2xx |
 

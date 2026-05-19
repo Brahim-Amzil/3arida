@@ -3,7 +3,7 @@ import { getStripeServer } from '@/lib/stripe-server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { amount, userId, userName } = await request.json();
+    const { amount, userId, userName, userEmail } = await request.json();
 
     // Validate amount
     if (!amount || amount <= 0) {
@@ -11,13 +11,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Create payment intent for platform support (tips)
+    const normalizedEmail =
+      typeof userEmail === 'string' ? userEmail.trim() : '';
+
     const paymentIntent = await getStripeServer().paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents (Stripe format)
       currency: 'mad', // Moroccan Dirham
+      ...(normalizedEmail ? { receipt_email: normalizedEmail } : {}),
       metadata: {
         type: 'platform_support',
         userId: userId || 'anonymous',
         userName: userName || 'Anonymous',
+        userEmail: normalizedEmail,
         supportedAt: new Date().toISOString(),
       },
       description: `Platform Support - ${amount} MAD`,

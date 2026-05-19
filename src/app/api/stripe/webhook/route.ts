@@ -7,9 +7,11 @@ import {
   initApiRequestContext,
   logApiError,
   logApiInfo,
+  logApiWarn,
   withRequestId,
 } from '@/lib/api-observability';
 import { recordPaymentWebhookFailure } from '@/lib/payment-webhook-alerting';
+import { sendPlatformSupportThankYouEmail } from '@/lib/platform-support-email';
 
 const webhookSecret = (process.env.STRIPE_WEBHOOK_SECRET || '').trim();
 
@@ -141,6 +143,55 @@ export async function POST(request: NextRequest) {
             }
           } catch (error) {
             logApiError(apiContext, 'Error upgrading petition', error);
+          }
+        } else if (metadata.type === 'platform_support') {
+          if (metadata.thankYouEmailSent === 'true') {
+            logApiInfo(apiContext, 'Platform support thank-you email already sent', {
+              paymentIntentId: paymentIntent.id,
+            });
+          } else {
+            const donorEmail =
+              metadata.userEmail?.trim() || paymentIntent.receipt_email?.trim();
+            const amountMad = paymentIntent.amount / 100;
+
+            if (donorEmail) {
+              try {
+                const emailResult = await sendPlatformSupportThankYouEmail({
+                  userName: metadata.userName || 'Supporter',
+                  amount: amountMad,
+                  userEmail: donorEmail,
+                });
+
+                if (emailResult.success) {
+                  await getStripeServer().paymentIntents.update(paymentIntent.id, {
+                    metadata: {
+                      ...metadata,
+                      thankYouEmailSent: 'true',
+                    },
+                  });
+                  logApiInfo(apiContext, 'Platform support thank-you email sent', {
+                    paymentIntentId: paymentIntent.id,
+                    donorEmail,
+                  });
+                } else {
+                  logApiError(
+                    apiContext,
+                    'Failed to send platform support thank-you email',
+                    emailResult.error,
+                  );
+                }
+              } catch (emailError) {
+                logApiError(
+                  apiContext,
+                  'Error sending platform support thank-you email',
+                  emailError,
+                );
+              }
+            } else {
+              logApiWarn(apiContext, 'Platform support payment missing donor email', {
+                paymentIntentId: paymentIntent.id,
+              });
+            }
           }
         } else {
           // Regular petition creation payment

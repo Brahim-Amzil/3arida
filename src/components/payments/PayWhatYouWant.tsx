@@ -114,14 +114,37 @@ function DonationPaymentForm({
  * Culturally appropriate for Moroccan market (تضامن).
  */
 export default function PayWhatYouWant() {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [amount, setAmount] = useState('');
   const [showPayment, setShowPayment] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [thankYouAmount, setThankYouAmount] = useState<number | null>(null);
   const [clientSecret, setClientSecret] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const suggestedAmounts = [20, 50, 100, 200];
+
+  function getDonorEmail() {
+    return (user?.email || userProfile?.email || '').trim();
+  }
+
+  function getDonorName() {
+    return (
+      user?.displayName ||
+      userProfile?.displayName ||
+      user?.email?.split('@')[0] ||
+      userProfile?.email?.split('@')[0] ||
+      'Supporter'
+    );
+  }
+
+  function handleTipAgain() {
+    setShowThankYou(false);
+    setThankYouAmount(null);
+    setAmount('');
+    setClientSecret('');
+    setShowPayment(false);
+  }
 
   const handleDonate = async () => {
     const donationAmount = parseInt(amount);
@@ -134,13 +157,16 @@ export default function PayWhatYouWant() {
 
     try {
       // Create payment intent
+      const donorEmail = getDonorEmail();
+
       const response = await fetch('/api/stripe/create-donation-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: donationAmount,
           userId: user?.uid || 'anonymous',
-          userName: user?.displayName || user?.email || 'Anonymous',
+          userName: getDonorName(),
+          userEmail: donorEmail,
         }),
       });
 
@@ -161,45 +187,34 @@ export default function PayWhatYouWant() {
   };
 
   const handlePaymentSuccess = async () => {
+    const donationAmount = parseInt(amount, 10);
+    const donorEmail = getDonorEmail();
+
     setShowPayment(false);
+    setThankYouAmount(donationAmount);
     setShowThankYou(true);
 
-    // Send thank you email
-    try {
-      console.log('📧 Sending thank you email...', {
-        userName:
-          user?.displayName || user?.email?.split('@')[0] || 'Supporter',
-        amount: parseInt(amount),
-        userEmail: user?.email || '',
-      });
+    // Client-side send for fast delivery; Stripe webhook also sends (deduped via metadata)
+    if (donorEmail && donationAmount > 0) {
+      try {
+        const response = await fetch('/api/email/platform-support-thanks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userName: getDonorName(),
+            amount: donationAmount,
+            userEmail: donorEmail,
+          }),
+        });
 
-      const response = await fetch('/api/email/platform-support-thanks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userName:
-            user?.displayName || user?.email?.split('@')[0] || 'Supporter',
-          amount: parseInt(amount),
-          userEmail: user?.email || '',
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log('✅ Thank you email sent successfully', data);
-      } else {
-        console.error('❌ Failed to send thank you email:', data);
+        if (!response.ok) {
+          const data = await response.json();
+          console.error('Failed to send thank you email:', data);
+        }
+      } catch (error) {
+        console.error('Error sending thank you email:', error);
       }
-    } catch (error) {
-      console.error('❌ Error sending thank you email:', error);
-      // Don't show error to user - email is not critical
     }
-
-    setTimeout(() => {
-      setShowThankYou(false);
-      setAmount('');
-    }, 5000);
   };
 
   const handleCancel = () => {
@@ -208,6 +223,8 @@ export default function PayWhatYouWant() {
   };
 
   if (showThankYou) {
+    const donorEmail = getDonorEmail();
+
     return (
       <Card className="p-6 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300">
         <div className="text-center">
@@ -215,9 +232,31 @@ export default function PayWhatYouWant() {
           <h3 className="text-2xl font-bold text-green-900 mb-2">
             شكراً جزيلاً!
           </h3>
-          <p className="text-green-800">
+          {thankYouAmount != null && (
+            <p className="text-green-900 font-semibold mb-2">
+              تم استلام مساهمتك: {thankYouAmount} DH
+            </p>
+          )}
+          <p className="text-green-800 mb-4">
             مساهمتك تساعدنا في تطوير المنصة وخدمة المجتمع بشكل أفضل
           </p>
+          {donorEmail ? (
+            <p className="text-sm text-green-700 mb-4">
+              سيتم إرسال رسالة شكر إلى {donorEmail}
+            </p>
+          ) : (
+            <p className="text-sm text-amber-700 mb-4">
+              لم نتمكن من تحديد بريدك الإلكتروني لإرسال رسالة الشكر
+            </p>
+          )}
+          <Button
+            type="button"
+            onClick={handleTipAgain}
+            variant="outline"
+            className="border-green-600 text-green-800 hover:bg-green-100"
+          >
+            ساهم مرة أخرى
+          </Button>
         </div>
       </Card>
     );

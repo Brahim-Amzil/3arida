@@ -60,3 +60,4 @@ temp/
 
 # TypeScript
 tsconfig.tsbuildinfo
+.vercel

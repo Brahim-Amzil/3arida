@@ -28,6 +28,7 @@ import {
   deleteImage,
 } from '@/lib/storage';
 import { getMaxImages } from '@/lib/tier-restrictions';
+import { YouTubeEmbedPreview } from '@/components/petitions/YouTubeEmbedPreview';
 import { UpgradeModal } from '@/components/ui/UpgradeModal';
 import { useTranslation } from '@/hooks/useTranslation';
 import { isAuthenticated } from '@/lib/auth-mock';
@@ -2999,7 +3000,15 @@ function CreatePetitionContent() {
                   )}
               </div>
             )}
-            {formData.youtubeVideoUrl && <p>{t('review.youtubeAdded')}</p>}
+            {formData.youtubeVideoUrl && (
+              <div className="mt-3">
+                <p className="mb-2">{t('review.youtubeAdded')}</p>
+                <YouTubeEmbedPreview
+                  url={formData.youtubeVideoUrl}
+                  invalidMessage={t('form.validYouTubeUrl')}
+                />
+              </div>
+            )}
           </div>
         )}
 
