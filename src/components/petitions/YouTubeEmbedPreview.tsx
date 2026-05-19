@@ -11,7 +11,7 @@ import {
 interface YouTubeEmbedPreviewProps {
   url: string;
   invalidMessage?: string;
-  /** When true, render an embed player below the thumbnail (needs CSP frame-src for YouTube) */
+  /** true = embedded player only; false = thumbnail only (review step) */
   showPlayer?: boolean;
   className?: string;
 }
@@ -39,35 +39,11 @@ export function YouTubeEmbedPreview({
   const embedUrl = getYouTubeEmbedUrl(trimmed);
   const watchUrl = getYouTubeWatchUrl(trimmed);
 
-  if (!videoId || !thumbnailUrl) return null;
+  if (!videoId) return null;
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      <div className="relative w-full max-w-2xl aspect-video rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={thumbnailUrl}
-          alt="YouTube video preview"
-          className="absolute inset-0 h-full w-full object-cover"
-          loading="lazy"
-        />
-        <div
-          className="absolute inset-0 flex items-center justify-center bg-black/20"
-          aria-hidden
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 shadow-lg">
-            <svg
-              className="ml-1 h-6 w-6 text-white"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      {showPlayer && embedUrl && (
+    <div className={`space-y-2 ${className}`}>
+      {showPlayer && embedUrl ? (
         <div
           className="relative w-full max-w-2xl"
           style={{ paddingBottom: '56.25%' }}
@@ -81,9 +57,33 @@ export function YouTubeEmbedPreview({
             referrerPolicy="strict-origin-when-cross-origin"
           />
         </div>
-      )}
+      ) : thumbnailUrl ? (
+        <div className="relative w-full max-w-2xl aspect-video rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={thumbnailUrl}
+            alt="YouTube video preview"
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+          />
+          <div
+            className="absolute inset-0 flex items-center justify-center bg-black/20"
+            aria-hidden
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 shadow-lg">
+              <svg
+                className="ml-1 h-6 w-6 text-white"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
-      {watchUrl && (
+      {watchUrl && !showPlayer && (
         <p className="text-sm text-gray-600">
           <a
             href={watchUrl}
