@@ -1,24 +1,25 @@
 'use client';
 
-import Image from 'next/image';
 import {
   getYouTubeEmbedUrl,
   getYouTubeThumbnailUrl,
+  getYouTubeVideoId,
+  getYouTubeWatchUrl,
   isValidYouTubeUrl,
 } from '@/lib/youtube-utils';
 
 interface YouTubeEmbedPreviewProps {
   url: string;
   invalidMessage?: string;
-  /** Static thumbnail only (e.g. compact review grids). Default: embedded player */
-  thumbnailOnly?: boolean;
+  /** When true, render an embed player below the thumbnail (needs CSP frame-src for YouTube) */
+  showPlayer?: boolean;
   className?: string;
 }
 
 export function YouTubeEmbedPreview({
   url,
   invalidMessage,
-  thumbnailOnly = false,
+  showPlayer = true,
   className = '',
 }: YouTubeEmbedPreviewProps) {
   const trimmed = url?.trim() ?? '';
@@ -33,30 +34,30 @@ export function YouTubeEmbedPreview({
     );
   }
 
-  const embedUrl = getYouTubeEmbedUrl(trimmed);
+  const videoId = getYouTubeVideoId(trimmed);
   const thumbnailUrl = getYouTubeThumbnailUrl(trimmed);
-  if (!embedUrl) return null;
+  const embedUrl = getYouTubeEmbedUrl(trimmed);
+  const watchUrl = getYouTubeWatchUrl(trimmed);
 
-  if (thumbnailOnly && thumbnailUrl) {
-    return (
-      <div
-        className={`relative w-full max-w-md aspect-video rounded-lg overflow-hidden border border-gray-200 bg-gray-100 ${className}`}
-      >
-        <Image
+  if (!videoId || !thumbnailUrl) return null;
+
+  return (
+    <div className={`space-y-3 ${className}`}>
+      <div className="relative w-full max-w-2xl aspect-video rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={thumbnailUrl}
-          alt="YouTube video thumbnail"
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 400px"
-          unoptimized
+          alt="YouTube video preview"
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="lazy"
         />
         <div
-          className="absolute inset-0 flex items-center justify-center bg-black/25"
+          className="absolute inset-0 flex items-center justify-center bg-black/20"
           aria-hidden
         >
-          <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center shadow-lg">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 shadow-lg">
             <svg
-              className="w-5 h-5 text-white ml-0.5"
+              className="ml-1 h-6 w-6 text-white"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
@@ -65,21 +66,35 @@ export function YouTubeEmbedPreview({
           </div>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div
-      className={`relative w-full max-w-2xl ${className}`}
-      style={{ paddingBottom: '56.25%' }}
-    >
-      <iframe
-        src={embedUrl}
-        title="YouTube video player"
-        className="absolute top-0 left-0 w-full h-full rounded-lg border border-gray-200"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      />
+      {showPlayer && embedUrl && (
+        <div
+          className="relative w-full max-w-2xl"
+          style={{ paddingBottom: '56.25%' }}
+        >
+          <iframe
+            src={embedUrl}
+            title="YouTube video player"
+            className="absolute left-0 top-0 h-full w-full rounded-lg border border-gray-200"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        </div>
+      )}
+
+      {watchUrl && (
+        <p className="text-sm text-gray-600">
+          <a
+            href={watchUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-purple-700 underline hover:text-purple-900"
+          >
+            فتح الفيديو على يوتيوب
+          </a>
+        </p>
+      )}
     </div>
   );
 }

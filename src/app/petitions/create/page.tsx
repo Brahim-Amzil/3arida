@@ -2272,31 +2272,12 @@ function CreatePetitionContent() {
 
           {/* YouTube Video Preview */}
           {formData.youtubeVideoUrl && (
-            <div className="mt-4">
-              {isValidYouTubeUrl(formData.youtubeVideoUrl) ? (
-                <div
-                  className="relative w-full"
-                  style={{ paddingBottom: '56.25%' }}
-                >
-                  <iframe
-                    src={`https://www.youtube.com/embed/${getYouTubeVideoId(
-                      formData.youtubeVideoUrl,
-                    )}`}
-                    title="YouTube video player"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="absolute top-0 left-0 w-full h-full rounded-lg"
-                  ></iframe>
-                </div>
-              ) : (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">
-                    {t('form.validYouTubeUrl')}
-                  </p>
-                </div>
-              )}
-            </div>
+            <YouTubeEmbedPreview
+              url={formData.youtubeVideoUrl}
+              invalidMessage={t('form.validYouTubeUrl')}
+              showPlayer
+              className="mt-4"
+            />
           )}
         </div>
       </div>
@@ -3006,6 +2987,7 @@ function CreatePetitionContent() {
                 <YouTubeEmbedPreview
                   url={formData.youtubeVideoUrl}
                   invalidMessage={t('form.validYouTubeUrl')}
+                  showPlayer={false}
                 />
               </div>
             )}
