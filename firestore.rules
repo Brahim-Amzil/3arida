@@ -26,12 +26,28 @@ service cloud.firestore {
     function isModerator() {
       return isAuthenticated() && getUserData().role in ['moderator', 'admin', 'master_admin'];
     }
+
+    // Email/password accounts must have Firebase Auth email_verified claim
+    function hasVerifiedEmail() {
+      return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+
+    function ownerCannotEscalatePrivileges() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['verifiedEmail', 'role', 'isActive']);
+    }
     
     // Users collection - Users can read all, but only update their own profile
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
+      allow update: if isAdmin()
+        || (isOwner(userId) && ownerCannotEscalatePrivileges())
+        || (isOwner(userId)
+            && request.resource.data.verifiedEmail == true
+            && request.auth.token.email_verified == true
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['verifiedEmail', 'updatedAt']));
       allow delete: if isAdmin(); // Only admins can delete users
     }
     
@@ -40,8 +56,8 @@ service cloud.firestore {
       // Anyone can read approved petitions, creators can read their own
       allow read: if true;
       
-      // Authenticated users can create petitions with valid data
-      allow create: if isAuthenticated() 
+      // Verified email required to create petitions
+      allow create: if hasVerifiedEmail() 
         && request.resource.data.creatorId == request.auth.uid
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
@@ -77,8 +93,8 @@ service cloud.firestore {
     match /signatures/{signatureId} {
       allow read: if true; // Public signatures for transparency
       
-      // MVP: Simplified rules - authenticated users can create signatures
-      allow create: if isAuthenticated()
+      // Verified email required to sign petitions
+      allow create: if hasVerifiedEmail()
         && request.resource.data.petitionId is string
         && request.resource.size() < 5000; // 5KB document size limit
       

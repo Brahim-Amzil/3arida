@@ -1042,6 +1042,14 @@ function CreatePetitionContent() {
       return;
     }
 
+    if (!user.emailVerified) {
+      setError(
+        'يجب تأكيد بريدك الإلكتروني قبل إنشاء عريضة. راجع بريدك أو افتح صفحة تأكيد البريد.',
+      );
+      router.push('/auth/verify-email');
+      return;
+    }
+
     // MVP: PHONE VERIFICATION DISABLED FOR PETITION CREATORS
     // Phone verification is paused for MVP to reduce friction
     // if (!userProfile?.verifiedPhone) {

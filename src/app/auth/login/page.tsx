@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { loginWithEmail, loginWithGoogle } from '@/lib/auth';
+import { EMAIL_NOT_VERIFIED_CODE } from '@/lib/auth-email-verification';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useTranslation } from '@/hooks/useTranslation';
 import { db } from '@/lib/firebase';
@@ -109,6 +110,12 @@ function LoginPageContent() {
       // Redirect will happen automatically via useEffect
     } catch (err: any) {
       console.error('Login error:', err);
+      if (err?.code === EMAIL_NOT_VERIFIED_CODE) {
+        router.push(
+          `/auth/verify-email?email=${encodeURIComponent(formData.email)}`,
+        );
+        return;
+      }
       setError(err.message || 'Failed to sign in. Please try again.');
     } finally {
       setLoading(false);

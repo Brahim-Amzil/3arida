@@ -3,7 +3,6 @@ import {
   signInWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
-  sendEmailVerification,
   GoogleAuthProvider,
   signInWithPopup,
   User as FirebaseUser,
@@ -18,6 +17,29 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 
 import { auth, db } from './firebase';
 import { User } from '../types/petition';
+import {
+  EMAIL_NOT_VERIFIED_CODE,
+  isDisposableOrInvalidEmail,
+} from './auth-email-verification';
+
+async function requestVerificationEmailFromApi(idToken: string) {
+  const response = await fetch('/api/auth/send-verification-email', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(
+      typeof body?.error === 'string'
+        ? body.error
+        : 'Failed to send verification email',
+    );
+  }
+}
 
 // Types for our auth functions
 export interface RegisterData {
@@ -48,6 +70,10 @@ export const registerWithEmail = async (
   userData: RegisterData,
 ): Promise<UserCredential> => {
   try {
+    if (isDisposableOrInvalidEmail(userData.email)) {
+      throw new Error('Please enter a valid email address.');
+    }
+
     // Create user account
     const userCredential = await createUserWithEmailAndPassword(
       auth,
@@ -66,26 +92,12 @@ export const registerWithEmail = async (
       email: userData.email,
     });
 
-    // Send email verification (optional - won't block if it fails)
-    try {
-      await sendEmailVerification(userCredential.user);
-      console.log('✅ Verification email sent');
-    } catch (emailError) {
-      console.warn('⚠️ Could not send verification email:', emailError);
-      // Don't throw - allow registration to proceed
-    }
+    // Send Arabic verification email from 3arida.org (Resend), not Firebase default
+    const idToken = await userCredential.user.getIdToken();
+    await requestVerificationEmailFromApi(idToken);
 
-    // Send welcome email (async, don't block registration)
-    // Wrapped in setTimeout to ensure it runs after registration completes
-    setTimeout(async () => {
-      try {
-        const { sendWelcomeEmail } = await import('./email-notifications');
-        await sendWelcomeEmail(userData.name, userData.email);
-        console.log('✅ Welcome email sent');
-      } catch (emailError) {
-        console.warn('⚠️ Could not send welcome email:', emailError);
-      }
-    }, 0);
+    // Must verify before using the platform — sign out until link is clicked
+    await signOut(auth);
 
     return userCredential;
   } catch (error: any) {
@@ -105,6 +117,16 @@ export const loginWithEmail = async (
       loginData.password,
     );
 
+    await userCredential.user.reload();
+
+    if (!userCredential.user.emailVerified) {
+      const error = new Error(
+        'يجب تأكيد بريدك الإلكتروني قبل تسجيل الدخول. تحقق من بريدك أو أعد إرسال رسالة التأكيد.',
+      );
+      (error as Error & { code?: string }).code = EMAIL_NOT_VERIFIED_CODE;
+      throw error;
+    }
+
     // Check if user is active
     const userRef = doc(db, 'users', userCredential.user.uid);
     const userDoc = await getDoc(userRef);
@@ -120,12 +142,20 @@ export const loginWithEmail = async (
       }
     }
 
+    await updateDoc(doc(db, 'users', userCredential.user.uid), {
+      verifiedEmail: true,
+      updatedAt: new Date(),
+    });
+
     // Update login tracking
     await updateUserLoginTracking(userCredential.user.uid);
 
     return userCredential;
   } catch (error: any) {
     console.error('Login error:', error);
+    if (error?.code === EMAIL_NOT_VERIFIED_CODE) {
+      throw error;
+    }
     throw new Error(getAuthErrorMessage(error.code));
   }
 };
@@ -241,7 +271,7 @@ export const resetPassword = async (email: string): Promise<void> => {
   }
 };
 
-// Send email verification
+// Resend verification email (3arida / Resend — not Firebase default template)
 export const sendVerificationEmail = async (
   user?: FirebaseUser,
 ): Promise<void> => {
@@ -250,10 +280,13 @@ export const sendVerificationEmail = async (
     if (!currentUser) {
       throw new Error('No user is currently signed in');
     }
-    await sendEmailVerification(currentUser);
+    const idToken = await currentUser.getIdToken();
+    await requestVerificationEmailFromApi(idToken);
   } catch (error: any) {
     console.error('Email verification error:', error);
-    throw new Error(getAuthErrorMessage(error.code));
+    throw new Error(
+      error?.message || getAuthErrorMessage(error.code) || 'Failed to send email',
+    );
   }
 };
 
@@ -417,6 +450,8 @@ const getAuthErrorMessage = (errorCode: string): string => {
       return 'Verification code has expired. Please request a new one.';
     case 'auth/account-inactive':
       return 'Your account has been deactivated. Please contact support.';
+    case EMAIL_NOT_VERIFIED_CODE:
+      return 'يجب تأكيد بريدك الإلكتروني قبل تسجيل الدخول.';
     default:
       return 'An error occurred. Please try again.';
   }

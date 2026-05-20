@@ -85,12 +85,13 @@ function RegisterPageContent() {
         password: formData.password,
       });
 
-      setSuccess('Account created successfully! You can now sign in.');
+      setSuccess(
+        'تم إنشاء حسابك. راجع بريدك الإلكتروني واضغط رابط التأكيد قبل تسجيل الدخول.',
+      );
 
-      // Redirect to login after a short delay
-      setTimeout(() => {
-        router.push('/auth/login');
-      }, 1500);
+      router.push(
+        `/auth/verify-email?pending=1&email=${encodeURIComponent(formData.email)}`,
+      );
     } catch (err: any) {
       console.error('Registration error:', err);
       setError(err.message || 'Failed to create account. Please try again.');

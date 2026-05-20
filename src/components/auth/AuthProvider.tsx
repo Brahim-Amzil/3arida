@@ -7,10 +7,20 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { requiresEmailVerification } from '@/lib/auth-email-verification';
 import { User } from '@/types/petition';
+
+const EMAIL_VERIFY_ALLOWED_PATHS = [
+  '/auth/verify-email',
+  '/auth/login',
+  '/auth/register',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+];
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -39,10 +49,29 @@ interface AuthProviderProps {
 }
 
 export default function AuthProvider({ children }: AuthProviderProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const profileUnsubscribeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (loading || !user || !pathname) {
+      return;
+    }
+
+    if (!requiresEmailVerification(user)) {
+      return;
+    }
+
+    const isAllowed = EMAIL_VERIFY_ALLOWED_PATHS.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`),
+    );
+    if (!isAllowed) {
+      router.replace('/auth/verify-email');
+    }
+  }, [loading, user, pathname, router]);
 
   useEffect(() => {
     function detachProfileListener() {

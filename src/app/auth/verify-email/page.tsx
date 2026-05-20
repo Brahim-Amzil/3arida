@@ -3,12 +3,14 @@
 import React, { useCallback, useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { sendEmailVerification, applyActionCode } from 'firebase/auth';
+import { applyActionCode } from 'firebase/auth';
+import { doc, updateDoc } from 'firebase/firestore';
 import Header from '@/components/layout/HeaderWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { sendVerificationEmail as resendVerificationEmail } from '@/lib/auth';
 
 function VerifyEmailPageContent() {
   const router = useRouter();
@@ -21,11 +23,15 @@ function VerifyEmailPageContent() {
   const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState<string | null>(null);
   const [actionCode, setActionCode] = useState<string | null>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [isPendingRegistration, setIsPendingRegistration] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     setMode(searchParams?.get('mode'));
     setActionCode(searchParams?.get('oobCode'));
+    setPendingEmail(searchParams?.get('email'));
+    setIsPendingRegistration(searchParams?.get('pending') === '1');
   }, [searchParams]);
 
   const handleEmailVerification = useCallback(
@@ -35,8 +41,28 @@ function VerifyEmailPageContent() {
         setError('');
 
         await applyActionCode(auth, code);
+
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          await currentUser.reload();
+          await updateDoc(doc(db, 'users', currentUser.uid), {
+            verifiedEmail: true,
+            updatedAt: new Date(),
+          });
+
+          try {
+            const { sendWelcomeEmail } = await import('@/lib/email-notifications');
+            await sendWelcomeEmail(
+              currentUser.displayName || 'مستخدم',
+              currentUser.email || '',
+            );
+          } catch (welcomeError) {
+            console.warn('Welcome email after verify failed:', welcomeError);
+          }
+        }
+
         setSuccess(
-          'Email verified successfully! You can now access all features.',
+          'تم تأكيد بريدك الإلكتروني! يمكنك الآن إنشاء العرائض والتوقيع عليها.',
         );
 
         setTimeout(() => {
@@ -45,7 +71,7 @@ function VerifyEmailPageContent() {
       } catch (err: any) {
         console.error('Email verification error:', err);
         setError(
-          'Invalid or expired verification link. Please request a new one.',
+          'رابط التأكيد غير صالح أو منتهي الصلاحية. أعد إرسال رسالة التأكيد.',
         );
       } finally {
         setLoading(false);
@@ -63,7 +89,7 @@ function VerifyEmailPageContent() {
 
   const sendVerificationEmail = async () => {
     if (!user) {
-      setError('Please sign in to send verification email.');
+      setError('سجّل الدخول أولاً لإعادة إرسال رسالة التأكيد.');
       return;
     }
 
@@ -71,12 +97,12 @@ function VerifyEmailPageContent() {
       setLoading(true);
       setError('');
 
-      await sendEmailVerification(user);
+      await resendVerificationEmail(user);
       setVerificationSent(true);
-      setSuccess('Verification email sent! Please check your inbox.');
+      setSuccess('تم إرسال رسالة التأكيد من contact@3arida.org — راجع بريدك.');
     } catch (err: any) {
       console.error('Send verification error:', err);
-      setError('Failed to send verification email. Please try again.');
+      setError(err.message || 'تعذر إرسال رسالة التأكيد.');
     } finally {
       setLoading(false);
     }
@@ -183,16 +209,21 @@ function VerifyEmailPageContent() {
         <div className="max-w-md w-full">
           <Card>
             <CardHeader>
-              <CardTitle className="text-center">Verify Your Email</CardTitle>
+              <CardTitle className="text-center">تأكيد البريد الإلكتروني</CardTitle>
             </CardHeader>
             <CardContent>
               {!user ? (
-                <div className="text-center">
-                  <p className="text-gray-600 mb-4">
-                    Please sign in to verify your email address.
+                <div className="text-center" dir="rtl">
+                  <p className="text-gray-700 mb-4">
+                    {isPendingRegistration
+                      ? `تم إرسال رسالة تأكيد إلى ${pendingEmail || 'بريدك'}. افتح الرابط في البريد ثم سجّل الدخول.`
+                      : 'سجّل الدخول لإعادة إرسال رسالة التأكيد.'}
                   </p>
-                  <Button asChild>
-                    <Link href="/auth/login">Sign In</Link>
+                  <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4 text-sm text-amber-900">
+                    بدون تأكيد البريد لا يمكنك إنشاء عريضة أو التوقيع على العرائض.
+                  </div>
+                  <Button asChild className="w-full">
+                    <Link href="/auth/login">تسجيل الدخول</Link>
                   </Button>
                 </div>
               ) : user.emailVerified ? (
@@ -213,17 +244,17 @@ function VerifyEmailPageContent() {
                     </svg>
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Email Already Verified
+                    تم التأكيد مسبقاً
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    Your email address has been verified successfully.
+                    بريدك الإلكتروني مؤكد. يمكنك استخدام المنصة بالكامل.
                   </p>
                   <Button asChild>
-                    <Link href="/dashboard">Go to Dashboard</Link>
+                    <Link href="/dashboard">لوحة التحكم</Link>
                   </Button>
                 </div>
               ) : (
-                <div className="text-center">
+                <div className="text-center" dir="rtl">
                   <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
                     <svg
                       className="w-8 h-8 text-blue-600"
@@ -240,12 +271,14 @@ function VerifyEmailPageContent() {
                     </svg>
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Check Your Email
+                    راجع بريدك الإلكتروني
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    We need to verify your email address:{' '}
-                    <strong>{user.email}</strong>
+                    يجب تأكيد: <strong>{user.email}</strong>
                   </p>
+                  <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4 text-sm text-amber-900">
+                    بدون التأكيد لا يمكنك إنشاء عريضة أو التوقيع على العرائض.
+                  </div>
 
                   {success && (
                     <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
@@ -273,26 +306,17 @@ function VerifyEmailPageContent() {
                       ) : verificationSent ? (
                         'Verification Email Sent'
                       ) : (
-                        'Send Verification Email'
+                        'إعادة إرسال رسالة التأكيد'
                       )}
                     </Button>
 
-                    <div className="text-sm text-gray-500">
-                      <p>Didn't receive the email?</p>
+                    <div className="text-sm text-gray-500 text-right">
+                      <p>لم تصلك الرسالة؟</p>
                       <ul className="mt-2 space-y-1">
-                        <li>• Check your spam/junk folder</li>
-                        <li>• Make sure {user.email} is correct</li>
-                        <li>• Wait a few minutes and try again</li>
+                        <li>• تحقق من مجلد الرسائل غير المرغوب فيها (خصوصاً Gmail)</li>
+                        <li>• الرسالة تُرسل من contact@3arida.org</li>
+                        <li>• انتظر دقائق ثم أعد الإرسال</li>
                       </ul>
-                    </div>
-
-                    <div className="pt-4 border-t border-gray-200">
-                      <Button variant="outline" asChild className="w-full">
-                        <Link href="/dashboard">Continue to Dashboard</Link>
-                      </Button>
-                      <p className="text-xs text-gray-500 mt-2 text-center">
-                        Some features may be limited until email is verified
-                      </p>
                     </div>
                   </div>
                 </div>

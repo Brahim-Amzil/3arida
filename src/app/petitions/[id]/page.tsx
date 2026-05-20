@@ -249,6 +249,14 @@ export default function PetitionDetailPage() {
       return;
     }
 
+    if (!user.emailVerified) {
+      alert(
+        'يجب تأكيد بريدك الإلكتروني قبل التوقيع على العرائض.\nPlease verify your email before signing petitions.',
+      );
+      window.location.href = '/auth/verify-email';
+      return;
+    }
+
     // Check if user already signed this petition (MVP: only check by user ID)
     try {
       const { collection, query, where, getDocs, limit } =

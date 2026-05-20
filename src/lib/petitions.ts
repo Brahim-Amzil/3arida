@@ -116,6 +116,12 @@ export const createPetition = async (
   creatorName: string,
   finalPrice?: number, // Optional: final price after coupons (for beta launch)
 ): Promise<Petition> => {
+  const { auth } = await import('@/lib/firebase');
+  const { assertEmailVerifiedForPlatformAction } = await import(
+    '@/lib/auth-email-verification'
+  );
+  assertEmailVerifiedForPlatformAction(auth.currentUser);
+
   // Validate petition data
   const validationErrors = validatePetitionData(petitionData);
   if (validationErrors.length > 0) {
@@ -590,6 +596,14 @@ export const signPetition = async (
   const now = new Date();
 
   try {
+    if (userId) {
+      const { auth } = await import('@/lib/firebase');
+      const { assertEmailVerifiedForPlatformAction } = await import(
+        '@/lib/auth-email-verification'
+      );
+      assertEmailVerifiedForPlatformAction(auth.currentUser);
+    }
+
     // Get petition to verify it can be signed
     const petition = await getPetition(petitionId);
     if (!petition) {

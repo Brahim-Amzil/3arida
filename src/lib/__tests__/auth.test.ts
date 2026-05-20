@@ -11,7 +11,7 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   updateProfile,
-  sendEmailVerification,
+  signOut,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 
@@ -33,9 +33,7 @@ const mockSendPasswordResetEmail =
 const mockUpdateProfile = updateProfile as jest.MockedFunction<
   typeof updateProfile
 >;
-const mockSendEmailVerification = sendEmailVerification as jest.MockedFunction<
-  typeof sendEmailVerification
->;
+const mockSignOut = signOut as jest.MockedFunction<typeof signOut>;
 const mockSetDoc = setDoc as jest.MockedFunction<typeof setDoc>;
 const mockGetDoc = getDoc as jest.MockedFunction<typeof getDoc>;
 const mockUpdateDoc = updateDoc as jest.MockedFunction<typeof updateDoc>;
@@ -64,6 +62,10 @@ function snapshotActiveUser() {
 describe('Auth Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true }),
+    }) as jest.Mock;
   });
 
   describe('registerWithEmail', () => {
@@ -78,6 +80,7 @@ describe('Auth Service', () => {
         uid: 'user123',
         email: userData.email,
         displayName: null,
+        getIdToken: jest.fn().mockResolvedValue('mock-token'),
       };
 
       const mockUserCredential = {
@@ -88,7 +91,7 @@ describe('Auth Service', () => {
         mockUserCredential as any
       );
       mockUpdateProfile.mockResolvedValue(undefined);
-      mockSendEmailVerification.mockResolvedValue(undefined);
+      mockSignOut.mockResolvedValue(undefined);
       mockDoc.mockReturnValue({} as any);
       mockGetDoc.mockResolvedValue(snapshotMissing() as any);
       mockSetDoc.mockResolvedValue(undefined);
@@ -103,7 +106,8 @@ describe('Auth Service', () => {
       expect(mockUpdateProfile).toHaveBeenCalledWith(mockUser, {
         displayName: userData.name,
       });
-      expect(mockSendEmailVerification).toHaveBeenCalledWith(mockUser);
+      expect(global.fetch).toHaveBeenCalled();
+      expect(mockSignOut).toHaveBeenCalled();
       expect(mockSetDoc).toHaveBeenCalled();
       expect(result).toBe(mockUserCredential);
     });
@@ -135,6 +139,8 @@ describe('Auth Service', () => {
       const mockUser = {
         uid: 'user123',
         email: loginData.email,
+        emailVerified: true,
+        reload: jest.fn().mockResolvedValue(undefined),
       };
 
       const mockUserCredential = {
@@ -157,6 +163,28 @@ describe('Auth Service', () => {
       );
       expect(mockUpdateDoc).toHaveBeenCalled();
       expect(result).toBe(mockUserCredential);
+    });
+
+    it('should block login when email is not verified', async () => {
+      const loginData = {
+        email: 'john@example.com',
+        password: 'SecurePass123',
+      };
+
+      const mockUser = {
+        uid: 'user123',
+        email: loginData.email,
+        emailVerified: false,
+        reload: jest.fn().mockResolvedValue(undefined),
+      };
+
+      mockSignInWithEmailAndPassword.mockResolvedValue({
+        user: mockUser,
+      } as any);
+
+      await expect(loginWithEmail(loginData)).rejects.toThrow(
+        'يجب تأكيد بريدك الإلكتروني',
+      );
     });
 
     it('should handle login errors', async () => {

@@ -18,7 +18,7 @@ Status values:
 |---|---|---|---|---|
 | G-01 | No critical security findings remain unresolved | P0 | Pending | Includes secrets, authz, SSRF, XSS — pre-flight: [`docs/SECURITY-GATE-G01-CHECKLIST.md`](docs/SECURITY-GATE-G01-CHECKLIST.md) |
 | G-02 | Production build passes on clean environment | P0 | Done | CI #32 green on `main` @ `efad0c9` (2026-05-16): lint, type-check, test, production build |
-| G-03 | Core user journeys pass smoke tests in production-like env | P0 | In Progress | **Automated (2026-05-16):** health, key routes, Stripe webhook. **Done (2026-05-20):** contact form + reCAPTCHA on `www.3arida.org`. **Manual still needed:** auth, petition create/sign, tip + paid petition receipt smoke (§13 rows 2–4, 8) |
+| G-03 | Core user journeys pass smoke tests in production-like env | P0 | In Progress | **Automated (2026-05-16):** health, key routes, Stripe webhook. **Done (2026-05-20):** contact form + reCAPTCHA on `www.3arida.org`. **Code (2026-05-20):** mandatory email verification (Resend Arabic mail from `contact@3arida.org`, login blocked until verified, Firestore rules) — see [`docs/FIREBASE-EMAIL-VERIFICATION.md`](docs/FIREBASE-EMAIL-VERIFICATION.md). **Manual still needed:** deploy rules + app, retest auth/create/sign, payment receipt smoke (§13) |
 | G-04 | Incident rollback plan documented and tested | P0 | Pending | Docs: tracker §13 + [`docs/STAGING-DRY-RUN.md`](docs/STAGING-DRY-RUN.md) rollback row; mark **Done** after signed drill in Vercel UI |
 
 ---
