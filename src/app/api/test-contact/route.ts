@@ -14,6 +14,11 @@ export async function POST(request: NextRequest) {
         console.log('FROM_EMAIL:', process.env.FROM_EMAIL);
         console.log('CONTACT_EMAIL:', process.env.CONTACT_EMAIL);
 
+        const recaptchaSiteKey =
+            process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ||
+            process.env.RECAPTCHA_SITE_KEY ||
+            '';
+
         return NextResponse.json({
             success: true,
             message: 'Test successful',
@@ -22,6 +27,8 @@ export async function POST(request: NextRequest) {
                 resendFromEmail: process.env.RESEND_FROM_EMAIL || 'NOT SET',
                 fromEmail: process.env.FROM_EMAIL || 'NOT SET',
                 contactEmail: process.env.CONTACT_EMAIL || 'NOT SET',
+                hasRecaptchaSiteKey: Boolean(recaptchaSiteKey.trim()),
+                hasRecaptchaSecret: Boolean(process.env.RECAPTCHA_SECRET_KEY?.trim()),
             }
         });
     } catch (error) {

@@ -47,6 +47,31 @@ export function loadRecaptchaScript(siteKey: string): Promise<void> {
 }
 
 /**
+ * Resolve reCAPTCHA site key (build-time env or runtime API on production).
+ */
+export async function getRecaptchaSiteKey(): Promise<string | null> {
+  const fromEnv = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY?.trim();
+  if (fromEnv) {
+    return fromEnv;
+  }
+
+  try {
+    const response = await fetch('/api/recaptcha/config', {
+      cache: 'no-store',
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const data = await response.json();
+    return typeof data?.siteKey === 'string' && data.siteKey
+      ? data.siteKey
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Execute reCAPTCHA v3 and get token
  */
 export async function executeRecaptcha(

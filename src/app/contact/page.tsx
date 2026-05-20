@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/layout/HeaderWrapper';
 import Footer from '@/components/layout/Footer';
-import { executeRecaptcha } from '@/lib/recaptcha';
+import { executeRecaptcha, getRecaptchaSiteKey } from '@/lib/recaptcha';
 
 const contactReasons = [
   { value: 'general', label: 'استفسار عام' },
@@ -123,9 +123,11 @@ export default function ContactPage() {
     setErrorMessage('');
 
     try {
-      const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+      const siteKey = await getRecaptchaSiteKey();
       if (!siteKey) {
-        throw new Error('reCAPTCHA is not configured');
+        throw new Error(
+          'التحقق الأمني غير مفعّل على الخادم. يرجى إضافة مفاتيح reCAPTCHA في Vercel ثم إعادة النشر.',
+        );
       }
 
       const recaptchaToken = await executeRecaptcha(
