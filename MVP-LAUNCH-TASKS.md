@@ -12,6 +12,7 @@
 
 - [x] **Authentication System** (Complete)
   - Email/password authentication
+  - **Mandatory email verification** (Resend Arabic, login blocked until verified, Firestore rules — May 2026)
   - Google OAuth integration
   - Phone verification system
   - User profiles with bio
@@ -96,12 +97,12 @@
 
 #### Critical User Flows
 
-- [ ] **Authentication Flow** (15 min)
-  - [ ] Register new user with email
-  - [ ] Email verification works
-  - [ ] Login with email/password
+- [x] **Authentication Flow** (email/password — prod verified 2026-05-20)
+  - [x] Register new user with email
+  - [x] Email verification works (Resend + `www.3arida.org` link)
+  - [x] Login with email/password (blocked until verified)
   - [ ] Login with Google OAuth
-  - [ ] Logout and re-login
+  - [x] Logout and re-login
 
 - [ ] **Petition Creation Flow** (15 min)
   - [ ] Create new petition

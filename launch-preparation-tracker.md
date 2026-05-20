@@ -18,7 +18,7 @@ Status values:
 |---|---|---|---|---|
 | G-01 | No critical security findings remain unresolved | P0 | Pending | Includes secrets, authz, SSRF, XSS — pre-flight: [`docs/SECURITY-GATE-G01-CHECKLIST.md`](docs/SECURITY-GATE-G01-CHECKLIST.md) |
 | G-02 | Production build passes on clean environment | P0 | Done | CI #32 green on `main` @ `efad0c9` (2026-05-16): lint, type-check, test, production build |
-| G-03 | Core user journeys pass smoke tests in production-like env | P0 | In Progress | **Automated (2026-05-16):** health, key routes, Stripe webhook. **Done (2026-05-20):** contact form + reCAPTCHA on `www.3arida.org`. **Code (2026-05-20):** mandatory email verification (Resend Arabic mail from `contact@3arida.org`, login blocked until verified, Firestore rules) — see [`docs/FIREBASE-EMAIL-VERIFICATION.md`](docs/FIREBASE-EMAIL-VERIFICATION.md). **Manual still needed:** deploy rules + app, retest auth/create/sign, payment receipt smoke (§13) |
+| G-03 | Core user journeys pass smoke tests in production-like env | P0 | In Progress | **Done (2026-05-20):** contact + reCAPTCHA; **email/password auth** — register → Arabic Resend mail (`contact@3arida.org`), verify link on `www.3arida.org`, login blocked until verified, resend works (`0f76a0e`–`61e22ed`). **Still open:** formal §13 petition create/sign smoke, **E-08** payment receipt matrix, Google OAuth spot-check |
 | G-04 | Incident rollback plan documented and tested | P0 | Pending | Docs: tracker §13 + [`docs/STAGING-DRY-RUN.md`](docs/STAGING-DRY-RUN.md) rollback row; mark **Done** after signed drill in Vercel UI |
 
 ---
@@ -189,7 +189,7 @@ Status values:
 | # | Area | Minimum check |
 |---|------|-----------------|
 | 1 | API / uptime | `GET /api/health?format=minimal` → HTTP 200 + `ok` |
-| 2 | Auth | Login, logout, password reset email received (staging) |
+| 2 | Auth | **Done (prod 2026-05-20):** email register, verify link, login/logout, unverified blocked. Still: password reset email, Google OAuth |
 | 3 | Petition | Create draft → submit; sign flow; share link resolves |
 | 4 | Payments | Stripe/PayPal test or small real charge in staging; webhook logs clean (ties **T-06**) |
 | 5 | Admin / mod | Invite mod path; appeals visibility per role |
@@ -221,19 +221,36 @@ Policy matrix (what each payer receives):
 | E-01 | Tips: disable Stripe automatic receipts | P0 | Done | Removed `receipt_email` from `create-donation-intent`; webhook uses `metadata.userEmail` only |
 | E-02 | Tips: send single platform thank-you via Stripe webhook | P0 | Done | `sendPlatformSupportThankYouEmail` + `thankYouEmailSent` dedup (`179860b`) |
 | E-03 | Stripe Dashboard: receipt support contact `support@3arida.org` | P1 | Done | Public business profile (for any Stripe receipt footer) — [`docs/STRIPE-RECEIPT-SUPPORT-EMAIL.md`](docs/STRIPE-RECEIPT-SUPPORT-EMAIL.md) |
-| E-04 | Paid petition create: enable Stripe receipt to payer | P0 | Done | `receipt_email` on `create-payment-intent` + `customerEmail` from create flow (deploy pending) |
-| E-05 | Petition upgrade: enable Stripe receipt to payer | P0 | Done | `receipt_email` on `api/petitions/upgrade` + `userEmail` from client (deploy pending) |
+| E-04 | Paid petition create: enable Stripe receipt to payer | P0 | Done | `receipt_email` on `create-payment-intent` + `customerEmail` from create flow (`1735495`, deployed) |
+| E-05 | Petition upgrade: enable Stripe receipt to payer | P0 | Done | `receipt_email` on `api/petitions/upgrade` + `userEmail` from client (`1735495`, deployed) |
 | E-06 | Contact form delivers to `contact@3arida.org` | P0 | Done | Resend + reCAPTCHA v3; domains `3arida.org` / `www.3arida.org`; Vercel keys via CLI (2026-05-20 prod test) |
 | E-07 | Production reCAPTCHA keys on Vercel | P0 | Done | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` + `RECAPTCHA_SECRET_KEY`; runtime loader `/api/recaptcha/config` (`fd75739`) |
-| E-08 | Post-deploy smoke: verify payment email matrix | P0 | Pending | After push/deploy: 1) small tip → thank-you only, no Stripe receipt; 2) paid create/upgrade → Stripe receipt only |
+| E-08 | Post-deploy smoke: verify payment email matrix | P0 | Pending | Code deployed; manual: 1) small tip → thank-you only, no Stripe receipt; 2) paid create/upgrade → Stripe receipt only |
+
+---
+
+## 15) Email verification & account integrity
+
+| ID | Task | Priority | Status | Notes |
+|---|---|---|---|---|
+| EV-01 | Send verification via Resend (Arabic, `contact@3arida.org`) not Firebase default | P0 | Done | `send-verification-email-server.ts` + `auth-email-verification.ts`; subject `#عريـــضة` (`61e22ed`) |
+| EV-02 | Block email/password login until `emailVerified` | P0 | Done | `loginWithEmail` + `EMAIL_NOT_VERIFIED_CODE`; redirect to `/auth/verify-email` |
+| EV-03 | Sign out after register until email confirmed | P0 | Done | `registerWithEmail` → API send → `signOut` |
+| EV-04 | Enforce verified email for create/sign (UI + lib + Firestore) | P0 | Done | `createPetition` / `signPetition`; Firestore `hasVerifiedEmail()`; rules deployed (`0f76a0e`) |
+| EV-05 | Authenticated resend API (`/api/auth/send-verification-email`) | P0 | Done | Admin `generateEmailVerificationLink` + Resend |
+| EV-06 | Resend without login (`/api/auth/request-verification-email`) | P0 | Done | Post-register + fallback when bearer fails (`037b2d0`) |
+| EV-07 | Firebase Admin credentials on Vercel (split `FIREBASE_*` vars) | P0 | Done | `firebase-admin.ts` loads `CLIENT_EMAIL` + `PRIVATE_KEY`; fixes 401 Unauthorized |
+| EV-08 | Verification links use `www.3arida.org` not `firebaseapp.com` | P0 | Done | `rewriteFirebaseActionLinkToApp` + middleware `/__/auth/action` redirect (`6aaa13e`) |
+| EV-09 | Production smoke: register → verify → login | P0 | Done | Verified on `www.3arida.org` (2026-05-20) |
+| EV-10 | Welcome email production URLs + button contrast | P1 | Done | `getPublicAppUrl()` + white CTA (`1dd6b7e`); welcome after verify on verify page |
 
 ---
 
 ## Progress Summary
 
-- Total tasks (§0–§14 rows): 87
-- Done: 82
-- Remaining (Pending or In Progress): 5 — **G-01**, **G-03** (partial), **G-04**, **T-06** (PayPal), **E-08**
+- Total tasks (§0–§15 rows): 97
+- Done: 92
+- Remaining (Pending or In Progress): 5 — **G-01**, **G-03** (petition journeys + E-08), **G-04**, **T-06** (PayPal), **E-08**
 
 ---
 
@@ -344,4 +361,11 @@ Policy matrix (what each payer receives):
 | 2026-05-20 | E-05 | Pending | Done | `withStripeReceiptEmail` on upgrade API + `PetitionCardWithReport` passes `userEmail` |
 | 2026-05-20 | §14 | N/A | N/A | Added payment & transactional email task section + §13 smoke row 8 |
 | 2026-05-20 | G-03 | In Progress | In Progress | Contact + reCAPTCHA production verified; other §13 journeys still open |
+| 2026-05-20 | EV-01–EV-04 | N/A | Done | Mandatory email verification shipped: Resend Arabic mail, login block, Firestore rules (`0f76a0e`) |
+| 2026-05-20 | EV-05–EV-07 | N/A | Done | Resend APIs + Firebase Admin split credentials; fixed 401 on verification send (`037b2d0`) |
+| 2026-05-20 | EV-08 | N/A | Done | Rewrite verification links to `www.3arida.org`; fixes firebaseapp.com CORS blank page (`6aaa13e`) |
+| 2026-05-20 | EV-09 | N/A | Done | Production smoke: register, verify link, login — user confirmed working |
+| 2026-05-20 | EV-10 | N/A | Done | Welcome email URL/button fixes (`1dd6b7e`); branding subject (`61e22ed`) |
+| 2026-05-20 | E-04 / E-05 | Done | Done | Paid create/upgrade Stripe receipts deployed on `main` (`1735495`) |
+| 2026-05-20 | G-03 | In Progress | In Progress | Auth email/password journey verified prod; §13 rows 3–4 + **E-08** still open |
 

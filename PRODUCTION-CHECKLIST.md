@@ -185,7 +185,7 @@ curl -f https://3arida.ma/auth/login
 ### ✅ Functionality Testing
 
 - [ ] User registration works
-- [ ] Email verification works
+- [x] Email verification works (Resend + `www.3arida.org` links; prod verified 2026-05-20 — [`docs/FIREBASE-EMAIL-VERIFICATION.md`](docs/FIREBASE-EMAIL-VERIFICATION.md))
 - [ ] Google OAuth works
 - [ ] Petition creation works
 - [ ] File upload works

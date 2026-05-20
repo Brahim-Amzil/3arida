@@ -192,9 +192,9 @@
 
 **Registration & Authentication:**
 
-- [ ] Register with email
-- [ ] Verify email
-- [ ] Login with email
+- [x] Register with email (production verified 2026-05-20)
+- [x] Verify email — Arabic Resend from `contact@3arida.org`; link on `www.3arida.org` (not `firebaseapp.com`)
+- [x] Login with email (blocked until verified)
 - [ ] Login with Google
 - [ ] Logout
 - [ ] Password reset

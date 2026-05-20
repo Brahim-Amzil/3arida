@@ -17,7 +17,8 @@ Run this **once** on a staging or production-like Preview deployment before call
 
 ## Manual — core journeys
 
-- [ ] **Auth**: register, login, logout, password reset email (if enabled)
+- [x] **Auth (email/password)**: register → verify link on `www.3arida.org` → login; unverified blocked (prod 2026-05-20, §15)
+- [ ] **Auth (remaining)**: Google OAuth, password reset email
 - [ ] **Petition**: browse list → open detail → sign (reCAPTCHA path) → signature count updates
 - [ ] **Create flow**: create draft → required fields validation → submit (as far as policy allows on staging)
 - [ ] **Payments**: test card or PayPal sandbox completes; **Stripe** and **PayPal** webhooks show 2xx in provider dashboard — follow [**WEBHOOK-STAGING-VALIDATION.md**](./WEBHOOK-STAGING-VALIDATION.md) (**T-06**)

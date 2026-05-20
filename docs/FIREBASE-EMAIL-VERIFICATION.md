@@ -1,5 +1,7 @@
 # Email verification (production)
 
+**Status (2026-05-20):** Verified working on `www.3arida.org` — register, Resend mail, verify link, login. Tracker: **§15 EV-01–EV-10** in [`launch-preparation-tracker.md`](../launch-preparation-tracker.md).
+
 ## What users see
 
 - **Registration (email/password):** Arabic verification email from **contact@3arida.org** (Resend), not `noreply@…firebaseapp.com`. User is signed out until they click the link.
