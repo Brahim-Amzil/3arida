@@ -1,6 +1,7 @@
 import { adminAuth } from '@/lib/firebase-admin';
 import { getPublicAppUrl } from '@/lib/app-url';
 import { sendVerificationEmailViaResend } from '@/lib/auth-email-verification';
+import { rewriteFirebaseActionLinkToApp } from '@/lib/firebase-action-link';
 
 export async function sendVerificationEmailForAddress(
   email: string,
@@ -33,13 +34,14 @@ export async function sendVerificationEmailForAddress(
 
   const userEmail = firebaseUser.email || normalizedEmail;
   const continueUrl = `${getPublicAppUrl()}/auth/verify-email`;
-  const verificationLink = await adminAuth.generateEmailVerificationLink(
+  const firebaseLink = await adminAuth.generateEmailVerificationLink(
     userEmail,
     {
       url: continueUrl,
       handleCodeInApp: false,
     },
   );
+  const verificationLink = rewriteFirebaseActionLinkToApp(firebaseLink);
 
   const name =
     firebaseUser.displayName || displayName || 'مستخدم';

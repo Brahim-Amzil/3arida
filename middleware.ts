@@ -45,6 +45,13 @@ function applyNoCacheHeaders(response: NextResponse) {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Firebase email action links sometimes hit /__/auth/action on our domain
+  if (pathname === '/__/auth/action' || pathname.startsWith('/__/auth/')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/verify-email';
+    return NextResponse.redirect(url);
+  }
+
   // Private tester bypass entrypoint: visiting /bsk grants temporary access.
   if (
     pathname === TEST_BYPASS_PATH ||

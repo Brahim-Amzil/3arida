@@ -7,6 +7,20 @@
 - **Google sign-in:** No extra step (Google accounts are already verified).
 - **Create / sign petitions:** Blocked in UI, in `createPetition` / `signPetition`, and in **Firestore rules** (`request.auth.token.email_verified`).
 
+## Verification link domain
+
+Emails must use **`https://www.3arida.org/auth/verify-email?mode=verifyEmail&oobCode=...`**, not `arida-c5faf.firebaseapp.com/__/auth/action` (that page needs Firebase Hosting `init.json` and fails with CORS on custom domains).
+
+The server rewrites Admin SDK links before sending via Resend. Middleware redirects `/__/auth/action` on our domain to `/auth/verify-email`.
+
+**Old email in inbox?** Copy the `oobCode` from the broken link into:
+
+`https://www.3arida.org/auth/verify-email?mode=verifyEmail&oobCode=PASTE_CODE_HERE`
+
+Or click **إعادة إرسال رسالة التأكيد** after deploy for a new link.
+
+**Firebase Console (recommended):** Authentication → Templates → customize action URL → `https://www.3arida.org/auth/verify-email`
+
 ## Deploy checklist
 
 1. **Vercel env** (already used elsewhere): `RESEND_API_KEY`, `RESEND_FROM_EMAIL=contact@3arida.org`, `CONTACT_EMAIL=contact@3arida.org`, `NEXT_PUBLIC_APP_URL=https://www.3arida.org`, Firebase Admin credentials.

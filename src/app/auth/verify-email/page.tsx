@@ -62,15 +62,21 @@ function VerifyEmailPageContent() {
           } catch (welcomeError) {
             console.warn('Welcome email after verify failed:', welcomeError);
           }
+
+          setSuccess(
+            'تم تأكيد بريدك الإلكتروني! يمكنك الآن إنشاء العرائض والتوقيع عليها.',
+          );
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 3000);
+        } else {
+          setSuccess(
+            'تم تأكيد بريدك الإلكتروني! سجّل الدخول الآن لاستخدام المنصة.',
+          );
+          setTimeout(() => {
+            router.push('/auth/login?verified=1');
+          }, 3000);
         }
-
-        setSuccess(
-          'تم تأكيد بريدك الإلكتروني! يمكنك الآن إنشاء العرائض والتوقيع عليها.',
-        );
-
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 3000);
       } catch (err: any) {
         console.error('Email verification error:', err);
         setError(
