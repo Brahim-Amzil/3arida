@@ -132,12 +132,14 @@ export function getBaseEmailStyles() {
       }
       .button { 
         display: inline-block; 
-        background: #667eea; 
-        color: white; 
-        padding: 12px 24px; 
+        background-color: #ffffff; 
+        color: #1e3a8a !important; 
+        border: 2px solid #667eea; 
+        padding: 14px 28px; 
         text-decoration: none; 
-        border-radius: 6px; 
+        border-radius: 8px; 
         margin: 20px 0;
+        font-weight: 700;
         font-family: 'Cairo', sans-serif !important;
       }
       .footer { 

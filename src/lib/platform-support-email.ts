@@ -1,3 +1,4 @@
+import { getPublicAppUrl } from '@/lib/app-url';
 import { sendEmail } from '@/lib/email-service';
 import { platformSupportThankYouEmail } from '@/lib/email-templates';
 
@@ -5,7 +6,7 @@ function platformSupportThankYouPlainText(
   userName: string,
   amount: number,
 ): string {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://3arida.org';
+  const appUrl = getPublicAppUrl();
   return [
     `عزيزي ${userName}،`,
     '',

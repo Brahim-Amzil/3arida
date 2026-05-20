@@ -25,7 +25,7 @@ Single place to see what the app and CI expect in **Production**, **Preview**, a
 
 | Variable | Scope | Prod | Purpose |
 |----------|-------|------|-----------|
-| `NEXT_PUBLIC_APP_URL` | client | required | Canonical HTTPS site URL (also used in emails and PDF/report links) |
+| `NEXT_PUBLIC_APP_URL` | client | required | Production: `https://www.3arida.org` — emails use [`getPublicAppUrl()`](../src/lib/app-url.ts) and **ignore** `localhost` values |
 | `NEXT_PUBLIC_APP_NAME` | client | required | Display name (see `src/lib/env-validator.ts`) |
 | `NEXT_PUBLIC_BASE_URL` | client | recommended | Used by some PayPal return URLs; align with `NEXT_PUBLIC_APP_URL` if both are set |
 

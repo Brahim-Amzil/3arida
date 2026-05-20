@@ -1,6 +1,9 @@
+import { getPublicAppUrl, emailButtonInlineStyle } from './app-url';
 import { getBaseEmailStyles } from './email-service';
 
 export function welcomeEmail(userName: string, userEmail: string) {
+  const appUrl = getPublicAppUrl();
+
   return `
     <!DOCTYPE html>
     <html>
@@ -26,13 +29,13 @@ export function welcomeEmail(userName: string, userEmail: string) {
               <li>متابعة تقدم العرائض</li>
             </ul>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/petitions" class="button">تصفح العرائض</a>
+            <a href="${appUrl}/petitions" class="button" style="${emailButtonInlineStyle}">تصفح العرائض</a>
             
             <p>إذا كان لديك أي أسئلة، لا تتردد في التواصل معنا.</p>
           </div>
           <div class="footer">
             <p>© 2026 3arida Platform. All rights reserved.</p>
-            <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${userEmail}">إلغاء الاشتراك</a></p>
+            <p><a href="${appUrl}/unsubscribe?email=${userEmail}">إلغاء الاشتراك</a></p>
           </div>
         </div>
       </body>
@@ -69,13 +72,13 @@ export function petitionApprovedEmail(
               <li style="font-family: 'Cairo', sans-serif; text-align: right;">أضف تحديثات لإبقاء الموقعين على اطلاع</li>
             </ul>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/petitions/${petitionId}" class="button" style="font-family: 'Cairo', sans-serif;">عرض العريضة</a>
+            <a href="${getPublicAppUrl()}/petitions/${petitionId}" class="button" style="font-family: 'Cairo', sans-serif;">عرض العريضة</a>
             
             <p style="font-family: 'Cairo', sans-serif; text-align: right;">نتمنى لك التوفيق في حملتك!</p>
           </div>
           <div class="footer" style="font-family: 'Cairo', sans-serif;">
             <p style="font-family: 'Cairo', sans-serif;">© 2026 منصة عريضة. جميع الحقوق محفوظة.</p>
-            <p style="font-family: 'Cairo', sans-serif;"><a href="${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${userEmail}" style="font-family: 'Cairo', sans-serif;">إلغاء الاشتراك</a></p>
+            <p style="font-family: 'Cairo', sans-serif;"><a href="${getPublicAppUrl()}/unsubscribe?email=${userEmail}" style="font-family: 'Cairo', sans-serif;">إلغاء الاشتراك</a></p>
           </div>
         </div>
       </body>
@@ -112,7 +115,7 @@ export function signatureConfirmationEmail(
               <li>شجع الآخرين على التوقيع</li>
             </ul>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/petitions/${petitionId}" class="button">عرض العريضة</a>
+            <a href="${getPublicAppUrl()}/petitions/${petitionId}" class="button">عرض العريضة</a>
           </div>
           <div class="footer">
             <p>© 2026 3arida Platform. All rights reserved.</p>
@@ -154,11 +157,11 @@ export function petitionUpdateEmail(
               <p>${updateContent.substring(0, 200)}${updateContent.length > 200 ? '...' : ''}</p>
             </div>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/petitions/${petitionId}" class="button">قراءة التحديث الكامل</a>
+            <a href="${getPublicAppUrl()}/petitions/${petitionId}" class="button">قراءة التحديث الكامل</a>
           </div>
           <div class="footer">
             <p>© 2026 3arida Platform. All rights reserved.</p>
-            <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${userEmail}">إلغاء الاشتراك</a></p>
+            <p><a href="${getPublicAppUrl()}/unsubscribe?email=${userEmail}">إلغاء الاشتراك</a></p>
           </div>
         </div>
       </body>
@@ -202,11 +205,11 @@ export function milestoneReachedEmail(
             
             <p>استمر في المشاركة للوصول إلى مُوَجهة لِ الكامل!</p>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/petitions/${petitionId}" class="button">عرض العريضة</a>
+            <a href="${getPublicAppUrl()}/petitions/${petitionId}" class="button">عرض العريضة</a>
           </div>
           <div class="footer">
             <p>© 2026 3arida Platform. All rights reserved.</p>
-            <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${userEmail}">إلغاء الاشتراك</a></p>
+            <p><a href="${getPublicAppUrl()}/unsubscribe?email=${userEmail}">إلغاء الاشتراك</a></p>
           </div>
         </div>
       </body>
@@ -250,7 +253,7 @@ export function platformSupportThankYouEmail(
           .benefits-list li:before { content: "✓"; position: absolute; right: 0; color: #059669; font-weight: bold; font-size: 15px; }
           .benefits-list strong { color: #1f2937; font-weight: 600; }
           .closing { font-size: 14px; color: #4b5563; line-height: 1.7; margin: 20px 0; text-align: right; direction: rtl; }
-          .button { display: inline-block; background: linear-gradient(135deg, #debaff 0%, #d1cfff 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 10px; font-size: 15px; font-weight: 700; margin: 15px 0; }
+          .button { display: inline-block; background-color: #ffffff; color: #1e3a8a !important; border: 2px solid #667eea; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 700; margin: 15px 0; }
           .final-message { text-align: center; font-size: 18px; color: #9333ea; font-weight: 700; margin: 20px 0; direction: rtl; }
           .footer { background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); padding: 20px; text-align: center; border-top: 1px solid #e5e7eb; }
           .footer-text { color: #6b7280; font-size: 12px; margin-bottom: 6px; direction: rtl; }
@@ -282,7 +285,7 @@ export function platformSupportThankYouEmail(
               </ul>
             </div>
             <p class="closing">دعمُك يُساعدنا على تقديم خدمة أفضل للمجتمع المغربي وتحسين تجربة المستخدمين.</p>
-            <center><a href="${process.env.NEXT_PUBLIC_APP_URL}/petitions" class="button">تصفح العرائض</a></center>
+            <center><a href="${getPublicAppUrl()}/petitions" class="button">تصفح العرائض</a></center>
             <div class="final-message">شكراً لكونك جزءاً من مجتمع #منصة_عريضة! 🙏</div>
           </div>
           <div class="footer">
@@ -330,13 +333,13 @@ export function petitionRejectedEmail(
               <li>تأكد من إتِّباع إرشادات المنصة</li>
             </ul>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/petitions/${petitionId}" class="button" style="background: linear-gradient(135deg, #f59f9f 0%, #c47272 100%);">عرض العريضة و طلب إعادة التقديم</a>
+            <a href="${getPublicAppUrl()}/petitions/${petitionId}" class="button" style="background: linear-gradient(135deg, #f59f9f 0%, #c47272 100%);">عرض العريضة و طلب إعادة التقديم</a>
             
             <p>إذا كان لديك أي أسئلة، يمكنك التواصل مع فريق الدعم.</p>
           </div>
           <div class="footer">
             <p>© 2026 منصة عريضة. جميع الحقوق محفوظة.</p>
-            <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${userEmail}">إلغاء الاشتراك</a></p>
+            <p><a href="${getPublicAppUrl()}/unsubscribe?email=${userEmail}">إلغاء الاشتراك</a></p>
           </div>
         </div>
       </body>
@@ -386,7 +389,7 @@ export function petitionPausedEmail(
               <li>قم بإجراء التعديلات اللازمة إذا طُلب منك ذلك</li>
             </ul>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/contact" class="button" style="background: linear-gradient(135deg,  #fad8a5 0%, #e6b66e 100%);">تواصل مع فريق الإشراف</a>
+            <a href="${getPublicAppUrl()}/contact" class="button" style="background: linear-gradient(135deg,  #fad8a5 0%, #e6b66e 100%);">تواصل مع فريق الإشراف</a>
             
             <p>نحن هنا لمساعدتك في حل أي مشاكل.</p>
           </div>
@@ -441,7 +444,7 @@ export function petitionDeletedEmail(
               <li>سنراجع حالتك في أقرب وقت ممكن</li>
             </ul>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/contact" class="button" style="background: linear-gradient(135deg, #a9c1f5 0%, #6686cc 100%);">تواصل مع الدعم</a>
+            <a href="${getPublicAppUrl()}/contact" class="button" style="background: linear-gradient(135deg, #a9c1f5 0%, #6686cc 100%);">تواصل مع الدعم</a>
             
             <p>نأسف لأي إزعاج قد يسببه هذا.</p>
           </div>
