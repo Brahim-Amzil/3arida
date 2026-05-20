@@ -14,3 +14,9 @@ export function getStripeServer(): Stripe {
   }
   return stripeClient;
 }
+
+/** Stripe sends a receipt to this address when set (use for paid petitions/upgrades, not tips). */
+export function withStripeReceiptEmail(customerEmail?: string) {
+  const email = typeof customerEmail === 'string' ? customerEmail.trim() : '';
+  return email ? { receipt_email: email } : {};
+}

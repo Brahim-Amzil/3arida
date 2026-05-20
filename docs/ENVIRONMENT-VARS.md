@@ -88,7 +88,7 @@ Used where routes call Admin SDK with explicit credentials (see `src/app/api/use
 |----------|-------|------|-----------|
 | `RESEND_API_KEY` | server | recommended | Resend API |
 | `RESEND_FROM_EMAIL` | server | optional | From address (defaults exist in code) |
-| `CONTACT_EMAIL` | server | optional | Inbound routing / notifications |
+| `CONTACT_EMAIL` | server | optional | Contact form inbox (production: `contact@3arida.org`) |
 | `SMTP_HOST` | server | optional | SMTP host (e.g. Hostinger) |
 | `SMTP_PORT` | server | optional | Port (often `465`) |
 | `SMTP_USER` | server | optional | SMTP user |
@@ -115,7 +115,10 @@ Rotation procedure (when feature is on): [`WHATSAPP-TOKEN-ROTATION.md`](./WHATSA
 
 | Variable | Scope | Prod | Purpose |
 |----------|-------|------|-----------|
-| `RECAPTCHA_SECRET_KEY` | server | required | Server-side verify |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | client + server | required | v3 site key; allowlist domains include `3arida.org`, `www.3arida.org` |
+| `RECAPTCHA_SECRET_KEY` | server | required | Server-side verify (contact form, etc.) |
+
+Payment email policy (tips vs receipts): [`PAYMENT-EMAIL-MATRIX.md`](./PAYMENT-EMAIL-MATRIX.md).
 
 ---
 

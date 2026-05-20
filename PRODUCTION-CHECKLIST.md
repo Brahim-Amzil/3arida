@@ -47,6 +47,19 @@
 - [ ] Final comprehensive testing (Day 6)
 - [ ] Production deployment (Day 7)
 - [ ] Post-deployment verification
+- [ ] **E-08** Payment email smoke — [`docs/PAYMENT-EMAIL-MATRIX.md`](docs/PAYMENT-EMAIL-MATRIX.md)
+
+### Payment & transactional emails (May 2026)
+
+| Check | Status |
+|-------|--------|
+| Contact form → `contact@3arida.org` | [x] Verified production 2026-05-20 |
+| reCAPTCHA domains + Vercel keys | [x] `3arida.org`, `www.3arida.org` |
+| Tip: thank-you only (no Stripe receipt) | [ ] After deploy — **E-08** |
+| Paid create / upgrade: Stripe receipt | [ ] After deploy — **E-08** |
+| Stripe receipt support footer `support@3arida.org` | [x] Dashboard set |
+
+Tracker: [`launch-preparation-tracker.md`](launch-preparation-tracker.md) §14 (**E-01–E-08**).
 
 ---
 

@@ -21,6 +21,7 @@ Run this **once** on a staging or production-like Preview deployment before call
 - [ ] **Petition**: browse list → open detail → sign (reCAPTCHA path) → signature count updates
 - [ ] **Create flow**: create draft → required fields validation → submit (as far as policy allows on staging)
 - [ ] **Payments**: test card or PayPal sandbox completes; **Stripe** and **PayPal** webhooks show 2xx in provider dashboard — follow [**WEBHOOK-STAGING-VALIDATION.md**](./WEBHOOK-STAGING-VALIDATION.md) (**T-06**)
+- [ ] **Payment emails** (**E-08**): tip → platform thank-you only (no Stripe receipt); paid create/upgrade → Stripe receipt only; contact form → `contact@3arida.org` — [**PAYMENT-EMAIL-MATRIX.md**](./PAYMENT-EMAIL-MATRIX.md)
 - [ ] **WhatsApp verification** — **post-MVP only** (MVP does not include this): send verification + verify code + Meta webhook — [`WEBHOOK-STAGING-VALIDATION.md`](./WEBHOOK-STAGING-VALIDATION.md) (**T-06**)
 - [ ] **Admin / moderator**: sign in as elevated user → open admin-only route → confirm 403 for normal user (spot-check)
 

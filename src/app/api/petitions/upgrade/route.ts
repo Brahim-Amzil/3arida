@@ -2,14 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PricingTier } from '@/types/petition';
 import { UPGRADE_PRICING_TIERS } from '@/lib/petition-upgrade-utils';
 import { isBetaMode, getBetaCouponCode, calculateDiscountedAmount, getCouponMetadata } from '@/lib/beta-coupon-service';
-import { getStripeServer } from '@/lib/stripe-server';
+import { getStripeServer, withStripeReceiptEmail } from '@/lib/stripe-server';
 
 export async function POST(request: NextRequest) {
   console.log('[Upgrade API] ========== UPGRADE REQUEST RECEIVED ==========');
   
   try {
     const body = await request.json();
-    const { petitionId, currentTier, selectedTier, userId } = body;
+    const { petitionId, currentTier, selectedTier, userId, userEmail } = body;
+
+    const normalizedEmail =
+      typeof userEmail === 'string' ? userEmail.trim() : '';
 
     console.log('[Upgrade API] Request body:', JSON.stringify(body, null, 2));
 
@@ -101,7 +104,11 @@ export async function POST(request: NextRequest) {
     const paymentIntent = await getStripeServer().paymentIntents.create({
       amount: amountInCents,
       currency: 'mad',
-      metadata,
+      ...withStripeReceiptEmail(normalizedEmail),
+      metadata: {
+        ...metadata,
+        ...(normalizedEmail ? { userEmail: normalizedEmail } : {}),
+      },
       description: `Upgrade petition ${petitionId} from ${currentTier} to ${selectedTier}`,
     });
 

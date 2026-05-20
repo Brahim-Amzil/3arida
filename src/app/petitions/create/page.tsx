@@ -3213,6 +3213,7 @@ function CreatePetitionContent() {
             onPaymentSuccess={handlePaymentSuccess}
             onCancel={handlePaymentCancel}
             couponDiscount={couponDiscount}
+            customerEmail={user?.email || userProfile?.email}
           />
         </div>
       )}

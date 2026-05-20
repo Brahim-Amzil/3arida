@@ -376,6 +376,19 @@ firebase hosting:clone SOURCE_SITE_ID:SOURCE_CHANNEL_ID TARGET_SITE_ID:live
 
 ---
 
-**Last Updated:** February 3, 2026  
-**Updated By:** Kiro AI Assistant  
-**Status:** Ready for Final Testing Phase
+---
+
+## May 20, 2026 — Payment emails & contact (launch tracker §14)
+
+- [x] **E-06** Contact form → `contact@3arida.org` (production tested)
+- [x] **E-07** reCAPTCHA on production (domains + Vercel keys)
+- [x] **E-01–E-03** Tip = thank-you only; Stripe support `support@3arida.org`
+- [x] **E-04–E-05** Paid create/upgrade Stripe receipts (code; deploy + smoke pending)
+- [ ] **E-08** Post-deploy payment email smoke — [`docs/PAYMENT-EMAIL-MATRIX.md`](docs/PAYMENT-EMAIL-MATRIX.md)
+
+Full status: [`launch-preparation-tracker.md`](launch-preparation-tracker.md) (87 tasks, 82 done).
+
+---
+
+**Last Updated:** May 20, 2026  
+**Status:** Launch prep — contact/reCAPTCHA done; payment email deploy smoke (**E-08**) remaining

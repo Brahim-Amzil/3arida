@@ -2,7 +2,7 @@
 
 Use this file as the single source of truth for launch readiness.
 
-**Human-only queue:** [`docs/MANUAL-LAUNCH-BLOCKERS.md`](docs/MANUAL-LAUNCH-BLOCKERS.md) — ordered steps for gates **G-01–G-04**, secrets **S-01 / S-08**, and **T-06** (Stripe/PayPal only for **MVP**; **no WhatsApp** in MVP scope). Counts: **Progress Summary** below.
+**Human-only queue:** [`docs/MANUAL-LAUNCH-BLOCKERS.md`](docs/MANUAL-LAUNCH-BLOCKERS.md) — ordered steps for gates **G-01–G-04**, secrets **S-01 / S-08**, **T-06** (Stripe/PayPal), and payment emails **E-08** ([`docs/PAYMENT-EMAIL-MATRIX.md`](docs/PAYMENT-EMAIL-MATRIX.md)). **MVP:** no WhatsApp verification. Counts: **Progress Summary** below.
 
 Status values:
 - `Pending`
@@ -18,7 +18,7 @@ Status values:
 |---|---|---|---|---|
 | G-01 | No critical security findings remain unresolved | P0 | Pending | Includes secrets, authz, SSRF, XSS — pre-flight: [`docs/SECURITY-GATE-G01-CHECKLIST.md`](docs/SECURITY-GATE-G01-CHECKLIST.md) |
 | G-02 | Production build passes on clean environment | P0 | Done | CI #32 green on `main` @ `efad0c9` (2026-05-16): lint, type-check, test, production build |
-| G-03 | Core user journeys pass smoke tests in production-like env | P0 | In Progress | **Automated (2026-05-16):** `www.3arida.org` health 200, `/auth/login` `/petitions` `/sw.js` 200; Stripe webhook reachable (400 w/o sig). **Manual still needed:** auth, petition create/sign, admin/mod (§13 rows 2–3, 5) |
+| G-03 | Core user journeys pass smoke tests in production-like env | P0 | In Progress | **Automated (2026-05-16):** health, key routes, Stripe webhook. **Done (2026-05-20):** contact form + reCAPTCHA on `www.3arida.org`. **Manual still needed:** auth, petition create/sign, tip + paid petition receipt smoke (§13 rows 2–4, 8) |
 | G-04 | Incident rollback plan documented and tested | P0 | Pending | Docs: tracker §13 + [`docs/STAGING-DRY-RUN.md`](docs/STAGING-DRY-RUN.md) rollback row; mark **Done** after signed drill in Vercel UI |
 
 ---
@@ -195,6 +195,7 @@ Status values:
 | 5 | Admin / mod | Invite mod path; appeals visibility per role |
 | 6 | PWA | New deploy prompts refresh; SW not serving stale `/api/*` |
 | 7 | Flags | `COMING_SOON_MODE` / `MAINTENANCE_MODE` behave as expected |
+| 8 | Payment emails | **Tip:** thank-you only (no Stripe receipt). **Paid create / upgrade:** Stripe receipt to payer (no platform thank-you). **Contact:** message at `contact@3arida.org` — ties **E-01–E-08** |
 
 ### Rollback (C-05)
 
@@ -205,11 +206,34 @@ Status values:
 
 ---
 
+## 14) Payment & transactional emails
+
+Policy matrix (what each payer receives):
+
+| Payment type | Platform thank-you email | Stripe receipt |
+|---|---|---|
+| **Tip / donation** (`platform_support`) | Yes (logged-in donor with email) | **No** |
+| **Create petition (paid)** | No (unless added later) | **Yes** (payer email) |
+| **Upgrade petition** | No | **Yes** (payer email) |
+
+| ID | Task | Priority | Status | Notes |
+|---|---|---|---|---|
+| E-01 | Tips: disable Stripe automatic receipts | P0 | Done | Removed `receipt_email` from `create-donation-intent`; webhook uses `metadata.userEmail` only |
+| E-02 | Tips: send single platform thank-you via Stripe webhook | P0 | Done | `sendPlatformSupportThankYouEmail` + `thankYouEmailSent` dedup (`179860b`) |
+| E-03 | Stripe Dashboard: receipt support contact `support@3arida.org` | P1 | Done | Public business profile (for any Stripe receipt footer) — [`docs/STRIPE-RECEIPT-SUPPORT-EMAIL.md`](docs/STRIPE-RECEIPT-SUPPORT-EMAIL.md) |
+| E-04 | Paid petition create: enable Stripe receipt to payer | P0 | Done | `receipt_email` on `create-payment-intent` + `customerEmail` from create flow (deploy pending) |
+| E-05 | Petition upgrade: enable Stripe receipt to payer | P0 | Done | `receipt_email` on `api/petitions/upgrade` + `userEmail` from client (deploy pending) |
+| E-06 | Contact form delivers to `contact@3arida.org` | P0 | Done | Resend + reCAPTCHA v3; domains `3arida.org` / `www.3arida.org`; Vercel keys via CLI (2026-05-20 prod test) |
+| E-07 | Production reCAPTCHA keys on Vercel | P0 | Done | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` + `RECAPTCHA_SECRET_KEY`; runtime loader `/api/recaptcha/config` (`fd75739`) |
+| E-08 | Post-deploy smoke: verify payment email matrix | P0 | Pending | After push/deploy: 1) small tip → thank-you only, no Stripe receipt; 2) paid create/upgrade → Stripe receipt only |
+
+---
+
 ## Progress Summary
 
-- Total tasks (§0–§12 rows): 79
-- Done: 75
-- Remaining (Pending or In Progress): 4
+- Total tasks (§0–§14 rows): 87
+- Done: 82
+- Remaining (Pending or In Progress): 5 — **G-01**, **G-03** (partial), **G-04**, **T-06** (PayPal), **E-08**
 
 ---
 
@@ -311,4 +335,13 @@ Status values:
 | 2026-05-16 | G-02 | Pending | Done | CI #32 success on `efad0c9` (quality job: scan, lint, type-check, test, build) |
 | 2026-05-16 | G-03 | Pending | In Progress | Production automated smoke on `www.3arida.org`: health/login/petitions/sw 200; Stripe webhook 400 without sig (expected) |
 | 2026-05-16 | T-06 | In Progress | In Progress | **PayPal blocker:** no `PAYPAL_*` / `NEXT_PUBLIC_PAYPAL_*` in Vercel production env; webhook accepts POST but skips signature verification — add creds + `PAYPAL_WEBHOOK_ID`, then simulator 2xx |
+| 2026-05-20 | E-06 | Pending | Done | Contact form success on production; email to `contact@3arida.org`; reCAPTCHA domains + Vercel keys |
+| 2026-05-20 | E-07 | Pending | Done | Added `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` + `RECAPTCHA_SECRET_KEY` on Vercel production via CLI; `/api/recaptcha/config` |
+| 2026-05-20 | E-01 | Pending | Done | Donation PaymentIntents no longer set `receipt_email` |
+| 2026-05-20 | E-02 | Pending | Done | Confirmed thank-you path via webhook only (existing dedup) |
+| 2026-05-20 | E-03 | Pending | Done | User set Stripe support email `support@3arida.org` in Dashboard |
+| 2026-05-20 | E-04 | Pending | Done | `withStripeReceiptEmail` on paid petition create API + create pages pass `customerEmail` |
+| 2026-05-20 | E-05 | Pending | Done | `withStripeReceiptEmail` on upgrade API + `PetitionCardWithReport` passes `userEmail` |
+| 2026-05-20 | §14 | N/A | N/A | Added payment & transactional email task section + §13 smoke row 8 |
+| 2026-05-20 | G-03 | In Progress | In Progress | Contact + reCAPTCHA production verified; other §13 journeys still open |
 

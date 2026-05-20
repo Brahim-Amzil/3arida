@@ -22,7 +22,7 @@ Optional env: `STRIPE_SUPPORT_EMAIL`, `STRIPE_SUPPORT_URL`.
 
 ## What app code controls
 
-- `receipt_email` on PaymentIntent = where Stripe **sends** the receipt (donor email).
-- Receipt **footer contact** = Dashboard / `business_profile.support_email` only.
+- **Donation tips:** Stripe automatic receipts are **disabled** (`receipt_email` is not set on donation PaymentIntents). Donors only get the custom thank-you email from `/api/stripe/webhook`.
+- Receipt **footer contact** (if Stripe sends a receipt elsewhere) = Dashboard / `business_profile.support_email`.
 
-After updating, make a small test donation to confirm the new address on the receipt.
+Optional: Stripe Dashboard → **Settings → Customer emails** → turn off “Successful payments” if you want no Stripe receipts account-wide.

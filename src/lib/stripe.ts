@@ -82,7 +82,8 @@ export const getPricingTier = (signatures: number): PricingTier => {
 export const createPaymentIntent = async (
   amount: number,
   petitionId: string,
-  pricingTier: string
+  pricingTier: string,
+  userEmail?: string,
 ) => {
   try {
     const response = await fetch('/api/stripe/create-payment-intent', {
@@ -95,6 +96,7 @@ export const createPaymentIntent = async (
         currency: 'mad',
         petitionId,
         pricingTier,
+        userEmail: userEmail?.trim() || undefined,
       }),
     });
 

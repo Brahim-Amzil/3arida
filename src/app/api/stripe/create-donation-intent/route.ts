@@ -14,10 +14,11 @@ export async function POST(request: NextRequest) {
     const normalizedEmail =
       typeof userEmail === 'string' ? userEmail.trim() : '';
 
+    // Do not set receipt_email — Stripe would send its own receipt.
+    // Donors only receive our thank-you email via the webhook (platform_support).
     const paymentIntent = await getStripeServer().paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents (Stripe format)
       currency: 'mad', // Moroccan Dirham
-      ...(normalizedEmail ? { receipt_email: normalizedEmail } : {}),
       metadata: {
         type: 'platform_support',
         userId: userId || 'anonymous',

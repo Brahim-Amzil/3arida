@@ -27,6 +27,7 @@ interface StripePaymentProps {
   onPaymentSuccess: (paymentIntentId: string) => void;
   onCancel: () => void;
   couponDiscount?: number;
+  customerEmail?: string;
 }
 
 function PaymentForm({
@@ -34,6 +35,7 @@ function PaymentForm({
   onPaymentSuccess,
   onCancel,
   couponDiscount = 0,
+  customerEmail,
 }: StripePaymentProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -76,6 +78,7 @@ function PaymentForm({
           amount: price,
           petitionTitle: formData.title,
           targetSignatures: formData.targetSignatures,
+          userEmail: customerEmail?.trim() || undefined,
         }),
       });
 

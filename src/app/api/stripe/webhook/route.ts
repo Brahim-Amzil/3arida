@@ -150,8 +150,7 @@ export async function POST(request: NextRequest) {
               paymentIntentId: paymentIntent.id,
             });
           } else {
-            const donorEmail =
-              metadata.userEmail?.trim() || paymentIntent.receipt_email?.trim();
+            const donorEmail = metadata.userEmail?.trim();
             const amountMad = paymentIntent.amount / 100;
 
             if (donorEmail) {

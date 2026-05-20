@@ -260,24 +260,36 @@
 
 ---
 
-### 6. Email Testing (10 minutes)
+### 6. Email Testing (15 minutes)
 
-**Verify all 6 email types:**
+**Platform notification emails (6 types):**
 
 - [ ] Welcome email (registration)
 - [ ] Petition approved email
 - [ ] Signature confirmation email
 - [ ] Petition update email
 - [ ] Milestone reached email
-- [ ] Contact form email
+- [x] Contact form email → `contact@3arida.org` (verified production 2026-05-20)
 
-**Check:**
+**Payment & receipt policy** — see [`docs/PAYMENT-EMAIL-MATRIX.md`](docs/PAYMENT-EMAIL-MATRIX.md) (tracker **E-01–E-08**):
+
+| Payment | Platform thank-you | Stripe receipt |
+|---------|-------------------|----------------|
+| Tip / donation | Yes (logged-in donor) | **No** |
+| Create petition (paid) | No | **Yes** |
+| Upgrade petition | No | **Yes** |
+
+- [ ] **E-08** Tip: thank-you only — no Stripe receipt in inbox
+- [ ] **E-08** Paid create or upgrade: Stripe receipt — no duplicate platform thank-you
+- [ ] Stripe receipt footer shows `support@3arida.org` (Dashboard business profile)
+
+**General checks:**
 
 - [ ] Emails deliver within 1 minute
 - [ ] No spam folder
 - [ ] Links work
 - [ ] Formatting correct
-- [ ] Bilingual content (AR/FR)
+- [ ] Bilingual content (AR/FR) where applicable
 
 ---
 

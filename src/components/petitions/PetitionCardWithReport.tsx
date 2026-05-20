@@ -68,6 +68,7 @@ export default function PetitionCardWithReport({
           currentTier: petition.pricingTier,
           selectedTier,
           userId: user?.uid,
+          userEmail: user?.email?.trim() || undefined,
         }),
       });
 

@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getStripeServer } from '@/lib/stripe-server';
+import { getStripeServer, withStripeReceiptEmail } from '@/lib/stripe-server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { amount, petitionTitle, targetSignatures } = await request.json();
+    const { amount, petitionTitle, targetSignatures, userEmail } =
+      await request.json();
+
+    const normalizedEmail =
+      typeof userEmail === 'string' ? userEmail.trim() : '';
 
     // Validate amount
     if (!amount || amount <= 0) {
@@ -16,9 +20,11 @@ export async function POST(request: NextRequest) {
     const paymentIntent = await getStripeServer().paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency: 'mad', // Moroccan Dirham
+      ...withStripeReceiptEmail(normalizedEmail),
       metadata: {
         petitionTitle: petitionTitle || 'Petition',
         targetSignatures: targetSignatures?.toString() || '0',
+        ...(normalizedEmail ? { userEmail: normalizedEmail } : {}),
       },
       description: `Petition: ${petitionTitle} (${targetSignatures} signatures)`,
     });
