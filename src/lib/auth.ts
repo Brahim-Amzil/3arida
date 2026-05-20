@@ -33,10 +33,33 @@ async function requestVerificationEmailFromApi(idToken: string) {
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
+    const message =
+      typeof body?.error === 'string' ? body.error : null;
+    if (response.status === 401) {
+      throw new Error(
+        message ||
+          'تعذر التحقق من الجلسة. سجّل الدخول مرة أخرى أو استخدم إعادة الإرسال بالبريد.',
+      );
+    }
+    throw new Error(message || 'تعذر إرسال رسالة التأكيد');
+  }
+}
+
+export async function requestVerificationEmailByAddress(
+  email: string,
+): Promise<void> {
+  const response = await fetch('/api/auth/request-verification-email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
     throw new Error(
       typeof body?.error === 'string'
         ? body.error
-        : 'Failed to send verification email',
+        : 'تعذر إرسال رسالة التأكيد',
     );
   }
 }
@@ -93,7 +116,7 @@ export const registerWithEmail = async (
     });
 
     // Send Arabic verification email from 3arida.org (Resend), not Firebase default
-    const idToken = await userCredential.user.getIdToken();
+    const idToken = await userCredential.user.getIdToken(true);
     await requestVerificationEmailFromApi(idToken);
 
     // Must verify before using the platform — sign out until link is clicked
@@ -280,8 +303,16 @@ export const sendVerificationEmail = async (
     if (!currentUser) {
       throw new Error('No user is currently signed in');
     }
-    const idToken = await currentUser.getIdToken();
-    await requestVerificationEmailFromApi(idToken);
+    const idToken = await currentUser.getIdToken(true);
+    try {
+      await requestVerificationEmailFromApi(idToken);
+    } catch (apiError) {
+      if (currentUser.email) {
+        await requestVerificationEmailByAddress(currentUser.email);
+        return;
+      }
+      throw apiError;
+    }
   } catch (error: any) {
     console.error('Email verification error:', error);
     throw new Error(

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import '@/lib/firebase-admin';
 import { adminAuth } from '@/lib/firebase-admin';
-import { getPublicAppUrl } from '@/lib/app-url';
-import { sendVerificationEmailViaResend } from '@/lib/auth-email-verification';
+import { sendVerificationEmailForAddress } from '@/lib/send-verification-email-server';
 import { authenticateApiRequest } from '@/lib/api-auth';
 import { enforceRateLimit } from '@/lib/api-rate-limit';
 import {
@@ -44,36 +44,23 @@ export async function POST(request: NextRequest) {
     const email = firebaseUser.email;
     if (!email) {
       return withRequestId(
-        NextResponse.json({ error: 'لا يوجد بريد إلكتروني لهذا الحساب' }, { status: 400 }),
+        NextResponse.json(
+          { error: 'لا يوجد بريد إلكتروني لهذا الحساب' },
+          { status: 400 },
+        ),
         apiContext.requestId,
       );
     }
 
-    const continueUrl = `${getPublicAppUrl()}/auth/verify-email`;
-    const verificationLink = await adminAuth.generateEmailVerificationLink(
-      email,
-      {
-        url: continueUrl,
-        handleCodeInApp: false,
-      },
-    );
-
     const displayName =
       firebaseUser.displayName || authResult.user.name || 'مستخدم';
 
-    const emailResult = await sendVerificationEmailViaResend(
-      displayName,
-      email,
-      verificationLink,
-    );
+    const result = await sendVerificationEmailForAddress(email, displayName);
 
-    if (!emailResult.success) {
-      logApiError(apiContext, 'Verification email send failed', emailResult.error);
+    if (!result.success) {
+      logApiError(apiContext, 'Verification email send failed', result.error);
       return withRequestId(
-        NextResponse.json(
-          { error: 'تعذر إرسال رسالة التأكيد. حاول لاحقاً.' },
-          { status: 500 },
-        ),
+        NextResponse.json({ error: result.error }, { status: result.status }),
         apiContext.requestId,
       );
     }

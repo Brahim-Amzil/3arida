@@ -1,52 +1,65 @@
 import * as admin from 'firebase-admin';
 
+function resolveAdminCredential(): admin.credential.Credential | null {
+  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY?.trim();
+  if (serviceAccountJson) {
+    try {
+      const credentials = JSON.parse(serviceAccountJson);
+      return admin.credential.cert(credentials);
+    } catch (error) {
+      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', error);
+    }
+  }
+
+  const projectId =
+    process.env.FIREBASE_PROJECT_ID?.trim() ||
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim();
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (projectId && clientEmail && privateKey) {
+    return admin.credential.cert({
+      projectId,
+      clientEmail,
+      privateKey,
+    });
+  }
+
+  return null;
+}
+
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
   try {
-    // Check if we have service account credentials in environment
-    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    const credential = resolveAdminCredential();
+    const projectId =
+      process.env.FIREBASE_PROJECT_ID?.trim() ||
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() ||
+      'arida-c5faf';
 
-    if (serviceAccount) {
-      // Parse service account JSON from environment variable
-      const credentials = JSON.parse(serviceAccount);
+    if (credential) {
       admin.initializeApp({
-        credential: admin.credential.cert(credentials),
+        credential,
+        projectId,
       });
-      console.log('✅ Firebase Admin initialized with service account');
+      console.log('✅ Firebase Admin initialized with service account credentials');
+    } else if (process.env.FIRESTORE_EMULATOR_HOST) {
+      admin.initializeApp({ projectId });
+      console.log('✅ Firebase Admin initialized for emulator');
     } else {
-      // For development: Use emulator or initialize with minimal config
-      // This allows Firestore operations to work with security rules
-      const projectId =
-        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'arida-c5faf';
-
-      // Check if we're using emulator
-      const useEmulator = process.env.FIRESTORE_EMULATOR_HOST;
-
-      if (useEmulator) {
+      try {
         admin.initializeApp({
+          credential: admin.credential.applicationDefault(),
           projectId,
         });
-        console.log('✅ Firebase Admin initialized for emulator');
-      } else {
-        // For production without service account, try application default
-        try {
-          admin.initializeApp({
-            credential: admin.credential.applicationDefault(),
-            projectId,
-          });
-          console.log(
-            '✅ Firebase Admin initialized with application default credentials',
-          );
-        } catch {
-          // Last resort: initialize with just project ID
-          // This works for Firestore but bypasses security rules
-          admin.initializeApp({
-            projectId,
-          });
-          console.warn(
-            '⚠️ Firebase Admin initialized with project ID only - using security rules',
-          );
-        }
+        console.log(
+          '✅ Firebase Admin initialized with application default credentials',
+        );
+      } catch {
+        admin.initializeApp({ projectId });
+        console.error(
+          '❌ Firebase Admin missing credentials (FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY or FIREBASE_SERVICE_ACCOUNT_KEY). Token verification and Auth Admin APIs will fail.',
+        );
       }
     }
   } catch (error) {

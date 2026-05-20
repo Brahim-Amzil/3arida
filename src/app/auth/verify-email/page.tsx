@@ -10,7 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { auth, db } from '@/lib/firebase';
-import { sendVerificationEmail as resendVerificationEmail } from '@/lib/auth';
+import {
+  requestVerificationEmailByAddress,
+  sendVerificationEmail as resendVerificationEmail,
+} from '@/lib/auth';
 
 function VerifyEmailPageContent() {
   const router = useRouter();
@@ -88,8 +91,9 @@ function VerifyEmailPageContent() {
   }, [mounted, mode, actionCode, handleEmailVerification]);
 
   const sendVerificationEmail = async () => {
-    if (!user) {
-      setError('سجّل الدخول أولاً لإعادة إرسال رسالة التأكيد.');
+    const emailForResend = user?.email || pendingEmail;
+    if (!emailForResend) {
+      setError('سجّل الدخول أولاً أو أكمل التسجيل لإعادة إرسال رسالة التأكيد.');
       return;
     }
 
@@ -97,7 +101,14 @@ function VerifyEmailPageContent() {
       setLoading(true);
       setError('');
 
-      await resendVerificationEmail(user);
+      if (user && !user.emailVerified) {
+        await resendVerificationEmail(user);
+      } else if (!user && pendingEmail) {
+        await requestVerificationEmailByAddress(pendingEmail);
+      } else {
+        await requestVerificationEmailByAddress(emailForResend);
+      }
+
       setVerificationSent(true);
       setSuccess('تم إرسال رسالة التأكيد من contact@3arida.org — راجع بريدك.');
     } catch (err: any) {
@@ -217,14 +228,39 @@ function VerifyEmailPageContent() {
                   <p className="text-gray-700 mb-4">
                     {isPendingRegistration
                       ? `تم إرسال رسالة تأكيد إلى ${pendingEmail || 'بريدك'}. افتح الرابط في البريد ثم سجّل الدخول.`
-                      : 'سجّل الدخول لإعادة إرسال رسالة التأكيد.'}
+                      : 'أدخل بريدك لإعادة إرسال رسالة التأكيد أو سجّل الدخول.'}
                   </p>
                   <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4 text-sm text-amber-900">
                     بدون تأكيد البريد لا يمكنك إنشاء عريضة أو التوقيع على العرائض.
                   </div>
-                  <Button asChild className="w-full">
-                    <Link href="/auth/login">تسجيل الدخول</Link>
-                  </Button>
+                  {success && (
+                    <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+                      <p className="text-green-600 text-sm">{success}</p>
+                    </div>
+                  )}
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+                      <p className="text-red-600 text-sm">{error}</p>
+                    </div>
+                  )}
+                  <div className="space-y-3">
+                    {pendingEmail && (
+                      <Button
+                        onClick={sendVerificationEmail}
+                        disabled={loading || verificationSent}
+                        className="w-full"
+                      >
+                        {loading
+                          ? 'جاري الإرسال...'
+                          : verificationSent
+                            ? 'تم الإرسال'
+                            : 'إعادة إرسال رسالة التأكيد'}
+                      </Button>
+                    )}
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href="/auth/login">تسجيل الدخول</Link>
+                    </Button>
+                  </div>
                 </div>
               ) : user.emailVerified ? (
                 <div className="text-center">

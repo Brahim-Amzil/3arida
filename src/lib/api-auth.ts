@@ -49,8 +49,15 @@ export async function authenticateApiRequest(
     };
   } catch (error) {
     console.error('API auth failed:', error);
+    const hasAdminCredentials =
+      !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY?.trim() ||
+      (!!process.env.FIREBASE_CLIENT_EMAIL?.trim() &&
+        !!process.env.FIREBASE_PRIVATE_KEY?.trim());
+    const message = hasAdminCredentials
+      ? 'Unauthorized'
+      : 'Server auth misconfigured. Set FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY on Vercel.';
     return {
-      error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+      error: NextResponse.json({ error: message }, { status: 401 }),
     };
   }
 }
