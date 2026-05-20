@@ -119,7 +119,7 @@ export async function sendVerificationEmailViaResend(
 ) {
   return sendEmail({
     to: userEmail,
-    subject: 'تأكيد بريدك الإلكتروني — 3arida',
+    subject: 'تأكيد بريدك الإلكتروني — #عريـــضة',
     html: buildEmailVerificationHtml(userName, verificationLink),
     text: buildEmailVerificationPlainText(userName, verificationLink),
     replyTo: process.env.CONTACT_EMAIL || 'support@3arida.org',
