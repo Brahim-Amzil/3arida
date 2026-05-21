@@ -3,6 +3,10 @@ import '@/lib/firebase-admin';
 import { adminDb } from '@/lib/firebase-admin';
 import { generatePetitionPdfBuffer } from '@/lib/generate-petition-pdf-server';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
 /**
  * Public PDF download from the verification page (approved petitions only).
  */

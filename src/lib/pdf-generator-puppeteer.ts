@@ -3,7 +3,7 @@
  * Generates PDFs from HTML with proper Arabic RTL support
  */
 
-import puppeteer, { Browser, Page } from 'puppeteer';
+import { launchPuppeteerBrowser } from '@/lib/puppeteer-server';
 
 export interface PDFGeneratorOptions {
   url: string;
@@ -12,42 +12,25 @@ export interface PDFGeneratorOptions {
 }
 
 export async function generatePDFFromHTML(
-  options: PDFGeneratorOptions
+  options: PDFGeneratorOptions,
 ): Promise<Buffer> {
-  const { url, waitForFonts = true, timeout = 30000 } = options;
+  const { url, waitForFonts = true, timeout = 60000 } = options;
 
-  let browser: Browser | null = null;
-  let page: Page | null = null;
+  const browser = await launchPuppeteerBrowser();
 
   try {
-    console.log('[PDF Generator] Launching browser...');
-    browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-      ],
-    });
+    const page = await browser.newPage();
 
-    page = await browser.newPage();
-
-    console.log('[PDF Generator] Navigating to:', url);
     await page.goto(url, {
       waitUntil: 'networkidle0',
       timeout,
     });
 
     if (waitForFonts) {
-      console.log('[PDF Generator] Waiting for fonts...');
-      await page.evaluateHandle('document.fonts.ready');
-      // Additional wait to ensure fonts are fully rendered
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await page.evaluate(() => document.fonts.ready);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    console.log('[PDF Generator] Generating PDF...');
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
@@ -60,18 +43,9 @@ export async function generatePDFFromHTML(
       },
     });
 
-    console.log('[PDF Generator] PDF generated successfully');
     return Buffer.from(pdfBuffer);
-  } catch (error) {
-    console.error('[PDF Generator] Error:', error);
-    throw error;
   } finally {
-    if (page) {
-      await page.close();
-    }
-    if (browser) {
-      await browser.close();
-    }
+    await browser.close();
   }
 }
 

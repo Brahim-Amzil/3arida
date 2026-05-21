@@ -1,22 +1,12 @@
-import puppeteer from 'puppeteer';
 import { getPublicAppUrl } from '@/lib/app-url';
+import { launchPuppeteerBrowser } from '@/lib/puppeteer-server';
 
 export async function generatePetitionPdfBuffer(
   petitionId: string,
 ): Promise<Buffer> {
   const pdfUrl = `${getPublicAppUrl()}/pdf/petition/${petitionId}`;
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--disable-gpu',
-      '--font-render-hinting=none',
-    ],
-  });
+  const browser = await launchPuppeteerBrowser();
 
   try {
     const page = await browser.newPage();
@@ -31,7 +21,7 @@ export async function generatePetitionPdfBuffer(
       timeout: 60000,
     });
 
-    await page.evaluateHandle('document.fonts.ready');
+    await page.evaluate(() => document.fonts.ready);
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const pdfBuffer = await page.pdf({

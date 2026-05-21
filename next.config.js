@@ -149,6 +149,7 @@ const nextConfig = {
     return config;
   },
   transpilePackages: ['firebase', '@firebase/storage'],
+  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
 }
 
 module.exports = withNextIntl(withPWA(nextConfig))
