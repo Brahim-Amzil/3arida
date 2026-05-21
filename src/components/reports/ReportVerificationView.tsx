@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   CheckCircle,
   XCircle,
@@ -68,6 +69,18 @@ export function ReportVerificationView({ data }: ReportVerificationViewProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {petition.imageUrl && (
+            <div className="relative w-full aspect-[16/9] max-h-72 rounded-lg overflow-hidden border bg-muted">
+              <Image
+                src={petition.imageUrl}
+                alt={petition.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 672px"
+                priority
+              />
+            </div>
+          )}
           <div>
             <h3 className="font-semibold text-lg mb-2">{petition.title}</h3>
             <div className="flex flex-wrap items-center gap-2">

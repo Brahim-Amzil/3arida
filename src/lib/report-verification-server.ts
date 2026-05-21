@@ -6,6 +6,13 @@ import type { Petition } from '@/types/petition';
 
 export { formatReportDate } from '@/lib/report-verification-dates';
 
+function getPetitionCoverImageUrl(petition: Petition): string | null {
+  const url = petition.mediaUrls?.find(
+    (item) => typeof item === 'string' && item.trim().length > 0,
+  );
+  return url?.trim() || null;
+}
+
 export type ReportVerificationData =
   | {
       valid: true;
@@ -18,6 +25,7 @@ export type ReportVerificationData =
         targetSignatures: number;
         status: string;
         category: string;
+        imageUrl: string | null;
       };
       reportInfo: {
         totalDownloads: number;
@@ -51,6 +59,7 @@ export async function getReportVerificationData(
       targetSignatures: petition.targetSignatures,
       status: petition.status,
       category: petition.category,
+      imageUrl: getPetitionCoverImageUrl(petition),
     },
     reportInfo: {
       totalDownloads: petition.reportDownloads || 0,
