@@ -11,15 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { ReportVerificationData } from '@/lib/report-verification-server';
-
-function formatDate(value: string | Date | null | undefined): string {
-  if (!value) return '—';
-  return new Date(value).toLocaleDateString('ar-MA', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
+import { formatReportDate } from '@/lib/report-verification-dates';
 
 function progressPercent(current: number, target: number): string {
   if (!target) return '0';
@@ -110,7 +102,7 @@ export function ReportVerificationView({ data }: ReportVerificationViewProps) {
               <Calendar className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">تاريخ الإنشاء</p>
-                <p className="font-semibold">{formatDate(petition.createdAt)}</p>
+                <p className="font-semibold">{formatReportDate(petition.createdAt)}</p>
               </div>
             </div>
 
@@ -144,7 +136,7 @@ export function ReportVerificationView({ data }: ReportVerificationViewProps) {
             <div className="flex justify-between items-center gap-4">
               <span className="text-muted-foreground">آخر تحميل</span>
               <span className="font-semibold">
-                {formatDate(reportInfo.lastDownloaded)}
+                {formatReportDate(reportInfo.lastDownloaded)}
               </span>
             </div>
           )}

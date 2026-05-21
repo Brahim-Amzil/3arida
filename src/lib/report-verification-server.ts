@@ -1,7 +1,10 @@
 import '@/lib/firebase-admin';
 import { adminDb } from '@/lib/firebase-admin';
 import { getLastDownloadDate } from '@/lib/report-download-tracker';
+import { coerceFirestoreDate } from '@/lib/report-verification-dates';
 import type { Petition } from '@/types/petition';
+
+export { formatReportDate } from '@/lib/report-verification-dates';
 
 export type ReportVerificationData =
   | {
@@ -10,7 +13,7 @@ export type ReportVerificationData =
         id: string;
         title: string;
         referenceCode: string;
-        createdAt: string | Date;
+        createdAt: string;
         currentSignatures: number;
         targetSignatures: number;
         status: string;
@@ -18,7 +21,7 @@ export type ReportVerificationData =
       };
       reportInfo: {
         totalDownloads: number;
-        lastDownloaded: string | Date | null;
+        lastDownloaded: string | null;
       };
     }
   | { valid: false };
@@ -34,6 +37,8 @@ export async function getReportVerificationData(
 
   const petition = { id: petitionDoc.id, ...petitionDoc.data() } as Petition;
   const lastDownloaded = await getLastDownloadDate(petitionId);
+  const createdAt = coerceFirestoreDate(petition.createdAt);
+  const lastDownloadedDate = coerceFirestoreDate(lastDownloaded);
 
   return {
     valid: true,
@@ -41,7 +46,7 @@ export async function getReportVerificationData(
       id: petition.id,
       title: petition.title,
       referenceCode: petition.referenceCode || 'N/A',
-      createdAt: petition.createdAt,
+      createdAt: createdAt?.toISOString() ?? '',
       currentSignatures: petition.currentSignatures,
       targetSignatures: petition.targetSignatures,
       status: petition.status,
@@ -49,7 +54,7 @@ export async function getReportVerificationData(
     },
     reportInfo: {
       totalDownloads: petition.reportDownloads || 0,
-      lastDownloaded: lastDownloaded || null,
+      lastDownloaded: lastDownloadedDate?.toISOString() ?? null,
     },
   };
 }
