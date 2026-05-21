@@ -1,6 +1,7 @@
 'use client';
 
 import { Petition } from '@/types/petition';
+import { getSignatureProgressPercent } from '@/lib/petition-report-metrics';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { QRCodeSVG } from 'qrcode.react';
@@ -18,7 +19,10 @@ export function PetitionReportPrint({ petition }: PetitionReportPrintProps) {
       (1000 * 60 * 60 * 24),
   );
   const progress = Math.round(
-    (petition.currentSignatures / petition.targetSignatures) * 100,
+    getSignatureProgressPercent(
+      petition.currentSignatures,
+      petition.targetSignatures,
+    ),
   );
   const signaturesPerDay = Math.round(
     petition.currentSignatures / Math.max(1, daysRunning),
@@ -237,7 +241,7 @@ export function PetitionReportPrint({ petition }: PetitionReportPrintProps) {
               </div>
               <div className="text-center p-4 border">
                 <div className="text-3xl font-bold mb-2">{progress}%</div>
-                <div className="text-sm text-gray-600">نسبة الإنجاز</div>
+                <div className="text-sm text-gray-600">نسبة الإنجاز من التوقيعات المُستهدفة</div>
               </div>
               <div className="text-center p-4 border">
                 <div className="text-3xl font-bold mb-2">
@@ -342,7 +346,7 @@ export function PetitionReportPrint({ petition }: PetitionReportPrintProps) {
               </div>
             </div>
           </div>
-          <div className="mt-8 p-4 border" style={{ background: '#f9fafb' }}>
+          <div className="mt-8 p-4 border" style={{ background: '#ebbcc4' }}>
             <h3 className="text-base font-semibold mb-3">إشعار قانوني</h3>
             <div
               style={{ fontSize: '11px' }}
@@ -351,7 +355,7 @@ export function PetitionReportPrint({ petition }: PetitionReportPrintProps) {
               <div>
                 • هذا التقرير تم إنشاؤه آليا من بيانات موثقة على منصة 3arida.org
               </div>
-              <div>• جميع التوقيعات تم التحقق من صحتها</div>
+              <div>• جميع التوقيعات في العريضة تم التحقق من صحتها.</div>
               <div>• امسح رمز QR للتحقق من هذا التقرير عبر الإنترنت</div>
               <div>
                 • أي تعديل أو إختلاف بين بيانات هذا التقرير و مِنصّة التَّحقُّق

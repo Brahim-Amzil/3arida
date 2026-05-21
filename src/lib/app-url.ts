@@ -1,6 +1,9 @@
+/** Production domain used in QR codes, PDFs, emails, and share links. */
+export const CANONICAL_SITE_URL = 'https://3arida.org';
+
 /**
  * Canonical public site URL for emails, PDFs, and share links.
- * Ignores localhost values in production so misconfigured env does not leak into user emails.
+ * Ignores localhost and *.vercel.app so staging env does not leak into user-facing URLs.
  */
 export function getPublicAppUrl(): string {
   const candidates = [
@@ -11,18 +14,12 @@ export function getPublicAppUrl(): string {
 
   for (const raw of candidates) {
     const normalized = normalizeAppUrl(raw);
-    if (normalized && !isLocalDevUrl(normalized)) {
+    if (normalized && isProductionSiteUrl(normalized)) {
       return normalized;
     }
   }
 
-  const vercelHost = process.env.VERCEL_URL?.trim();
-  if (vercelHost) {
-    const host = vercelHost.replace(/^https?:\/\//, '');
-    return `https://${host}`;
-  }
-
-  return 'https://www.3arida.org';
+  return CANONICAL_SITE_URL;
 }
 
 function normalizeAppUrl(value?: string): string | null {
@@ -34,6 +31,17 @@ function normalizeAppUrl(value?: string): string | null {
 
 function isLocalDevUrl(url: string): boolean {
   return /localhost|127\.0\.0\.1/i.test(url);
+}
+
+function isProductionSiteUrl(url: string): boolean {
+  if (isLocalDevUrl(url) || /\.vercel\.app/i.test(url)) {
+    return false;
+  }
+  try {
+    return /(^|\.)3arida\.org$/i.test(new URL(url).hostname);
+  } catch {
+    return false;
+  }
 }
 
 /** Inline styles for email CTA buttons (many clients ignore class-based link colors). */

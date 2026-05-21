@@ -7,7 +7,7 @@ describe('rewriteFirebaseActionLinkToApp', () => {
 
     const result = rewriteFirebaseActionLinkToApp(firebaseLink);
 
-    expect(result).toContain('https://www.3arida.org/auth/verify-email');
+    expect(result).toContain('https://3arida.org/auth/verify-email');
     expect(result).toContain('mode=verifyEmail');
     expect(result).toContain('oobCode=abc123');
     expect(result).not.toContain('firebaseapp.com');

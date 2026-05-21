@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { translateValue } from '@/lib/pdf-translations';
 import { getPublicAppUrl } from '@/lib/app-url';
+import { getSignatureProgressPercent } from '@/lib/petition-report-metrics';
 
 export async function GET(
   request: NextRequest,
@@ -24,7 +25,10 @@ export async function GET(
       (1000 * 60 * 60 * 24),
   );
   const progress = Math.round(
-    (petition.currentSignatures / petition.targetSignatures) * 100,
+    getSignatureProgressPercent(
+      petition.currentSignatures,
+      petition.targetSignatures,
+    ),
   );
   const signaturesPerDay = Math.round(
     petition.currentSignatures / Math.max(1, daysRunning),
@@ -226,7 +230,7 @@ export async function GET(
         </div>
         <div class="text-center p-4 border">
           <div class="text-3xl font-bold mb-2">${progress}%</div>
-          <div class="text-sm text-gray-600">نسبة الإنجاز</div>
+          <div class="text-sm text-gray-600">نسبة الإنجاز من التوقيعات المُستهدفة</div>
         </div>
         <div class="text-center p-4 border">
           <div class="text-3xl font-bold mb-2">${signaturesPerDay}</div>
@@ -301,13 +305,14 @@ export async function GET(
         <div><span class="font-semibold">التواصل:</span> support@3arida.org</div>
       </div>
     </div>
-    <div class="mt-8 p-4 border" style="background: #f9fafb">
+    <div class="mt-8 p-4 border" style="background:rgb(247, 170, 185)">
       <h3 class="text-base font-semibold mb-3">إشعار قانوني</h3>
       <div style="font-size: 11px" class="text-gray-700 space-y-2">
-        <div>• هذا التقرير تم إنشاؤه من بيانات موثقة على منصة 3arida.org</div>
-        <div>• جميع التوقيعات تم التحقق من صحتها</div>
+        <div>• أنتم الآن على صفحة التحقق من التقرير المُسلَّم إليكم في نُسخته الورقية.</div>
+        <div>• جميع التوقيعات في العريضة تم التحقق من صحتها.</div>
         <div>• امسح رمز QR للتحقق من هذا التقرير عبر الإنترنت</div>
         <div>• أي تعديل على هذا التقرير يعتبر تزويراً</div>
+        <div>•أي إختلاف بين بيانات العريضة هنا على صفحة التحقق و النُّسخَة الورقية المُسلَّمة إليكم يُعتبر تحريفاً يتحمل مسؤوليته القانونية مُنشئُ العريضة.</div>
       </div>
     </div>
   </div>

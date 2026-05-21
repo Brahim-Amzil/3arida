@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebase-admin';
 import { getLastDownloadDate } from '@/lib/report-download-tracker';
 import { coerceFirestoreDate } from '@/lib/report-verification-dates';
 import { serializeFirestoreDocument } from '@/lib/serialize-petition-firestore';
+import { getPublicAppUrl } from '@/lib/app-url';
 import type { Petition } from '@/types/petition';
 
 export { formatReportDate } from '@/lib/report-verification-dates';
@@ -43,6 +44,11 @@ export type ReportVerificationData =
   | {
       valid: true;
       petition: ReportPetitionSnapshot;
+      urls: {
+        verification: string;
+        petition: string;
+        pdfDownload: string;
+      };
       reportInfo: {
         totalDownloads: number;
         lastDownloaded: string | null;
@@ -101,9 +107,16 @@ export async function getReportVerificationData(
   const lastDownloaded = await getLastDownloadDate(petitionId);
   const lastDownloadedDate = coerceFirestoreDate(lastDownloaded);
 
+  const appUrl = getPublicAppUrl();
+
   return {
     valid: true,
     petition: buildPetitionSnapshot(petition, raw),
+    urls: {
+      verification: `${appUrl}/reports/verify/${petition.id}`,
+      petition: `${appUrl}/petitions/${petition.id}`,
+      pdfDownload: `/api/reports/verify/${petition.id}/download`,
+    },
     reportInfo: {
       totalDownloads: petition.reportDownloads || 0,
       lastDownloaded: lastDownloadedDate?.toISOString() ?? null,
