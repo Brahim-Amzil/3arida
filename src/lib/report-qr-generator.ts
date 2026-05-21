@@ -6,12 +6,7 @@
  */
 
 import * as QRCode from 'qrcode';
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const BASE_VERIFICATION_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://3arida.org';
+import { getPublicAppUrl } from '@/lib/app-url';
 const QR_CODE_OPTIONS = {
   errorCorrectionLevel: 'M' as const,
   type: 'image/png' as const,
@@ -64,14 +59,15 @@ export async function generateReportQRCodeBuffer(petitionId: string): Promise<Bu
  * Gets the verification URL for a petition
  */
 export function getVerificationUrl(petitionId: string): string {
-  return `${BASE_VERIFICATION_URL}/reports/verify/${petitionId}`;
+  return `${getPublicAppUrl()}/reports/verify/${petitionId}`;
 }
 
 /**
  * Validates a verification URL format
  */
 export function isValidVerificationUrl(url: string): boolean {
-  const pattern = new RegExp(`^${BASE_VERIFICATION_URL}/reports/verify/[a-zA-Z0-9_-]+$`);
+  const base = getPublicAppUrl().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`^${base}/reports/verify/[a-zA-Z0-9_-]+$`);
   return pattern.test(url);
 }
 

@@ -18,8 +18,11 @@ const COMMON_BYPASS_PATHS = [
   '/.well-known',
 ];
 
+const PUBLIC_DOCUMENT_PATHS = ['/reports', '/api/reports'];
+
 const MAINTENANCE_BYPASS_PATHS = [
   ...COMMON_BYPASS_PATHS,
+  ...PUBLIC_DOCUMENT_PATHS,
   '/api/health',
   '/api/stripe/webhook',
   '/api/paypal/webhook',
