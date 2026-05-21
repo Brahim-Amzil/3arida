@@ -2,7 +2,7 @@
  * Public report verification (QR / PDF links use /reports/verify/{id} without locale).
  */
 
-import { ReportVerificationView } from '@/components/reports/ReportVerificationView';
+import { ReportVerificationClient } from '@/components/reports/ReportVerificationClient';
 import { getReportVerificationData } from '@/lib/report-verification-server';
 
 interface VerificationPageProps {
@@ -13,5 +13,5 @@ interface VerificationPageProps {
 
 export default async function ReportVerifyPage({ params }: VerificationPageProps) {
   const data = await getReportVerificationData(params.petitionId);
-  return <ReportVerificationView data={data} />;
+  return <ReportVerificationClient data={data} />;
 }

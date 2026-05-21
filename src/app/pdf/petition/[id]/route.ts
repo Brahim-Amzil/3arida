@@ -3,6 +3,7 @@ import { getPetitionById } from '@/lib/petitions';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { translateValue } from '@/lib/pdf-translations';
+import { getPublicAppUrl } from '@/lib/app-url';
 
 export async function GET(
   request: NextRequest,
@@ -14,8 +15,9 @@ export async function GET(
     return new NextResponse('Petition not found', { status: 404 });
   }
 
-  const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/reports/verify/${petition.id}`;
-  const petitionUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/petitions/${petition.id}`;
+  const appUrl = getPublicAppUrl();
+  const verificationUrl = `${appUrl}/reports/verify/${petition.id}`;
+  const petitionUrl = `${appUrl}/petitions/${petition.id}`;
   const downloadNumber = (petition.reportDownloads || 0) + 1;
   const daysRunning = Math.ceil(
     (new Date().getTime() - new Date(petition.createdAt).getTime()) /

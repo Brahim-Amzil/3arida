@@ -18,7 +18,7 @@ const COMMON_BYPASS_PATHS = [
   '/.well-known',
 ];
 
-const PUBLIC_DOCUMENT_PATHS = ['/reports', '/api/reports'];
+const PUBLIC_DOCUMENT_PATHS = ['/reports', '/api/reports', '/pdf'];
 
 const MAINTENANCE_BYPASS_PATHS = [
   ...COMMON_BYPASS_PATHS,
