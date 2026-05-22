@@ -1,7 +1,5 @@
 import Stripe from 'stripe';
 
-const STRIPE_API_VERSION = '2025-12-15.clover' as const;
-
 let stripeClient: Stripe | null = null;
 
 export function getStripeServer(): Stripe {
@@ -10,7 +8,8 @@ export function getStripeServer(): Stripe {
     if (!secretKey) {
       throw new Error('STRIPE_SECRET_KEY is not configured');
     }
-    stripeClient = new Stripe(secretKey, { apiVersion: STRIPE_API_VERSION });
+    // Omit apiVersion so it always matches the installed stripe SDK (avoids drift on upgrades).
+    stripeClient = new Stripe(secretKey);
   }
   return stripeClient;
 }

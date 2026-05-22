@@ -87,6 +87,7 @@ const nextConfig = {
   experimental: {
     optimizeCss: false, // Disabled due to critters module issue
     optimizePackageImports: ['@heroicons/react', 'lucide-react'],
+    serverComponentsExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
   },
   // Bundle analyzer for production builds
   ...(process.env.ANALYZE === 'true' && {
@@ -149,7 +150,6 @@ const nextConfig = {
     return config;
   },
   transpilePackages: ['firebase', '@firebase/storage'],
-  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
 }
 
 module.exports = withNextIntl(withPWA(nextConfig))
