@@ -1,26 +1,23 @@
 'use client';
 
 import { QRCodeSVG } from 'qrcode.react';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ReportPetitionSnapshot } from '@/lib/report-verification-server';
 import { translateValue } from '@/lib/pdf-translations';
-import { getPetitionReportMetrics, formatSignatureProgressPercent } from '@/lib/petition-report-metrics';
+import {
+  formatPetitionLongDate,
+  formatPetitionNumber,
+  formatReportGeneratedAt,
+} from '@/lib/petition-report-formatters';
+import {
+  formatSignatureProgressPercent,
+  getPetitionReportMetrics,
+} from '@/lib/petition-report-metrics';
 
 interface PetitionReportFullViewProps {
   petition: ReportPetitionSnapshot;
   verificationUrl: string;
   petitionUrl: string;
-}
-
-function formatLongDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  return format(new Date(iso), 'dd MMMM yyyy', { locale: ar });
-}
-
-function formatNow(): string {
-  return format(new Date(), 'dd MMMM yyyy - HH:mm', { locale: ar });
 }
 
 function DetailRow({
@@ -74,7 +71,7 @@ export function PetitionReportFullView({
           </div>
           <div className="text-sm text-muted-foreground space-y-1">
             <p>الرمز المرجعي للعريضة: {petition.referenceCode}</p>
-            <p>تاريخ الإنشاء: {formatLongDate(petition.createdAt)}</p>
+            <p>تاريخ الإنشاء: {formatPetitionLongDate(petition.createdAt)}</p>
           </div>
           <div className="flex justify-center py-2">
             <QRCodeSVG value={verificationUrl} size={180} level="H" />
@@ -139,7 +136,7 @@ export function PetitionReportFullView({
               />
               <DetailRow
                 label="تاريخ الإنشاء:"
-                value={formatLongDate(petition.createdAt)}
+                value={formatPetitionLongDate(petition.createdAt)}
               />
               <DetailRow
                 label="الحالة:"
@@ -157,7 +154,7 @@ export function PetitionReportFullView({
               />
               <DetailRow
                 label="الهدف:"
-                value={`${petition.targetSignatures.toLocaleString('ar-MA')} توقيع`}
+                value={`${formatPetitionNumber(petition.targetSignatures)} توقيع`}
               />
             </div>
           </div>
@@ -234,12 +231,12 @@ export function PetitionReportFullView({
             <div className="space-y-3">
               <DetailRow
                 label="تاريخ الإنشاء:"
-                value={formatLongDate(petition.createdAt)}
+                value={formatPetitionLongDate(petition.createdAt)}
               />
               {petition.approvedAt && (
                 <DetailRow
                   label="تاريخ الموافقة:"
-                  value={formatLongDate(petition.approvedAt)}
+                  value={formatPetitionLongDate(petition.approvedAt)}
                 />
               )}
               <DetailRow label="المدة:" value={`${daysRunning} يوم`} />
@@ -255,7 +252,7 @@ export function PetitionReportFullView({
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-3">
-            <DetailRow label="تاريخ إنشاء التقرير:" value={formatNow()} />
+            <DetailRow label="تاريخ إنشاء التقرير:" value={formatReportGeneratedAt()} />
             <DetailRow
               label="تم الإنشاء بواسطة:"
               value={petition.creatorName || '—'}

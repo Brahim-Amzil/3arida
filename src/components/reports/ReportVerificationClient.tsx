@@ -21,6 +21,7 @@ import { ReportLegalNotice } from '@/components/reports/ReportLegalNotice';
 import type { ReportVerificationData } from '@/lib/report-verification-server';
 import { formatReportDate } from '@/lib/report-verification-dates';
 import { formatSignatureProgressPercent } from '@/lib/petition-report-metrics';
+import { formatPetitionNumber } from '@/lib/petition-report-formatters';
 import { translateValue } from '@/lib/pdf-translations';
 
 interface ReportVerificationClientProps {
@@ -118,14 +119,14 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
               <Users className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
               <p className="text-xs text-muted-foreground">التوقيعات</p>
               <p className="font-semibold">
-                {petition.currentSignatures.toLocaleString('ar-MA')}
+                {formatPetitionNumber(petition.currentSignatures)}
               </p>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
               <Target className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
               <p className="text-xs text-muted-foreground">الهدف</p>
               <p className="font-semibold">
-                {petition.targetSignatures.toLocaleString('ar-MA')}
+                {formatPetitionNumber(petition.targetSignatures)}
               </p>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">

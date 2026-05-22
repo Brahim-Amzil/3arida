@@ -1,16 +1,16 @@
-import { getPetitionByIdAdmin } from '@/lib/get-petition-admin-server';
+import { getReportVerificationData } from '@/lib/report-verification-server';
 import { buildPetitionReportHtml } from '@/lib/petition-report-pdf-html';
 import { launchPuppeteerBrowser } from '@/lib/puppeteer-server';
 
 export async function generatePetitionPdfBuffer(
   petitionId: string,
 ): Promise<Buffer> {
-  const petition = await getPetitionByIdAdmin(petitionId);
-  if (!petition) {
+  const data = await getReportVerificationData(petitionId);
+  if (!data.valid) {
     throw new Error('Petition not found');
   }
 
-  const html = await buildPetitionReportHtml(petition);
+  const html = await buildPetitionReportHtml(data);
 
   const browser = await launchPuppeteerBrowser();
 
