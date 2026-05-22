@@ -278,33 +278,39 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
         الرسمية في المغرب
       </p>
 
-      <ReportDownloadLimitModal
-        isOpen={showLimitModal}
-        onClose={() => setShowLimitModal(false)}
-        onPay={() => {
-          setShowLimitModal(false);
-          setShowPaymentModal(true);
-        }}
-        onUpgrade={() => {
-          setShowLimitModal(false);
-          setShowUpgradeModal(true);
-        }}
-      />
+      {showLimitModal && (
+        <ReportDownloadLimitModal
+          isOpen={showLimitModal}
+          onClose={() => setShowLimitModal(false)}
+          onPay={() => {
+            setShowLimitModal(false);
+            setShowPaymentModal(true);
+          }}
+          onUpgrade={() => {
+            setShowLimitModal(false);
+            setShowUpgradeModal(true);
+          }}
+        />
+      )}
 
-      <ReportPaymentModal
-        petition={petitionForDownload}
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onSuccess={() => window.location.reload()}
-      />
+      {showPaymentModal && (
+        <ReportPaymentModal
+          petition={petitionForDownload}
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={() => window.location.reload()}
+        />
+      )}
 
-      <PetitionUpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        petitionId={petition.id}
-        currentTier={(petition.pricingTier || 'free') as PricingTier}
-        onTierSelect={handleTierSelect}
-      />
+      {showUpgradeModal && (
+        <PetitionUpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          petitionId={petition.id}
+          currentTier={(petition.pricingTier || 'free') as PricingTier}
+          onTierSelect={handleTierSelect}
+        />
+      )}
     </div>
   );
 }

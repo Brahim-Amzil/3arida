@@ -1,13 +1,11 @@
 'use client';
 
 /**
- * Report Payment Modal Component
- *
- * Modal for purchasing additional report downloads (19 MAD)
+ * Modal for purchasing additional report downloads (10 or 19 MAD by tier).
+ * Uses inline Arabic copy — verify/dashboard routes are outside [locale] layout.
  */
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { CreditCard, Check } from 'lucide-react';
 import { Petition } from '@/types/petition';
 import { getDownloadPrice } from '@/lib/report-access-control';
@@ -26,7 +24,6 @@ export function ReportPaymentModal({
   onClose,
   onSuccess,
 }: ReportPaymentModalProps) {
-  const t = useTranslations('report.paymentModal');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal' | null>(null);
   const price = getDownloadPrice(petition);
@@ -36,16 +33,18 @@ export function ReportPaymentModal({
     setPaymentMethod(method);
 
     try {
-      // TODO: Implement actual payment processing
-      // For now, simulate payment
+      // TODO: Implement actual payment processing (RPT-06)
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      alert(t('processing') + ' - ' + t('features.official'));
+      alert(`جاري المعالجة... — تقرير PDF رسمي`);
       onSuccess();
       onClose();
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Payment failed: ' + (error instanceof Error ? error.message : 'Network error'));
+      alert(
+        'فشل الدفع: ' +
+          (error instanceof Error ? error.message : 'خطأ في الشبكة'),
+      );
     } finally {
       setIsProcessing(false);
       setPaymentMethod(null);
@@ -62,7 +61,7 @@ export function ReportPaymentModal({
       <button
         type="button"
         className="absolute inset-0 bg-black/50"
-        aria-label="Close"
+        aria-label="إغلاق"
         onClick={onClose}
       />
       <div
@@ -70,70 +69,73 @@ export function ReportPaymentModal({
         aria-modal="true"
         aria-labelledby="report-payment-title"
         className="relative z-10 w-full max-w-md rounded-lg border bg-background p-6 shadow-lg"
+        dir="rtl"
       >
         <div className="mb-4 space-y-2">
           <h2 id="report-payment-title" className="text-lg font-semibold">
-            {t('title')}
+            تحميل تقرير العريضة
           </h2>
-          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
+          <p className="text-sm text-muted-foreground">
+            لقد استخدمت التحميلات المجانية لهذه العريضة
+          </p>
         </div>
 
         <div className="space-y-6 py-4">
-          {/* Price */}
           <div className="text-center">
-            <p className="text-3xl font-bold">{price} MAD</p>
-            <p className="text-sm text-muted-foreground">{t('price')}</p>
+            <p className="text-3xl font-bold">{price} درهم</p>
+            <p className="text-sm text-muted-foreground">لتحميل واحد إضافي</p>
           </div>
 
-          {/* Features */}
           <div className="space-y-2">
-            <p className="font-semibold">{t('features.title')}</p>
+            <p className="font-semibold">ما ستحصل عليه:</p>
             <ul className="space-y-2">
               <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">{t('features.official')}</span>
+                <Check className="h-4 w-4 text-green-600 shrink-0" />
+                <span className="text-sm">تقرير PDF رسمي</span>
               </li>
               <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">{t('features.qr')}</span>
+                <Check className="h-4 w-4 text-green-600 shrink-0" />
+                <span className="text-sm">رمز QR للتحقق</span>
               </li>
               <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">{t('features.stats')}</span>
+                <Check className="h-4 w-4 text-green-600 shrink-0" />
+                <span className="text-sm">جميع الإحصائيات</span>
               </li>
               <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">{t('features.valid')}</span>
+                <Check className="h-4 w-4 text-green-600 shrink-0" />
+                <span className="text-sm">صالح للتقديم الرسمي</span>
               </li>
             </ul>
           </div>
 
-          {/* Payment Buttons */}
           <div className="space-y-3">
             <Button
               onClick={() => handlePayment('stripe')}
               disabled={isProcessing}
-              className="w-full"
+              className="w-full gap-2"
               variant="default"
             >
-              <CreditCard className="mr-2 h-4 w-4" />
-              {isProcessing && paymentMethod === 'stripe' ? t('processing') : t('payStripe')}
+              <CreditCard className="h-4 w-4" />
+              {isProcessing && paymentMethod === 'stripe'
+                ? 'جاري المعالجة...'
+                : 'الدفع بواسطة Stripe'}
             </Button>
 
             <Button
               onClick={() => handlePayment('paypal')}
               disabled={isProcessing}
-              className="w-full"
+              className="w-full gap-2"
               variant="outline"
             >
-              <CreditCard className="mr-2 h-4 w-4" />
-              {isProcessing && paymentMethod === 'paypal' ? t('processing') : t('payPayPal')}
+              <CreditCard className="h-4 w-4" />
+              {isProcessing && paymentMethod === 'paypal'
+                ? 'جاري المعالجة...'
+                : 'الدفع بواسطة PayPal'}
             </Button>
           </div>
 
-          {/* Cancel */}
           <Button onClick={onClose} variant="ghost" className="w-full" disabled={isProcessing}>
-            {t('cancel')}
+            إلغاء
           </Button>
         </div>
       </div>
