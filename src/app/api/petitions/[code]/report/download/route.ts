@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { Petition } from '@/types/petition';
-import { canGenerateReport } from '@/lib/report-access-control';
+import { evaluateReportDownloadAccess } from '@/lib/report-download-access-server';
 import { recordDownload } from '@/lib/report-download-tracker';
 import { generatePetitionPdfBuffer } from '@/lib/generate-petition-pdf-server';
 
@@ -93,18 +93,25 @@ export async function GET(
       );
     }
 
-    const accessDecision = canGenerateReport(petition, userId);
+    const accessDecision = evaluateReportDownloadAccess(
+      petition,
+      userId,
+      paymentId,
+    );
 
     if (!accessDecision.allowed) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: accessDecision.reason || 'ACCESS_DENIED',
-            message: 'You do not have permission to download this report',
+            code: accessDecision.code,
+            message: accessDecision.message,
           },
+          requiresUpgrade: accessDecision.requiresUpgrade,
+          requiresPayment: accessDecision.requiresPayment,
+          price: accessDecision.price,
         },
-        { status: 403 },
+        { status: accessDecision.status },
       );
     }
 

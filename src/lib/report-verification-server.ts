@@ -17,6 +17,7 @@ function getPetitionCoverImageUrl(petition: Petition): string | null {
 
 export type ReportPetitionSnapshot = {
   id: string;
+  creatorId?: string;
   title: string;
   description: string;
   referenceCode: string;
@@ -67,6 +68,7 @@ function buildPetitionSnapshot(
 
   return {
     id: petition.id,
+    creatorId: petition.creatorId,
     title: petition.title,
     description: petition.description || '',
     referenceCode: petition.referenceCode || 'N/A',

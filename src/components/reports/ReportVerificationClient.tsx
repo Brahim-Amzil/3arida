@@ -11,25 +11,60 @@ import {
   Target,
   ChevronDown,
   ChevronUp,
-  Download,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { PetitionReportFullView } from '@/components/reports/PetitionReportFullView';
 import { ReportLegalNotice } from '@/components/reports/ReportLegalNotice';
+import { ReportDownloadButton } from '@/components/petitions/ReportDownloadButton';
+import { ReportPaymentModal } from '@/components/petitions/ReportPaymentModal';
+import { PetitionUpgradeModal } from '@/components/petitions/PetitionUpgradeModal';
 import type { ReportVerificationData } from '@/lib/report-verification-server';
 import { formatReportDate } from '@/lib/report-verification-dates';
 import { formatSignatureProgressPercent } from '@/lib/petition-report-metrics';
 import { formatPetitionNumber } from '@/lib/petition-report-formatters';
 import { translateValue } from '@/lib/pdf-translations';
+import type { Petition, PricingTier } from '@/types/petition';
 
 interface ReportVerificationClientProps {
   data: ReportVerificationData;
 }
 
+function snapshotToPetition(
+  petition: Extract<ReportVerificationData, { valid: true }>['petition'],
+): Petition {
+  return {
+    id: petition.id,
+    creatorId: petition.creatorId || '',
+    title: petition.title,
+    description: petition.description,
+    referenceCode: petition.referenceCode,
+    petitionType: petition.petitionType,
+    category: petition.category,
+    subcategory: petition.subcategory,
+    addressedToType: petition.addressedToType,
+    publisherType: petition.publisherType,
+    publisherName: petition.publisherName,
+    creatorName: petition.creatorName,
+    status: petition.status as Petition['status'],
+    pricingTier: petition.pricingTier as Petition['pricingTier'],
+    targetSignatures: petition.targetSignatures,
+    currentSignatures: petition.currentSignatures,
+    viewCount: petition.viewCount,
+    shareCount: petition.shareCount,
+    createdAt: petition.createdAt,
+    approvedAt: petition.approvedAt,
+    reportDownloads: petition.reportDownloads,
+  } as unknown as Petition;
+}
+
 export function ReportVerificationClient({ data }: ReportVerificationClientProps) {
+  const { user } = useAuth();
   const [showFullReport, setShowFullReport] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   if (!data.valid) {
     return (
@@ -55,7 +90,41 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
   }
 
   const { petition, urls, reportInfo } = data;
-  const canDownloadPdf = petition.status === 'approved';
+  const isCreator =
+    Boolean(user?.uid) &&
+    Boolean(petition.creatorId) &&
+    user?.uid === petition.creatorId;
+  const petitionForDownload = snapshotToPetition(petition);
+
+  const handleTierSelect = async (
+    selectedTier: PricingTier,
+    _upgradePrice: number,
+  ) => {
+    try {
+      const response = await fetch('/api/petitions/upgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          petitionId: petition.id,
+          currentTier: petition.pricingTier,
+          selectedTier,
+          userId: user?.uid,
+          userEmail: user?.email?.trim() || undefined,
+        }),
+      });
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'فشلت الترقية');
+      }
+      setShowUpgradeModal(false);
+      window.location.reload();
+    } catch (error) {
+      alert(
+        'فشلت الترقية: ' +
+          (error instanceof Error ? error.message : 'خطأ غير معروف'),
+      );
+    }
+  };
 
   return (
     <div className="container max-w-4xl mx-auto py-12 px-4" dir="rtl">
@@ -131,7 +200,9 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
               <FileText className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground">نسبة الإنجاز من التوقيعات المُستهدفة</p>
+              <p className="text-xs text-muted-foreground">
+                نسبة الإنجاز من التوقيعات المُستهدفة
+              </p>
               <p className="font-semibold">
                 {formatSignatureProgressPercent(
                   petition.currentSignatures,
@@ -164,13 +235,15 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
                 </>
               )}
             </Button>
-            {canDownloadPdf && (
-              <Button asChild size="lg" variant="secondary" className="gap-2">
-                <a href={urls.pdfDownload} download>
-                  <Download className="h-4 w-4" />
-                  تحميل التقرير الكامل (PDF)
-                </a>
-              </Button>
+            {isCreator && user && petition.status === 'approved' && (
+              <div className="w-full sm:w-auto sm:min-w-[240px]">
+                <ReportDownloadButton
+                  petition={petitionForDownload}
+                  userId={user.uid}
+                  onUpgrade={() => setShowUpgradeModal(true)}
+                  onPayment={() => setShowPaymentModal(true)}
+                />
+              </div>
             )}
             <Button asChild size="lg" variant="outline">
               <Link href={`/petitions/${petition.id}`}>عرض العريضة على المنصة</Link>
@@ -201,6 +274,21 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
         منصة <span className="font-semibold">3arida.org</span> — منصة العرائض
         الرسمية في المغرب
       </p>
+
+      <ReportPaymentModal
+        petition={petitionForDownload}
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={() => window.location.reload()}
+      />
+
+      <PetitionUpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        petitionId={petition.id}
+        currentTier={(petition.pricingTier || 'free') as PricingTier}
+        onTierSelect={handleTierSelect}
+      />
     </div>
   );
 }
