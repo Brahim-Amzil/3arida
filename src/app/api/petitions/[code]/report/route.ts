@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPetitionById } from '@/lib/petitions';
+import { getPetitionByIdAdmin } from '@/lib/get-petition-admin-server';
 import { generatePetitionPdfBuffer } from '@/lib/generate-petition-pdf-server';
 
 export const runtime = 'nodejs';
@@ -7,18 +7,16 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { code: string } },
 ) {
   try {
-    const petitionId = params.code;
-
-    const petition = await getPetitionById(petitionId);
+    const petition = await getPetitionByIdAdmin(params.code);
     if (!petition) {
       return NextResponse.json({ error: 'Petition not found' }, { status: 404 });
     }
 
-    const pdfBuffer = await generatePetitionPdfBuffer(petitionId);
+    const pdfBuffer = await generatePetitionPdfBuffer(petition.id);
     const filename = `petition-report-${petition.referenceCode}-${new Date().toISOString().split('T')[0]}.pdf`;
 
     return new NextResponse(new Uint8Array(pdfBuffer), {

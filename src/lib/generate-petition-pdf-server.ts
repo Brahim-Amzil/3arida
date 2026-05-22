@@ -1,10 +1,16 @@
-import { getPublicAppUrl } from '@/lib/app-url';
+import { getPetitionByIdAdmin } from '@/lib/get-petition-admin-server';
+import { buildPetitionReportHtml } from '@/lib/petition-report-pdf-html';
 import { launchPuppeteerBrowser } from '@/lib/puppeteer-server';
 
 export async function generatePetitionPdfBuffer(
   petitionId: string,
 ): Promise<Buffer> {
-  const pdfUrl = `${getPublicAppUrl()}/pdf/petition/${petitionId}`;
+  const petition = await getPetitionByIdAdmin(petitionId);
+  if (!petition) {
+    throw new Error('Petition not found');
+  }
+
+  const html = buildPetitionReportHtml(petition);
 
   const browser = await launchPuppeteerBrowser();
 
@@ -16,8 +22,8 @@ export async function generatePetitionPdfBuffer(
       deviceScaleFactor: 2,
     });
 
-    await page.goto(pdfUrl, {
-      waitUntil: 'networkidle0',
+    await page.setContent(html, {
+      waitUntil: 'load',
       timeout: 60000,
     });
 
