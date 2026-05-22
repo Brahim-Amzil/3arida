@@ -86,6 +86,8 @@ export async function GET(
       request.headers.get('x-real-ip') ||
       'unknown';
 
+    const pdfBuffer = await generatePetitionPdfBuffer(params.petitionId);
+
     await recordDownload(
       petition.id,
       userId,
@@ -93,12 +95,14 @@ export async function GET(
       ipAddress,
     );
 
-    const pdfBuffer = await generatePetitionPdfBuffer(params.petitionId);
     return pdfResponse(pdfBuffer, referenceCode);
   } catch (error) {
     console.error('[Report verify download] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate report PDF' },
+      {
+        error: 'Failed to generate report PDF',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 },
     );
   }

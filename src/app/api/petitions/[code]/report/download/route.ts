@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import '@/lib/firebase-admin';
 import { adminDb } from '@/lib/firebase-admin';
 import { Petition } from '@/types/petition';
 import { evaluateReportDownloadAccess } from '@/lib/report-download-access-server';
@@ -120,6 +121,8 @@ export async function GET(
       request.headers.get('x-real-ip') ||
       'unknown';
 
+    const pdfBuffer = await generatePetitionPdfBuffer(petition.id);
+
     await recordDownload(
       petition.id,
       userId,
@@ -127,8 +130,7 @@ export async function GET(
       ipAddress,
     );
 
-    const pdfBuffer = await generatePetitionPdfBuffer(petition.id);
-    const filename = `petition-report-${petition.referenceCode}-${new Date().toISOString().split('T')[0]}.pdf`;
+    const filename = `petition-report-${petition.referenceCode || petition.id}-${new Date().toISOString().split('T')[0]}.pdf`;
 
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,

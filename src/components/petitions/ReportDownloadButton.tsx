@@ -107,7 +107,9 @@ export function ReportDownloadButton({
           }
           return;
         }
-        throw new Error(errData?.error?.message || 'فشل تحميل التقرير');
+        const detail =
+          errData?.error?.details || errData?.error?.message || 'فشل تحميل التقرير';
+        throw new Error(detail);
       }
 
       setProgress('جاري حفظ الملف...');
