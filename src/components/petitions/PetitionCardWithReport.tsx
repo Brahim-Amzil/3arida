@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { Petition, PricingTier } from '@/types/petition';
 import PetitionCard from './PetitionCard';
 import { ReportDownloadButton } from './ReportDownloadButton';
+import { ReportPaymentModal } from './ReportPaymentModal';
 import { PetitionUpgradeModal } from './PetitionUpgradeModal';
 import { UpgradePaymentModal } from './UpgradePaymentModal';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -35,6 +36,7 @@ export default function PetitionCardWithReport({
   const { user } = useAuth();
   const router = useRouter();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showReportPaymentModal, setShowReportPaymentModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentData, setPaymentData] = useState<{
     clientSecret?: string;
@@ -50,8 +52,12 @@ export default function PetitionCardWithReport({
   };
 
   const handlePayment = () => {
-    alert('Payment required: 19 MAD for additional report download');
-    // TODO: Implement payment modal
+    setShowReportPaymentModal(true);
+  };
+
+  const handleReportPaymentSuccess = () => {
+    setShowReportPaymentModal(false);
+    window.location.reload();
   };
 
   const handleTierSelect = async (
@@ -156,6 +162,13 @@ export default function PetitionCardWithReport({
           onSuccess={handlePaymentSuccess}
         />
       )}
+
+      <ReportPaymentModal
+        petition={petition}
+        isOpen={showReportPaymentModal}
+        onClose={() => setShowReportPaymentModal(false)}
+        onSuccess={handleReportPaymentSuccess}
+      />
     </div>
   );
 }
