@@ -1,4 +1,3 @@
-import { getPublicAppUrl } from '@/lib/app-url';
 import { escapeHtml } from '@/lib/escape-html';
 import {
   formatPetitionLongDate,
@@ -13,7 +12,6 @@ import {
 import { getPetitionReportFontFaceCss } from '@/lib/petition-report-pdf-fonts';
 import { translateValue } from '@/lib/pdf-translations';
 import { generateReportQRCode } from '@/lib/report-qr-generator';
-import { REPORT_LEGAL_NOTICE_ITEMS } from '@/lib/report-legal-notice-items';
 import type { ReportVerificationData } from '@/lib/report-verification-server';
 
 type ValidReportVerificationData = Extract<
@@ -109,22 +107,13 @@ export async function buildPetitionReportHtml(
 
     .page:last-child { page-break-after: auto; }
 
-    .verify-header { text-align: center; margin-bottom: 24px; }
-    .verify-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 12px; }
-    .verify-header p { margin-bottom: 8px; }
-    .verify-header .muted { color: #6b7280; max-width: 640px; margin: 0 auto; }
-
-    .legal-notice {
-      border: 1px solid #fca5a5;
-      background: #fef2f2;
-      color: #7f1d1d;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 24px;
+    .cover-page {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
     }
-    .legal-notice-title { font-weight: 600; margin-bottom: 12px; color: #991b1b; }
-    .legal-notice ul { list-style: disc; padding-right: 20px; }
-    .legal-notice li + li { margin-top: 8px; }
 
     .card {
       border: 1px solid #e5e7eb;
@@ -139,7 +128,6 @@ export async function buildPetitionReportHtml(
       background: #f9fafb;
     }
     .card-title { font-size: 18px; font-weight: 600; }
-    .card-description { font-size: 14px; color: #6b7280; margin-top: 4px; }
     .card-content { padding: 20px; }
 
     .summary-card-title {
@@ -213,16 +201,15 @@ export async function buildPetitionReportHtml(
     .detail-label { font-size: 14px; color: #6b7280; }
     .detail-value { font-size: 14px; font-weight: 600; text-align: right; word-break: break-all; }
 
-    .cover-center { text-align: center; }
-    .cover-center .brand { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-    .cover-center .tagline { color: #6b7280; margin-bottom: 24px; }
-    .cover-center .report-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
-    .cover-center .petition-title { font-size: 18px; margin-bottom: 16px; }
-    .cover-meta { color: #6b7280; font-size: 14px; margin-bottom: 16px; }
-    .cover-meta p + p { margin-top: 4px; }
-    .qr-wrap { display: flex; justify-content: center; margin: 16px 0; }
-    .qr-wrap img { width: 180px; height: 180px; }
-    .verify-link { font-size: 12px; color: #2563eb; word-break: break-all; }
+    .brand { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .tagline { color: #6b7280; margin-bottom: 32px; font-size: 16px; }
+    .report-title { font-size: 22px; font-weight: 700; margin-bottom: 16px; }
+    .petition-title { font-size: 18px; margin-bottom: 20px; max-width: 90%; }
+    .cover-meta { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+    .cover-meta p + p { margin-top: 6px; }
+    .qr-wrap { display: flex; justify-content: center; margin: 24px 0; }
+    .qr-wrap img { width: 200px; height: 200px; }
+    .verify-link { font-size: 11px; color: #2563eb; word-break: break-all; max-width: 90%; }
 
     .content-text {
       font-size: 16px;
@@ -245,28 +232,27 @@ export async function buildPetitionReportHtml(
   </style>
 </head>
 <body>
-  <!-- Page 1: Verify page header, legal notice, summary card -->
+  <!-- Page 1: QR cover -->
+  <div class="page cover-page">
+    <div class="brand">3arida.org</div>
+    <div class="tagline">منصة العرائض الرسمية للمغرب</div>
+    <div class="report-title">تقرير عريضة رسمي</div>
+    <div class="petition-title">${title}</div>
+    <div class="cover-meta">
+      <p>الرمز المرجعي للعريضة: ${referenceCode}</p>
+      <p>تاريخ الإنشاء: ${escapeHtml(formatPetitionLongDate(petition.createdAt))}</p>
+    </div>
+    <div class="qr-wrap">
+      <img src="${qrDataUrl}" alt="QR Code" width="200" height="200" />
+    </div>
+    <p style="color:#6b7280;font-size:14px;margin-bottom:12px">
+      امسح رمز QR للتحقق من صحة التقرير
+    </p>
+    <p class="verify-link">${verificationUrl}</p>
+  </div>
+
+  <!-- Page 2: Summary card -->
   <div class="page">
-    <div class="verify-header">
-      <h1>صفحة التحقق من تقرير العريضة</h1>
-      <p>
-        هذا التقرير صادر عن منصة
-        <span style="font-weight:600">3arida.org</span>
-      </p>
-      <p class="muted">
-        أنت الآن على صفحة التحقق الرسمية. البيانات المعروضة أدناه هي المرجع
-        المعتمد من المنصة — يُرجى قراءة الإشعار القانوني قبل المقارنة مع أي
-        نسخة ورقية.
-      </p>
-    </div>
-
-    <div class="legal-notice">
-      <p class="legal-notice-title">إشعار قانوني</p>
-      <ul>
-        ${REPORT_LEGAL_NOTICE_ITEMS.map((item) => `<li>${escapeHtml(item)}</li>`).join('\n        ')}
-      </ul>
-    </div>
-
     <div class="card">
       <div class="summary-card-title">3arida.org — تقرير عريضة رسمي</div>
       <div class="card-content">
@@ -290,35 +276,8 @@ export async function buildPetitionReportHtml(
     </div>
   </div>
 
-  <!-- Page 2+: Full report (PetitionReportFullView) -->
+  <!-- Page 3: Details -->
   <div class="page">
-    <div class="card-header" style="border:1px solid #e5e7eb;border-radius:8px;margin-bottom:24px">
-      <div class="card-title">التقرير الكامل</div>
-      <div class="card-description">
-        نفس أقسام تقرير PDF — التفاصيل، النص، الإحصائيات، والتحقق
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-content cover-center">
-        <div class="brand">3arida.org</div>
-        <div class="tagline">منصة العرائض الرسمية للمغرب</div>
-        <div class="report-title">تقرير عريضة رسمي</div>
-        <div class="petition-title">${title}</div>
-        <div class="cover-meta">
-          <p>الرمز المرجعي للعريضة: ${referenceCode}</p>
-          <p>تاريخ الإنشاء: ${escapeHtml(formatPetitionLongDate(petition.createdAt))}</p>
-        </div>
-        <div class="qr-wrap">
-          <img src="${qrDataUrl}" alt="QR Code" width="180" height="180" />
-        </div>
-        <p style="color:#6b7280;font-size:14px;margin-bottom:8px">
-          امسح رمز QR للتحقق من صحة التقرير
-        </p>
-        <p class="verify-link">${verificationUrl}</p>
-      </div>
-    </div>
-
     <div class="card">
       <div class="card-header"><div class="card-title">تفاصيل العريضة</div></div>
       <div class="card-content">
@@ -354,6 +313,7 @@ export async function buildPetitionReportHtml(
     </div>
   </div>
 
+  <!-- Page 4: Content -->
   <div class="page">
     <div class="card">
       <div class="card-header"><div class="card-title">محتوى العريضة</div></div>
@@ -362,7 +322,10 @@ export async function buildPetitionReportHtml(
         <div class="content-text">${description}</div>
       </div>
     </div>
+  </div>
 
+  <!-- Page 5: Statistics -->
+  <div class="page">
     <div class="card">
       <div class="card-header"><div class="card-title">الإحصائيات والتأثير</div></div>
       <div class="card-content">
@@ -394,6 +357,7 @@ export async function buildPetitionReportHtml(
     </div>
   </div>
 
+  <!-- Page 6: Verification -->
   <div class="page">
     <div class="card">
       <div class="card-header"><div class="card-title">التحقق والمعلومات</div></div>
