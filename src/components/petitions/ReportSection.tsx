@@ -13,6 +13,7 @@ import { Petition } from '@/types/petition';
 import { PricingTier } from '@/types/petition';
 import { ReportDownloadButton } from './ReportDownloadButton';
 import { ReportPaymentModal } from './ReportPaymentModal';
+import { ReportDownloadLimitModal } from './ReportDownloadLimitModal';
 import { PetitionUpgradeModal } from './PetitionUpgradeModal';
 import {
   Card,
@@ -31,6 +32,7 @@ interface ReportSectionProps {
 export function ReportSection({ petition, userId }: ReportSectionProps) {
   const router = useRouter();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
 
@@ -127,6 +129,7 @@ export function ReportSection({ petition, userId }: ReportSectionProps) {
                 userId={userId}
                 onUpgrade={() => setShowUpgradeModal(true)}
                 onPayment={() => setShowPaymentModal(true)}
+                onLimitChoice={() => setShowLimitModal(true)}
               />
             </div>
 
@@ -140,6 +143,19 @@ export function ReportSection({ petition, userId }: ReportSectionProps) {
       </Card>
 
       {/* Modals */}
+      <ReportDownloadLimitModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        onPay={() => {
+          setShowLimitModal(false);
+          setShowPaymentModal(true);
+        }}
+        onUpgrade={() => {
+          setShowLimitModal(false);
+          setShowUpgradeModal(true);
+        }}
+      />
+
       <ReportPaymentModal
         petition={petition}
         isOpen={showPaymentModal}

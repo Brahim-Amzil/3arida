@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { CreditCard, Check } from 'lucide-react';
 import { Petition } from '@/types/petition';
+import { getDownloadPrice } from '@/lib/report-access-control';
 import { Button } from '@/components/ui/button';
 
 interface ReportPaymentModalProps {
@@ -28,6 +29,7 @@ export function ReportPaymentModal({
   const t = useTranslations('report.paymentModal');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal' | null>(null);
+  const price = getDownloadPrice(petition);
 
   const handlePayment = async (method: 'stripe' | 'paypal') => {
     setIsProcessing(true);
@@ -79,7 +81,7 @@ export function ReportPaymentModal({
         <div className="space-y-6 py-4">
           {/* Price */}
           <div className="text-center">
-            <p className="text-3xl font-bold">19 MAD</p>
+            <p className="text-3xl font-bold">{price} MAD</p>
             <p className="text-sm text-muted-foreground">{t('price')}</p>
           </div>
 

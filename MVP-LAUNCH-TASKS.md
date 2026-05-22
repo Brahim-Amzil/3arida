@@ -139,6 +139,14 @@
   - [ ] Paid tier has full access to both buttons
   - [ ] Appeals count badge shows correctly
 
+- [ ] **Report PDF Download Limits** (§16 — [`docs/REPORT-DOWNLOAD-LIMITS-PLAN.md`](docs/REPORT-DOWNLOAD-LIMITS-PLAN.md))
+  - [ ] Paid tier: 10 free downloads per petition, then 10 MAD
+  - [ ] Free tier: 4 free downloads, then limit modal (19 MAD or upgrade)
+  - [ ] Verify page uses same quota (no public unlimited bypass)
+  - [ ] Badges show remaining free count
+  - [ ] **RPT-06** Stripe one-off payment for extra downloads (10 / 19 MAD)
+  - [ ] **RPT-09** Manual smoke on production/staging
+
 #### Mobile Testing
 
 - [ ] **Mobile Responsiveness** (15 min)

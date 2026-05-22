@@ -1,15 +1,14 @@
 /**
  * Report Access Control Service
  *
- * Manages access control for petition report generation based on:
- * - Beta mode status
- * - Petition pricing tier
- * - Download count
- * - User permissions
+ * Per-petition download quotas:
+ * - Paid tier: 10 free downloads, then 10 MAD each
+ * - Free tier: 4 free downloads, then 19 MAD or upgrade
+ *
+ * Launch/beta mode (BETA100) applies to checkout only — not unlimited PDFs.
  */
 
-import { Petition, PricingTier } from '../types/petition';
-import { isLaunchMode } from './feature-flags';
+import { Petition } from '../types/petition';
 
 // ============================================================================
 // TYPES
@@ -25,8 +24,35 @@ export interface AccessDecision {
 // CONSTANTS
 // ============================================================================
 
-const FREE_DOWNLOADS_PER_TIER = 2;
-const PAID_DOWNLOAD_PRICE_MAD = 19;
+export const FREE_TIER_FREE_DOWNLOADS = 4;
+export const PAID_TIER_FREE_DOWNLOADS = 10;
+export const FREE_EXTRA_DOWNLOAD_PRICE_MAD = 19;
+export const PAID_EXTRA_DOWNLOAD_PRICE_MAD = 10;
+
+/** @deprecated Use tier-specific constants */
+export const FREE_DOWNLOADS_PER_TIER = PAID_TIER_FREE_DOWNLOADS;
+/** @deprecated Use tier-specific constants */
+export const PAID_DOWNLOAD_PRICE_MAD = PAID_EXTRA_DOWNLOAD_PRICE_MAD;
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+export function isPaidPetitionTier(petition: Petition): boolean {
+  return petition.pricingTier !== 'free';
+}
+
+export function getFreeDownloadAllowance(petition: Petition): number {
+  return isPaidPetitionTier(petition)
+    ? PAID_TIER_FREE_DOWNLOADS
+    : FREE_TIER_FREE_DOWNLOADS;
+}
+
+export function getExtraDownloadPrice(petition: Petition): number {
+  return isPaidPetitionTier(petition)
+    ? PAID_EXTRA_DOWNLOAD_PRICE_MAD
+    : FREE_EXTRA_DOWNLOAD_PRICE_MAD;
+}
 
 // ============================================================================
 // ACCESS CONTROL FUNCTIONS
@@ -39,7 +65,6 @@ export function canGenerateReport(
   petition: Petition,
   userId: string,
 ): AccessDecision {
-  // Check if user owns the petition
   if (petition.creatorId !== userId) {
     return {
       allowed: false,
@@ -47,67 +72,30 @@ export function canGenerateReport(
     };
   }
 
-  // During MVP launch (BETA100 checkout), report downloads are free for all tiers
-  if (isLaunchMode()) {
-    return {
-      allowed: true,
-    };
-  }
-
-  // Check tier restrictions (post-beta)
-  if (petition.pricingTier === 'free') {
-    return {
-      allowed: false,
-      reason: 'UPGRADE_REQUIRED',
-      requiresUpgrade: true,
-    };
-  }
-
-  // Paid tiers can generate reports
-  return {
-    allowed: true,
-  };
+  return { allowed: true };
 }
 
 /**
  * Determines if payment is required for the next download
  */
 export function requiresPayment(petition: Petition): boolean {
-  // During launch, no per-download payment
-  if (isLaunchMode()) {
-    return false;
-  }
-
-  // Free tier cannot download (should upgrade first)
-  if (petition.pricingTier === 'free') {
-    return false; // Not applicable - they can't download at all
-  }
-
-  // Check download count
   const downloadCount = petition.reportDownloads || 0;
+  return downloadCount >= getFreeDownloadAllowance(petition);
+}
 
-  // First 2 downloads are free for paid tiers
-  return downloadCount >= FREE_DOWNLOADS_PER_TIER;
+/**
+ * Free tier at quota: user chooses pay 19 MAD or upgrade
+ */
+export function isFreeTierLimitChoice(petition: Petition): boolean {
+  return petition.pricingTier === 'free' && requiresPayment(petition);
 }
 
 /**
  * Calculates remaining free downloads
  */
 export function getRemainingFreeDownloads(petition: Petition): number {
-  // During launch, unlimited downloads
-  if (isLaunchMode()) {
-    return Infinity;
-  }
-
-  // Free tier has no free downloads (must upgrade)
-  if (petition.pricingTier === 'free') {
-    return 0;
-  }
-
-  // Calculate remaining for paid tiers
   const downloadCount = petition.reportDownloads || 0;
-  const remaining = FREE_DOWNLOADS_PER_TIER - downloadCount;
-
+  const remaining = getFreeDownloadAllowance(petition) - downloadCount;
   return Math.max(0, remaining);
 }
 
@@ -115,10 +103,10 @@ export function getRemainingFreeDownloads(petition: Petition): number {
  * Gets the price for the next download
  */
 export function getDownloadPrice(petition: Petition): number {
-  if (requiresPayment(petition)) {
-    return PAID_DOWNLOAD_PRICE_MAD;
+  if (!requiresPayment(petition)) {
+    return 0;
   }
-  return 0;
+  return getExtraDownloadPrice(petition);
 }
 
 /**
@@ -126,32 +114,12 @@ export function getDownloadPrice(petition: Petition): number {
  */
 export function getButtonState(petition: Petition): {
   disabled: boolean;
-  badge: 'free' | 'beta' | 'paid' | 'locked';
+  badge: 'free' | 'paid' | 'locked' | 'choice';
   badgeText: string;
-  onClick: 'generate' | 'upgrade' | 'payment';
+  onClick: 'generate' | 'upgrade' | 'payment' | 'limit_choice';
 } {
-  // MVP launch — BETA100 checkout, free report downloads
-  if (isLaunchMode()) {
-    return {
-      disabled: false,
-      badge: 'beta',
-      badgeText: 'مجاني - الإطلاق',
-      onClick: 'generate',
-    };
-  }
-
-  // Free tier (post-beta)
-  if (petition.pricingTier === 'free') {
-    return {
-      disabled: true,
-      badge: 'locked',
-      badgeText: 'يجب الترقية',
-      onClick: 'upgrade',
-    };
-  }
-
-  // Paid tier with free downloads remaining
   const remaining = getRemainingFreeDownloads(petition);
+
   if (remaining > 0) {
     return {
       disabled: false,
@@ -161,11 +129,19 @@ export function getButtonState(petition: Petition): {
     };
   }
 
-  // Paid tier, payment required
+  if (petition.pricingTier === 'free') {
+    return {
+      disabled: false,
+      badge: 'choice',
+      badgeText: `${FREE_EXTRA_DOWNLOAD_PRICE_MAD} درهم أو ترقية`,
+      onClick: 'limit_choice',
+    };
+  }
+
   return {
     disabled: false,
     badge: 'paid',
-    badgeText: `${PAID_DOWNLOAD_PRICE_MAD} درهم`,
+    badgeText: `${PAID_EXTRA_DOWNLOAD_PRICE_MAD} درهم`,
     onClick: 'payment',
   };
 }
@@ -177,9 +153,17 @@ export function getButtonState(petition: Petition): {
 export const ReportAccessControl = {
   canGenerateReport,
   requiresPayment,
+  isFreeTierLimitChoice,
   getRemainingFreeDownloads,
   getDownloadPrice,
   getButtonState,
+  isPaidPetitionTier,
+  getFreeDownloadAllowance,
+  getExtraDownloadPrice,
+  FREE_TIER_FREE_DOWNLOADS,
+  PAID_TIER_FREE_DOWNLOADS,
+  FREE_EXTRA_DOWNLOAD_PRICE_MAD,
+  PAID_EXTRA_DOWNLOAD_PRICE_MAD,
   FREE_DOWNLOADS_PER_TIER,
   PAID_DOWNLOAD_PRICE_MAD,
 } as const;

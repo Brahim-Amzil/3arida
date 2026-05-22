@@ -246,11 +246,29 @@ Policy matrix (what each payer receives):
 
 ---
 
+## 16) Report PDF download limits (anti-abuse)
+
+Policy doc: [`docs/REPORT-DOWNLOAD-LIMITS-PLAN.md`](docs/REPORT-DOWNLOAD-LIMITS-PLAN.md)
+
+| ID | Task | Priority | Status | Notes |
+|---|---|---|---|---|
+| RPT-01 | Update report access control: 10 free (paid) / 4 free (free tier); 10 / 19 MAD extras | P0 | Done | `src/lib/report-access-control.ts` |
+| RPT-02 | Remove unlimited PDF bypass tied to launch/beta mode | P0 | Done | BETA100 applies to checkout only, not PDF quota |
+| RPT-03 | Free-tier exhausted modal: pay 19 MAD **or** upgrade with perks | P0 | Done | `ReportDownloadLimitModal` |
+| RPT-04 | Wire limit modal + badges in download button and card/verify flows | P0 | Done | Dashboard, petition card, verify page (creator) |
+| RPT-05 | Enforce quotas on all PDF APIs (generate, download, verify) | P0 | Done | Same `reportDownloads` counter everywhere |
+| RPT-06 | Stripe one-off payment for extra report download (10 / 19 MAD) | P0 | Pending | Replace payment modal stub; webhook records `paymentId` |
+| RPT-07 | Arabic copy for quotas, badges, and modals | P1 | Done | Per-petition wording in UI |
+| RPT-08 | Unit tests for report access control quotas | P1 | Done | `src/lib/__tests__/report-access-control.test.ts` |
+| RPT-09 | Manual smoke: quotas + modal + verify page | P0 | Pending | Tie to **G-03** §13 |
+
+---
+
 ## Progress Summary
 
-- Total tasks (§0–§15 rows): 97
-- Done: 92
-- Remaining (Pending or In Progress): 5 — **G-01**, **G-03** (petition journeys + E-08), **G-04**, **T-06** (PayPal), **E-08**
+- Total tasks (§0–§16 rows): 106
+- Done: 98
+- Remaining (Pending or In Progress): 8 — **G-01**, **G-03**, **G-04**, **T-06**, **E-08**, **RPT-06**, **RPT-09**
 
 ---
 
@@ -368,4 +386,6 @@ Policy matrix (what each payer receives):
 | 2026-05-20 | EV-10 | N/A | Done | Welcome email URL/button fixes (`1dd6b7e`); branding subject (`61e22ed`) |
 | 2026-05-20 | E-04 / E-05 | Done | Done | Paid create/upgrade Stripe receipts deployed on `main` (`1735495`) |
 | 2026-05-20 | G-03 | In Progress | In Progress | Auth email/password journey verified prod; §13 rows 3–4 + **E-08** still open |
+| 2026-05-22 | RPT-01–RPT-09 | N/A | Pending | Added §16 report PDF download limits plan — [`docs/REPORT-DOWNLOAD-LIMITS-PLAN.md`](docs/REPORT-DOWNLOAD-LIMITS-PLAN.md); execution started |
+| 2026-05-22 | RPT-01–RPT-05, RPT-07–RPT-08 | In Progress / Pending | Done | Quotas, limit modal, verify API enforcement, Arabic copy, unit tests |
 

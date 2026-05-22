@@ -4,14 +4,13 @@
  * Report Download Button Component
  *
  * Displays a button to download petition reports with:
- * - Different states based on tier and download count
- * - Badge showing free/paid/beta status
- * - Handles upgrade modal and payment modal
- * - Loading animation during generation
+ * - Tier-based free download quotas
+ * - Badge showing remaining free / paid price
+ * - Limit-choice modal (free tier) or payment modal (paid tier)
  */
 
 import { useState } from 'react';
-import { Download, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { Download, Loader2, AlertCircle } from 'lucide-react';
 import { Petition } from '@/types/petition';
 import { getButtonState } from '@/lib/report-access-control';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,7 @@ interface ReportDownloadButtonProps {
   userId: string;
   onUpgrade?: () => void;
   onPayment?: () => void;
+  onLimitChoice?: () => void;
 }
 
 export function ReportDownloadButton({
@@ -29,6 +29,7 @@ export function ReportDownloadButton({
   userId,
   onUpgrade,
   onPayment,
+  onLimitChoice,
 }: ReportDownloadButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState('');
@@ -37,12 +38,10 @@ export function ReportDownloadButton({
   const buttonState = getButtonState(petition);
 
   const handleClick = async () => {
-    // Clear any previous error
     setError('');
 
-    if (buttonState.onClick === 'upgrade') {
-      // Show inline error message instead of modal
-      setError('تحميل التقارير غير متاح للعرائض المجانية');
+    if (buttonState.onClick === 'limit_choice') {
+      onLimitChoice?.();
       return;
     }
 
@@ -51,12 +50,15 @@ export function ReportDownloadButton({
       return;
     }
 
-    // Generate and download
+    if (buttonState.onClick === 'upgrade') {
+      onUpgrade?.();
+      return;
+    }
+
     setIsGenerating(true);
     setProgress('جاري إنشاء التقرير...');
 
     try {
-      // Call generate API
       const response = await fetch(
         `/api/petitions/${petition.referenceCode || petition.id}/report/generate`,
         {
@@ -72,19 +74,22 @@ export function ReportDownloadButton({
 
       if (!data.success) {
         if (data.requiresPayment) {
-          onPayment?.();
+          if (petition.pricingTier === 'free') {
+            onLimitChoice?.();
+          } else {
+            onPayment?.();
+          }
           return;
         }
 
         if (data.requiresUpgrade) {
-          setError('تحميل التقارير غير متاح للعرائض المجانية');
+          onUpgrade?.();
           return;
         }
 
         throw new Error(data.error?.message || 'فشل إنشاء التقرير');
       }
 
-      // Download the report
       setProgress('جاري تحميل التقرير...');
       const downloadResponse = await fetch(data.downloadUrl, {
         headers: {
@@ -93,10 +98,18 @@ export function ReportDownloadButton({
       });
 
       if (!downloadResponse.ok) {
-        throw new Error('فشل تحميل التقرير');
+        const errData = await downloadResponse.json().catch(() => null);
+        if (errData?.requiresPayment) {
+          if (petition.pricingTier === 'free') {
+            onLimitChoice?.();
+          } else {
+            onPayment?.();
+          }
+          return;
+        }
+        throw new Error(errData?.error?.message || 'فشل تحميل التقرير');
       }
 
-      // Create blob and download
       setProgress('جاري حفظ الملف...');
       const blob = await downloadResponse.blob();
       const url = window.URL.createObjectURL(blob);
@@ -110,11 +123,11 @@ export function ReportDownloadButton({
 
       setProgress('تم التحميل بنجاح!');
       setTimeout(() => setProgress(''), 2000);
-    } catch (error) {
-      console.error('Error downloading report:', error);
+    } catch (err) {
+      console.error('Error downloading report:', err);
       setError(
         'فشل إنشاء التقرير: ' +
-          (error instanceof Error ? error.message : 'خطأ في الشبكة'),
+          (err instanceof Error ? err.message : 'خطأ في الشبكة'),
       );
       setProgress('');
     } finally {
@@ -128,10 +141,11 @@ export function ReportDownloadButton({
   const getBadgeVariant = () => {
     switch (buttonState.badge) {
       case 'free':
-      case 'beta':
         return 'default';
       case 'paid':
         return 'secondary';
+      case 'choice':
+        return 'outline';
       case 'locked':
         return 'destructive';
       default:
@@ -143,15 +157,13 @@ export function ReportDownloadButton({
     <div className="space-y-2">
       <Button
         onClick={handleClick}
-        disabled={isGenerating}
+        disabled={isGenerating || buttonState.disabled}
         variant={buttonState.disabled ? 'outline' : 'default'}
         className="gap-2 w-full"
         size="sm"
       >
         {isGenerating ? (
           <Loader2 className="h-4 w-4 animate-spin" />
-        ) : buttonState.disabled ? (
-          <Lock className="h-4 w-4" />
         ) : (
           <Download className="h-4 w-4" />
         )}
@@ -161,30 +173,13 @@ export function ReportDownloadButton({
         </Badge>
       </Button>
 
-      {/* Error message with upgrade button */}
       {error && (
         <div className="flex items-start gap-2 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md">
           <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-          <div className="flex-1 flex items-center justify-between gap-3">
-            <span>{error}</span>
-            {buttonState.onClick === 'upgrade' && onUpgrade && (
-              <Button
-                onClick={() => {
-                  setError('');
-                  onUpgrade();
-                }}
-                size="sm"
-                variant="destructive"
-                className="flex-shrink-0"
-              >
-                يجب الترقية
-              </Button>
-            )}
-          </div>
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Progress indicator */}
       {isGenerating && progress && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
           <Loader2 className="h-3 w-3 animate-spin" />

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import '@/lib/firebase-admin';
 import { adminDb } from '@/lib/firebase-admin';
-import { isLaunchMode } from '@/lib/feature-flags';
 import { evaluateReportDownloadAccess } from '@/lib/report-download-access-server';
 import { recordDownload } from '@/lib/report-download-tracker';
 import { generatePetitionPdfBuffer } from '@/lib/generate-petition-pdf-server';
@@ -37,9 +36,7 @@ function pdfResponse(pdfBuffer: Buffer, referenceCode: string) {
 }
 
 /**
- * Verify-page PDF download.
- * Launch mode (BETA100): public download for approved petitions.
- * Post-launch: creator auth + billing rules apply.
+ * Verify-page PDF download — creator auth + same per-petition quotas as dashboard.
  */
 export async function GET(
   request: NextRequest,
@@ -55,12 +52,6 @@ export async function GET(
     }
 
     const referenceCode = petition.referenceCode || params.petitionId;
-
-    if (isLaunchMode()) {
-      const pdfBuffer = await generatePetitionPdfBuffer(params.petitionId);
-      return pdfResponse(pdfBuffer, referenceCode);
-    }
-
     const userId = request.headers.get('x-user-id');
     const paymentId = request.nextUrl.searchParams.get('paymentId');
 

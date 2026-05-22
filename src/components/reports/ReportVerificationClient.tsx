@@ -11,7 +11,6 @@ import {
   Target,
   ChevronDown,
   ChevronUp,
-  Download,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,13 +20,13 @@ import { PetitionReportFullView } from '@/components/reports/PetitionReportFullV
 import { ReportLegalNotice } from '@/components/reports/ReportLegalNotice';
 import { ReportDownloadButton } from '@/components/petitions/ReportDownloadButton';
 import { ReportPaymentModal } from '@/components/petitions/ReportPaymentModal';
+import { ReportDownloadLimitModal } from '@/components/petitions/ReportDownloadLimitModal';
 import { PetitionUpgradeModal } from '@/components/petitions/PetitionUpgradeModal';
 import type { ReportVerificationData } from '@/lib/report-verification-server';
 import { formatReportDate } from '@/lib/report-verification-dates';
 import { formatSignatureProgressPercent } from '@/lib/petition-report-metrics';
 import { formatPetitionNumber } from '@/lib/petition-report-formatters';
 import { translateValue } from '@/lib/pdf-translations';
-import { isLaunchMode } from '@/lib/feature-flags';
 import type { Petition, PricingTier } from '@/types/petition';
 
 interface ReportVerificationClientProps {
@@ -67,6 +66,7 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
   const [showFullReport, setShowFullReport] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
 
   if (!data.valid) {
     return (
@@ -96,7 +96,6 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
     Boolean(user?.uid) &&
     Boolean(petition.creatorId) &&
     user?.uid === petition.creatorId;
-  const launchMode = isLaunchMode();
   const petitionForDownload = snapshotToPetition(petition);
 
   const handleTierSelect = async (
@@ -238,21 +237,14 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
                 </>
               )}
             </Button>
-            {launchMode && petition.status === 'approved' && (
-              <Button asChild size="lg" variant="secondary" className="gap-2">
-                <a href={urls.pdfDownload} download>
-                  <Download className="h-4 w-4" />
-                  تحميل التقرير الكامل (PDF)
-                </a>
-              </Button>
-            )}
-            {!launchMode && isCreator && user && petition.status === 'approved' && (
+            {isCreator && user && petition.status === 'approved' && (
               <div className="w-full sm:w-auto sm:min-w-[240px]">
                 <ReportDownloadButton
                   petition={petitionForDownload}
                   userId={user.uid}
                   onUpgrade={() => setShowUpgradeModal(true)}
                   onPayment={() => setShowPaymentModal(true)}
+                  onLimitChoice={() => setShowLimitModal(true)}
                 />
               </div>
             )}
@@ -285,6 +277,19 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
         منصة <span className="font-semibold">3arida.org</span> — منصة العرائض
         الرسمية في المغرب
       </p>
+
+      <ReportDownloadLimitModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        onPay={() => {
+          setShowLimitModal(false);
+          setShowPaymentModal(true);
+        }}
+        onUpgrade={() => {
+          setShowLimitModal(false);
+          setShowUpgradeModal(true);
+        }}
+      />
 
       <ReportPaymentModal
         petition={petitionForDownload}
