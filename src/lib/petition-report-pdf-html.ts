@@ -1,18 +1,39 @@
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { getPublicAppUrl } from '@/lib/app-url';
+import { escapeHtml } from '@/lib/escape-html';
 import { getSignatureProgressPercent } from '@/lib/petition-report-metrics';
+import { getPetitionReportFontFaceCss } from '@/lib/petition-report-pdf-fonts';
 import { translateValue } from '@/lib/pdf-translations';
+import { generateReportQRCode } from '@/lib/report-qr-generator';
+import { REPORT_PDF_LEGAL_NOTICE_ITEMS } from '@/lib/report-legal-notice-items';
 import type { Petition } from '@/types/petition';
 
-function petitionDate(value: Petition['createdAt']): Date {
+function petitionDate(value: Petition['createdAt'] | Petition['approvedAt']): Date {
+  if (!value) return new Date();
   return value instanceof Date ? value : new Date(value);
 }
 
-export function buildPetitionReportHtml(petition: Petition): string {
+function formatReportDate(date: Date): string {
+  if (Number.isNaN(date.getTime())) return '—';
+  return format(date, 'dd MMMM yyyy', { locale: ar });
+}
+
+function formatReportDateTime(date: Date): string {
+  if (Number.isNaN(date.getTime())) return '—';
+  return format(date, 'dd MMMM yyyy، HH:mm', { locale: ar });
+}
+
+export async function buildPetitionReportHtml(petition: Petition): Promise<string> {
   const appUrl = getPublicAppUrl();
   const verificationUrl = `${appUrl}/reports/verify/${petition.id}`;
   const petitionUrl = `${appUrl}/petitions/${petition.id}`;
+  const qrDataUrl = await generateReportQRCode(petition.id);
+  const fontFaceCss = getPetitionReportFontFaceCss();
+  const title = escapeHtml(petition.title);
+  const description = escapeHtml(petition.description || '');
+  const referenceCode = escapeHtml(petition.referenceCode || petition.id);
+  const creatorName = escapeHtml(petition.creatorName || petition.publisherName || '—');
   const downloadNumber = (petition.reportDownloads || 0) + 1;
   const createdAt = petitionDate(petition.createdAt);
   const daysRunning = Math.ceil(
@@ -31,7 +52,7 @@ export function buildPetitionReportHtml(petition: Petition): string {
     ? `
         <div class="flex justify-between p-3 border">
           <span class="font-semibold">تاريخ الموافقة:</span>
-          <span>${format(petitionDate(petition.approvedAt), 'dd MMMM yyyy', { locale: ar })}</span>
+          <span>${formatReportDate(petitionDate(petition.approvedAt))}</span>
         </div>
         `
     : '';
@@ -40,31 +61,9 @@ export function buildPetitionReportHtml(petition: Petition): string {
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <title>تقرير عريضة - ${petition.title}</title>
+  <title>تقرير عريضة - ${title}</title>
   <style>
-    @font-face {
-      font-family: 'Cairo';
-      src: url('${appUrl}/fonts/Cairo-Regular.ttf') format('truetype');
-      font-weight: 400;
-      font-style: normal;
-      font-display: block;
-    }
-    
-    @font-face {
-      font-family: 'Cairo';
-      src: url('${appUrl}/fonts/Cairo-SemiBold.ttf') format('truetype');
-      font-weight: 600;
-      font-style: normal;
-      font-display: block;
-    }
-    
-    @font-face {
-      font-family: 'Cairo';
-      src: url('${appUrl}/fonts/Cairo-Bold.ttf') format('truetype');
-      font-weight: 700;
-      font-style: normal;
-      font-display: block;
-    }
+    ${fontFaceCss}
     
     * { 
       margin: 0; 
@@ -145,17 +144,17 @@ export function buildPetitionReportHtml(petition: Petition): string {
     </div>
     <div class="text-center mb-8">
       <div class="text-2xl font-bold mb-4">تقرير عريضة رسمي</div>
-      <div class="text-xl mb-2">${petition.title}</div>
+      <div class="text-xl mb-2">${title}</div>
     </div>
     <div class="text-center mb-8">
-      <div class="text-sm text-gray-600 mb-2">الرمز المرجعي للعريضة: ${petition.referenceCode}</div>
+      <div class="text-sm text-gray-600 mb-2">الرمز المرجعي للعريضة: ${referenceCode}</div>
       <div class="text-sm text-gray-600">
-        تاريخ الإنشاء: ${format(createdAt, 'dd MMMM yyyy', { locale: ar })}
+        تاريخ الإنشاء: ${formatReportDate(createdAt)}
       </div>
     </div>
     <div class="flex justify-center mb-8">
       <img 
-        src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verificationUrl)}"
+        src="${qrDataUrl}"
         alt="QR Code"
         width="200"
         height="200"
@@ -177,27 +176,27 @@ export function buildPetitionReportHtml(petition: Petition): string {
     <div class="mb-6">
       <h3 class="text-lg font-semibold mb-4">المعلومات الأساسية</h3>
       <div class="grid grid-cols-2 gap-4 text-sm">
-        <div><div class="font-semibold mb-2">العنوان:</div><div class="text-gray-700">${petition.title}</div></div>
-        <div><div class="font-semibold mb-2">نوع العريضة:</div><div class="text-gray-700">${translateValue(petition.petitionType, 'petitionType')}</div></div>
-        <div><div class="font-semibold mb-2">الفئة:</div><div class="text-gray-700">${translateValue(petition.category, 'category')}</div></div>
-        <div><div class="font-semibold mb-2">الفئة الفرعية:</div><div class="text-gray-700">${translateValue(petition.subcategory, 'subcategory')}</div></div>
-        <div><div class="font-semibold mb-2">موجهة إلى:</div><div class="text-gray-700">${translateValue(petition.addressedToType, 'addressedToType')}</div></div>
-        <div><div class="font-semibold mb-2">الرمز المرجعي للعريضة:</div><div class="text-gray-700">${petition.referenceCode}</div></div>
+        <div><div class="font-semibold mb-2">العنوان:</div><div class="text-gray-700">${title}</div></div>
+        <div><div class="font-semibold mb-2">نوع العريضة:</div><div class="text-gray-700">${escapeHtml(translateValue(petition.petitionType, 'petitionType'))}</div></div>
+        <div><div class="font-semibold mb-2">الفئة:</div><div class="text-gray-700">${escapeHtml(translateValue(petition.category, 'category'))}</div></div>
+        <div><div class="font-semibold mb-2">الفئة الفرعية:</div><div class="text-gray-700">${escapeHtml(translateValue(petition.subcategory, 'subcategory'))}</div></div>
+        <div><div class="font-semibold mb-2">موجهة إلى:</div><div class="text-gray-700">${escapeHtml(translateValue(petition.addressedToType, 'addressedToType'))}</div></div>
+        <div><div class="font-semibold mb-2">الرمز المرجعي للعريضة:</div><div class="text-gray-700">${referenceCode}</div></div>
       </div>
     </div>
     <div class="mb-6">
       <h3 class="text-lg font-semibold mb-4">معلومات الناشر</h3>
       <div class="grid grid-cols-2 gap-4 text-sm">
-        <div><div class="font-semibold mb-2">نوع الناشر:</div><div class="text-gray-700">${translateValue(petition.publisherType, 'publisherType')}</div></div>
-        <div><div class="font-semibold mb-2">اسم الناشر:</div><div class="text-gray-700">${petition.creatorName || ''}</div></div>
-        <div><div class="font-semibold mb-2">تاريخ الإنشاء:</div><div class="text-gray-700">${format(createdAt, 'dd MMMM yyyy', { locale: ar })}</div></div>
-        <div><div class="font-semibold mb-2">الحالة:</div><div class="text-gray-700">${translateValue(petition.status, 'status')}</div></div>
+        <div><div class="font-semibold mb-2">نوع الناشر:</div><div class="text-gray-700">${escapeHtml(translateValue(petition.publisherType, 'publisherType'))}</div></div>
+        <div><div class="font-semibold mb-2">اسم الناشر:</div><div class="text-gray-700">${creatorName}</div></div>
+        <div><div class="font-semibold mb-2">تاريخ الإنشاء:</div><div class="text-gray-700">${formatReportDate(createdAt)}</div></div>
+        <div><div class="font-semibold mb-2">الحالة:</div><div class="text-gray-700">${escapeHtml(translateValue(petition.status, 'status'))}</div></div>
       </div>
     </div>
     <div class="mb-6">
       <h3 class="text-lg font-semibold mb-4">معلومات الباقة</h3>
       <div class="grid grid-cols-2 gap-4 text-sm">
-        <div><div class="font-semibold mb-2">الباقة:</div><div class="text-gray-700">${translateValue(petition.pricingTier, 'pricingTier')}</div></div>
+        <div><div class="font-semibold mb-2">الباقة:</div><div class="text-gray-700">${escapeHtml(translateValue(petition.pricingTier, 'pricingTier'))}</div></div>
         <div><div class="font-semibold mb-2">الهدف:</div><div class="text-gray-700">${petition.targetSignatures} توقيع</div></div>
       </div>
     </div>
@@ -212,7 +211,7 @@ export function buildPetitionReportHtml(petition: Petition): string {
     <h2 class="text-2xl font-bold mb-6 border-b pb-4">محتوى العريضة</h2>
     <div class="mb-6">
       <h3 class="text-lg font-semibold mb-4">نص العريضة</h3>
-      <div class="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">${petition.description}</div>
+      <div class="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">${description}</div>
     </div>
   </div>
 
@@ -252,7 +251,7 @@ export function buildPetitionReportHtml(petition: Petition): string {
       <div class="text-sm space-y-2">
         <div class="flex justify-between p-3 border">
           <span class="font-semibold">تاريخ الإنشاء:</span>
-          <span>${format(createdAt, 'dd MMMM yyyy', { locale: ar })}</span>
+          <span>${formatReportDate(createdAt)}</span>
         </div>
         ${approvedAtHtml}
         <div class="flex justify-between p-3 border">
@@ -271,11 +270,11 @@ export function buildPetitionReportHtml(petition: Petition): string {
       <div class="text-sm space-y-2">
         <div class="flex justify-between p-3 border">
           <span class="font-semibold">تاريخ إنشاء التقرير:</span>
-          <span>${format(new Date(), 'dd MMMM yyyy - HH:mm', { locale: ar })}</span>
+          <span>${formatReportDateTime(new Date())}</span>
         </div>
         <div class="flex justify-between p-3 border">
           <span class="font-semibold">تم الإنشاء بواسطة:</span>
-          <span>${petition.creatorName || ''}</span>
+          <span>${creatorName}</span>
         </div>
         <div class="flex justify-between p-3 border">
           <span class="font-semibold">رقم التحميل:</span>
@@ -301,11 +300,7 @@ export function buildPetitionReportHtml(petition: Petition): string {
     <div class="mt-8 p-4 border" style="background:rgb(247, 170, 185)">
       <h3 class="text-base font-semibold mb-3">إشعار قانوني</h3>
       <div style="font-size: 11px" class="text-gray-700 space-y-2">
-        <div>• أنتم الآن على صفحة التحقق من التقرير المُسلَّم إليكم في نُسخته الورقية.</div>
-        <div>• جميع التوقيعات في العريضة تم التحقق من صحتها.</div>
-        <div>• امسح رمز QR للتحقق من هذا التقرير عبر الإنترنت</div>
-        <div>• أي تعديل على هذا التقرير يعتبر تزويراً</div>
-        <div>•أي إختلاف بين بيانات العريضة هنا على صفحة التحقق و النُّسخَة الورقية المُسلَّمة إليكم يُعتبر تحريفاً يتحمل مسؤوليته القانونية مُنشئُ العريضة.</div>
+        ${REPORT_PDF_LEGAL_NOTICE_ITEMS.map((item) => `<div>• ${escapeHtml(item)}</div>`).join('\n        ')}
       </div>
     </div>
   </div>

@@ -15,7 +15,7 @@ export async function GET(
     return new NextResponse('Petition not found', { status: 404 });
   }
 
-  const html = buildPetitionReportHtml(petition);
+  const html = await buildPetitionReportHtml(petition);
 
   return new NextResponse(html, {
     headers: {

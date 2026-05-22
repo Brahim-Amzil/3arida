@@ -49,6 +49,7 @@ export const subcategoryTranslations: Record<string, string> = {
   'Clinics': 'العيادات',
   'Pollution': 'التلوث',
   'Green Spaces': 'المساحات الخضراء',
+  'Cultural Heritage': 'التراث الثقافي',
   'Other': 'أخرى',
 };
 
@@ -83,8 +84,10 @@ export const statusTranslations: Record<string, string> = {
 
 export const pricingTierTranslations: Record<string, string> = {
   'free': 'مجاني',
+  'basic': 'أساسي',
   'starter': 'المبتدئ',
   'pro': 'محترف',
+  'premium': 'مميز',
   'advanced': 'متقدم',
   'enterprise': 'مؤسسي',
 };

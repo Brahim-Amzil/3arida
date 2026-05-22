@@ -10,7 +10,7 @@ export async function generatePetitionPdfBuffer(
     throw new Error('Petition not found');
   }
 
-  const html = buildPetitionReportHtml(petition);
+  const html = await buildPetitionReportHtml(petition);
 
   const browser = await launchPuppeteerBrowser();
 
@@ -28,7 +28,12 @@ export async function generatePetitionPdfBuffer(
     });
 
     await page.evaluate(() => document.fonts.ready);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await page.evaluate(async () => {
+      await document.fonts.load('400 16px Cairo');
+      await document.fonts.load('600 16px Cairo');
+      await document.fonts.load('700 16px Cairo');
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
