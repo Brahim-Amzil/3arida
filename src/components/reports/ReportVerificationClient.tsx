@@ -11,6 +11,7 @@ import {
   Target,
   ChevronDown,
   ChevronUp,
+  Download,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,7 @@ import { formatReportDate } from '@/lib/report-verification-dates';
 import { formatSignatureProgressPercent } from '@/lib/petition-report-metrics';
 import { formatPetitionNumber } from '@/lib/petition-report-formatters';
 import { translateValue } from '@/lib/pdf-translations';
+import { isLaunchMode } from '@/lib/feature-flags';
 import type { Petition, PricingTier } from '@/types/petition';
 
 interface ReportVerificationClientProps {
@@ -94,6 +96,7 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
     Boolean(user?.uid) &&
     Boolean(petition.creatorId) &&
     user?.uid === petition.creatorId;
+  const launchMode = isLaunchMode();
   const petitionForDownload = snapshotToPetition(petition);
 
   const handleTierSelect = async (
@@ -235,7 +238,15 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
                 </>
               )}
             </Button>
-            {isCreator && user && petition.status === 'approved' && (
+            {launchMode && petition.status === 'approved' && (
+              <Button asChild size="lg" variant="secondary" className="gap-2">
+                <a href={urls.pdfDownload} download>
+                  <Download className="h-4 w-4" />
+                  تحميل التقرير الكامل (PDF)
+                </a>
+              </Button>
+            )}
+            {!launchMode && isCreator && user && petition.status === 'approved' && (
               <div className="w-full sm:w-auto sm:min-w-[240px]">
                 <ReportDownloadButton
                   petition={petitionForDownload}

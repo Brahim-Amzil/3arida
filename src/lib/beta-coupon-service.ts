@@ -9,6 +9,9 @@
 
 import { adminDb } from './firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
+import { isBetaMode } from '@/lib/feature-flags';
+
+export { isBetaMode };
 
 // ============================================================================
 // TYPES
@@ -37,19 +40,6 @@ const BETA_DISCOUNT_PERCENT = 100;
 // ============================================================================
 // BETA MODE CHECK
 // ============================================================================
-
-/**
- * Check if the application is in beta mode
- *
- * Beta mode is determined by the NEXT_PUBLIC_BETA_MODE environment variable
- * During beta, all upgrades are free (100% discount auto-applied)
- *
- * @returns True if in beta mode
- */
-export function isBetaMode(): boolean {
-  const betaMode = process.env.NEXT_PUBLIC_BETA_MODE;
-  return betaMode === 'true' || betaMode === '1';
-}
 
 /**
  * Check if coupon should be applied for an upgrade

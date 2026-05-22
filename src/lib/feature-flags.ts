@@ -19,19 +19,22 @@
  * Master switch: When true, all paid features become free
  * When false, normal tier restrictions apply
  */
-const IS_MVP_MODE =
-  typeof window !== 'undefined'
-    ? ((window as any).__NEXT_DATA__?.props?.pageProps?.mvpMode ?? false)
-    : process.env.NEXT_PUBLIC_MVP_MODE === 'true';
+const IS_MVP_MODE = process.env.NEXT_PUBLIC_MVP_MODE === 'true';
 
 /**
- * Beta mode for report feature: When true, unlimited free report downloads
+ * Beta / launch mode: BETA100 coupon at checkout, unlimited report downloads
  * When false, normal tier restrictions apply (2 free, then 19 MAD)
  */
 const IS_BETA_MODE =
-  typeof window !== 'undefined'
-    ? ((window as any).__NEXT_DATA__?.props?.pageProps?.betaMode ?? false)
-    : process.env.NEXT_PUBLIC_BETA_MODE === 'true';
+  process.env.NEXT_PUBLIC_BETA_MODE === 'true' ||
+  process.env.NEXT_PUBLIC_BETA_MODE === '1';
+
+/**
+ * MVP launch period — checkout uses 100% coupon and report billing is waived.
+ */
+export function isLaunchMode(): boolean {
+  return IS_MVP_MODE || IS_BETA_MODE;
+}
 
 /**
  * Individual feature toggles (only used when NOT in MVP mode)
@@ -64,6 +67,11 @@ export function isMVPMode(): boolean {
  */
 export function isBetaMode(): boolean {
   return IS_BETA_MODE;
+}
+
+/** @deprecated Prefer isLaunchMode() — kept for existing imports */
+export function isReportBillingWaived(): boolean {
+  return isLaunchMode();
 }
 
 /**
@@ -189,6 +197,8 @@ export function logFeatureFlags(): void {
 
   console.log('🚩 Feature Flags Configuration:');
   console.log('  MVP Mode:', IS_MVP_MODE);
+  console.log('  Beta/Launch Mode:', IS_BETA_MODE);
+  console.log('  Launch Mode (billing waived):', isLaunchMode());
   console.log('  Payments:', isPaymentsEnabled());
   console.log('  Tiers:', isTiersEnabled());
   console.log('  Pricing Page:', shouldShowPricingPage());
@@ -203,6 +213,8 @@ export function logFeatureFlags(): void {
 
 export const FeatureFlags = {
   isBetaMode,
+  isLaunchMode,
+  isReportBillingWaived,
   isMVPMode,
   isPaymentsEnabled,
   isTiersEnabled,

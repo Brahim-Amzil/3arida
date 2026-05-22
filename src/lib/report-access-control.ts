@@ -9,7 +9,7 @@
  */
 
 import { Petition, PricingTier } from '../types/petition';
-import { isBetaMode } from './feature-flags';
+import { isLaunchMode } from './feature-flags';
 
 // ============================================================================
 // TYPES
@@ -47,8 +47,8 @@ export function canGenerateReport(
     };
   }
 
-  // In beta mode, everyone can generate reports
-  if (isBetaMode()) {
+  // During MVP launch (BETA100 checkout), report downloads are free for all tiers
+  if (isLaunchMode()) {
     return {
       allowed: true,
     };
@@ -73,8 +73,8 @@ export function canGenerateReport(
  * Determines if payment is required for the next download
  */
 export function requiresPayment(petition: Petition): boolean {
-  // In beta mode, no payment required
-  if (isBetaMode()) {
+  // During launch, no per-download payment
+  if (isLaunchMode()) {
     return false;
   }
 
@@ -94,8 +94,8 @@ export function requiresPayment(petition: Petition): boolean {
  * Calculates remaining free downloads
  */
 export function getRemainingFreeDownloads(petition: Petition): number {
-  // In beta mode, unlimited downloads
-  if (isBetaMode()) {
+  // During launch, unlimited downloads
+  if (isLaunchMode()) {
     return Infinity;
   }
 
@@ -130,12 +130,12 @@ export function getButtonState(petition: Petition): {
   badgeText: string;
   onClick: 'generate' | 'upgrade' | 'payment';
 } {
-  // Beta mode
-  if (isBetaMode()) {
+  // MVP launch — BETA100 checkout, free report downloads
+  if (isLaunchMode()) {
     return {
       disabled: false,
       badge: 'beta',
-      badgeText: 'مجاني - بيتا',
+      badgeText: 'مجاني - الإطلاق',
       onClick: 'generate',
     };
   }
