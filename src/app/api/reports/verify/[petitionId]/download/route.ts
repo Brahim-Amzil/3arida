@@ -23,15 +23,23 @@ async function loadApprovedPetition(petitionId: string): Promise<Petition | null
   return petition;
 }
 
-function pdfResponse(pdfBuffer: Buffer, referenceCode: string) {
+function pdfResponse(
+  pdfBuffer: Buffer,
+  referenceCode: string,
+  downloadCount?: number,
+) {
   const filename = `petition-report-${referenceCode}-${new Date().toISOString().split('T')[0]}.pdf`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/pdf',
+    'Content-Disposition': `attachment; filename="${filename}"`,
+    'Content-Length': String(pdfBuffer.length),
+  };
+  if (downloadCount !== undefined) {
+    headers['X-Report-Download-Count'] = String(downloadCount);
+  }
   return new NextResponse(new Uint8Array(pdfBuffer), {
     status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${filename}"`,
-      'Content-Length': String(pdfBuffer.length),
-    },
+    headers,
   });
 }
 
@@ -88,14 +96,14 @@ export async function GET(
 
     const pdfBuffer = await generatePetitionPdfBuffer(params.petitionId);
 
-    await recordDownload(
+    const newDownloadCount = await recordDownload(
       petition.id,
       userId,
       paymentId || undefined,
       ipAddress,
     );
 
-    return pdfResponse(pdfBuffer, referenceCode);
+    return pdfResponse(pdfBuffer, referenceCode, newDownloadCount);
   } catch (error) {
     console.error('[Report verify download] Error:', error);
     return NextResponse.json(

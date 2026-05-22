@@ -16,21 +16,6 @@ export async function generatePetitionPdfBuffer(
 
   try {
     const page = await browser.newPage();
-
-    await page.setRequestInterception(true);
-    page.on('request', (request) => {
-      const url = request.url();
-      if (
-        request.resourceType() === 'image' &&
-        !url.startsWith('data:') &&
-        !url.startsWith('blob:')
-      ) {
-        request.abort();
-        return;
-      }
-      request.continue();
-    });
-
     await page.setViewport({
       width: 1200,
       height: 1600,

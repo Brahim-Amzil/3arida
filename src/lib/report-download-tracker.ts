@@ -95,8 +95,9 @@ export async function recordDownload(
   userId: string,
   paymentId?: string,
   ipAddress?: string,
-): Promise<void> {
+): Promise<number> {
   const petitionRef = db.collection('petitions').doc(petitionId);
+  let newDownloadCount = 0;
 
   try {
     await db.runTransaction(async (transaction) => {
@@ -108,22 +109,25 @@ export async function recordDownload(
 
       const petition = petitionDoc.data() as Petition;
       const currentDownloads = petition.reportDownloads || 0;
+      newDownloadCount = currentDownloads + 1;
       const downloadHistory = normalizeDownloadHistory(
         petition.reportDownloadHistory || [],
       );
       const newRecord = buildDownloadRecord(
         userId,
-        currentDownloads + 1,
+        newDownloadCount,
         paymentId,
         ipAddress,
       );
 
       transaction.update(petitionRef, {
-        reportDownloads: currentDownloads + 1,
+        reportDownloads: newDownloadCount,
         reportDownloadHistory: [...downloadHistory, newRecord],
         updatedAt: new Date(),
       });
     });
+
+    return newDownloadCount;
   } catch (error) {
     console.error('Error recording download:', error);
     throw new Error(

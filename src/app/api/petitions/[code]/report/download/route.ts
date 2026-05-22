@@ -123,7 +123,7 @@ export async function GET(
 
     const pdfBuffer = await generatePetitionPdfBuffer(petition.id);
 
-    await recordDownload(
+    const newDownloadCount = await recordDownload(
       petition.id,
       userId,
       paymentId || undefined,
@@ -138,6 +138,7 @@ export async function GET(
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
         'Content-Length': String(pdfBuffer.length),
+        'X-Report-Download-Count': String(newDownloadCount),
       },
     });
   } catch (error) {

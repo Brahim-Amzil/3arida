@@ -9,7 +9,7 @@
  * - Limit-choice modal (free tier) or payment modal (paid tier)
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Download, Loader2, AlertCircle } from 'lucide-react';
 import { Petition } from '@/types/petition';
 import { getButtonState } from '@/lib/report-access-control';
@@ -22,6 +22,7 @@ interface ReportDownloadButtonProps {
   onUpgrade?: () => void;
   onPayment?: () => void;
   onLimitChoice?: () => void;
+  onDownloadComplete?: (newDownloadCount: number) => void;
 }
 
 export function ReportDownloadButton({
@@ -30,12 +31,21 @@ export function ReportDownloadButton({
   onUpgrade,
   onPayment,
   onLimitChoice,
+  onDownloadComplete,
 }: ReportDownloadButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
+  const [reportDownloads, setReportDownloads] = useState(
+    petition.reportDownloads || 0,
+  );
 
-  const buttonState = getButtonState(petition);
+  useEffect(() => {
+    setReportDownloads(petition.reportDownloads || 0);
+  }, [petition.id, petition.reportDownloads]);
+
+  const petitionWithCount = { ...petition, reportDownloads };
+  const buttonState = getButtonState(petitionWithCount);
 
   const handleClick = async () => {
     setError('');
@@ -122,6 +132,15 @@ export function ReportDownloadButton({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      const countHeader = downloadResponse.headers.get('X-Report-Download-Count');
+      const newCount = countHeader
+        ? Number.parseInt(countHeader, 10)
+        : reportDownloads + 1;
+      if (Number.isFinite(newCount)) {
+        setReportDownloads(newCount);
+        onDownloadComplete?.(newCount);
+      }
 
       setProgress('تم التحميل بنجاح!');
       setTimeout(() => setProgress(''), 2000);

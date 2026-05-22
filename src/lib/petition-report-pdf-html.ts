@@ -12,6 +12,7 @@ import {
 import { getPetitionReportFontFaceCss } from '@/lib/petition-report-pdf-fonts';
 import { translateValue } from '@/lib/pdf-translations';
 import { generateReportQRCode } from '@/lib/report-qr-generator';
+import { fetchImageAsDataUrl } from '@/lib/embed-remote-image-data-url';
 import type { ReportVerificationData } from '@/lib/report-verification-server';
 
 type ValidReportVerificationData = Extract<
@@ -38,7 +39,7 @@ function statBox(label: string, value: string): string {
 export async function buildPetitionReportHtml(
   data: ValidReportVerificationData,
 ): Promise<string> {
-  const { petition, urls, reportInfo } = data;
+  const { petition, urls } = data;
   const fontFaceCss = getPetitionReportFontFaceCss();
   const qrDataUrl = await generateReportQRCode(petition.id);
   const { daysRunning, signaturesPerDay, downloadNumber } =
@@ -60,10 +61,18 @@ export async function buildPetitionReportHtml(
     ),
   );
 
-  const imageHtml = petition.imageUrl
+  // Include this issuance in PDF stats (counter increments after PDF is saved)
+  const displayDownloadCount = (petition.reportDownloads || 0) + 1;
+
+  let coverImageDataUrl: string | null = null;
+  if (petition.imageUrl) {
+    coverImageDataUrl = await fetchImageAsDataUrl(petition.imageUrl);
+  }
+
+  const imageHtml = coverImageDataUrl
     ? `
     <div class="summary-image-wrap">
-      <img src="${escapeHtml(petition.imageUrl)}" alt="${title}" class="summary-image" />
+      <img src="${coverImageDataUrl}" alt="${title}" class="summary-image" />
     </div>`
     : '';
 
@@ -259,7 +268,7 @@ export async function buildPetitionReportHtml(
         ${imageHtml}
         <div class="summary-title">${title}</div>
         <div class="badges">
-          <span class="badge">المرجع: ${referenceCode}</span>
+          <span class="badge">الرقم المرجعي : ${referenceCode}</span>
           <span class="badge badge-secondary">${escapeHtml(translateValue(petition.status, 'status'))}</span>
           <span class="badge">${escapeHtml(translateValue(petition.category, 'category'))}</span>
         </div>
@@ -270,7 +279,7 @@ export async function buildPetitionReportHtml(
           ${statBox('التوقيعات', escapeHtml(formatPetitionNumber(petition.currentSignatures)))}
           ${statBox('الهدف', escapeHtml(formatPetitionNumber(petition.targetSignatures)))}
           ${statBox('نسبة الإنجاز من التوقيعات المُستهدفة', progressPercent)}
-          ${statBox('التحميلات', escapeHtml(formatPetitionNumber(reportInfo.totalDownloads)))}
+          ${statBox('التحميلات', escapeHtml(formatPetitionNumber(displayDownloadCount)))}
         </div>
       </div>
     </div>
