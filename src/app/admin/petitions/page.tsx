@@ -138,21 +138,25 @@ export default function AdminPetitionsPage() {
   };
 
   const loadStatusCounts = async () => {
-    const petitionsRef = collection(db, 'petitions');
-    const [totalSnap, ...statusSnaps] = await Promise.all([
-      getCountFromServer(petitionsRef),
-      ...MODERATION_STATUS_FILTERS.map((s) =>
-        getCountFromServer(
-          query(petitionsRef, where('status', '==', s)),
+    try {
+      const petitionsRef = collection(db, 'petitions');
+      const [totalSnap, ...statusSnaps] = await Promise.all([
+        getCountFromServer(petitionsRef),
+        ...MODERATION_STATUS_FILTERS.map((s) =>
+          getCountFromServer(
+            query(petitionsRef, where('status', '==', s)),
+          ),
         ),
-      ),
-    ]);
-    setTotalPetitionCount(totalSnap.data().count);
-    setStatusCounts(
-      Object.fromEntries(
-        MODERATION_STATUS_FILTERS.map((s, i) => [s, statusSnaps[i].data().count]),
-      ) as Record<ModerationStatusFilter, number>,
-    );
+      ]);
+      setTotalPetitionCount(totalSnap.data().count);
+      setStatusCounts(
+        Object.fromEntries(
+          MODERATION_STATUS_FILTERS.map((s, i) => [s, statusSnaps[i].data().count]),
+        ) as Record<ModerationStatusFilter, number>,
+      );
+    } catch (err) {
+      console.error('Error loading petition status counts:', err);
+    }
   };
 
   const loadCategoryOptions = async () => {
@@ -314,7 +318,7 @@ export default function AdminPetitionsPage() {
   }, [filter, searchQuery, loadIndexedSearchAll, loadPetitionsPage]);
 
   useEffect(() => {
-    if (!authLoading || !hasRequiredRole) return;
+    if (authLoading || !hasRequiredRole) return;
 
     if (filter === 'deletion-requests') {
       setAllPetitions([]);
