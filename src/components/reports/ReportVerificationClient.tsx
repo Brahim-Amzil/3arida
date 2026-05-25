@@ -172,7 +172,7 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
           <div className="text-center">
             <h2 className="font-semibold text-xl mb-3">{petition.title}</h2>
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <Badge variant="outline">المرجع: {petition.referenceCode}</Badge>
+              <Badge variant="outline">الرقم المرجعي : {petition.referenceCode}</Badge>
               <Badge variant="secondary">
                 {translateValue(petition.status, 'status')}
               </Badge>
