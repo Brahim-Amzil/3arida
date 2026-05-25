@@ -335,6 +335,8 @@ export const getPetition = async (
             moderationNotes: data.moderationNotes,
             resubmissionCount: data.resubmissionCount || 0,
             resubmissionHistory: data.resubmissionHistory || [],
+            reportDownloads: data.reportDownloads || 0,
+            reportDownloadHistory: data.reportDownloadHistory,
           };
           return petition;
         }
@@ -442,6 +444,9 @@ export const getPetition = async (
       // Additional content
       youtubeVideoUrl: data.youtubeVideoUrl,
       tags: data.tags,
+
+      reportDownloads: data.reportDownloads || 0,
+      reportDownloadHistory: data.reportDownloadHistory,
     };
 
     console.log('✅ Petition processed successfully:', petition.id);
@@ -1108,6 +1113,10 @@ export const getUserPetitions = async (userId: string): Promise<Petition[]> => {
         // Public visibility
         isPublic: data.isPublic !== false,
         isActive: data.isActive !== false,
+
+        referenceCode: data.referenceCode,
+        reportDownloads: data.reportDownloads || 0,
+        reportDownloadHistory: data.reportDownloadHistory,
       });
     });
 
