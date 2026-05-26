@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface ReportSectionProps {
   petition: Petition;
@@ -31,14 +32,24 @@ interface ReportSectionProps {
 
 export function ReportSection({ petition, userId }: ReportSectionProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [reportDownloadsOverride, setReportDownloadsOverride] = useState<
+    number | null
+  >(null);
 
-  const handlePaymentSuccess = () => {
-    // Refresh petition data or trigger download
-    window.location.reload();
+  const petitionForReport = {
+    ...petition,
+    reportDownloads:
+      reportDownloadsOverride ?? petition.reportDownloads ?? 0,
+  };
+
+  const handlePaymentSuccess = (newDownloadCount: number) => {
+    setShowPaymentModal(false);
+    setReportDownloadsOverride(newDownloadCount);
   };
 
   const handleTierSelect = async (
@@ -125,11 +136,12 @@ export function ReportSection({ petition, userId }: ReportSectionProps) {
                   )}
               </div>
               <ReportDownloadButton
-                petition={petition}
+                petition={petitionForReport}
                 userId={userId}
                 onUpgrade={() => setShowUpgradeModal(true)}
                 onPayment={() => setShowPaymentModal(true)}
                 onLimitChoice={() => setShowLimitModal(true)}
+                onDownloadComplete={setReportDownloadsOverride}
               />
             </div>
 
@@ -157,7 +169,9 @@ export function ReportSection({ petition, userId }: ReportSectionProps) {
       />
 
       <ReportPaymentModal
-        petition={petition}
+        petition={petitionForReport}
+        userId={userId}
+        userEmail={user?.email?.trim() || undefined}
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         onSuccess={handlePaymentSuccess}

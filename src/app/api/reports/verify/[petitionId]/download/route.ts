@@ -70,7 +70,7 @@ export async function GET(
       );
     }
 
-    const accessDecision = evaluateReportDownloadAccess(
+    const accessDecision = await evaluateReportDownloadAccess(
       petition,
       userId,
       paymentId,

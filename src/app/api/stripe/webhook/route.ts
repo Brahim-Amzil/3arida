@@ -192,10 +192,13 @@ export async function POST(request: NextRequest) {
               });
             }
           }
+        } else if (metadata.type === 'report_download') {
+          logApiInfo(apiContext, 'Report download payment succeeded', {
+            paymentIntentId: paymentIntent.id,
+            petitionId: metadata.petitionId,
+          });
         } else {
-          // Regular petition creation payment
           logApiInfo(apiContext, 'Regular petition payment (not upgrade)');
-          // Your existing petition creation logic here
         }
 
         break;

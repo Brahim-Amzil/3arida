@@ -40,6 +40,9 @@ export default function PetitionCardWithReport({
   const [showReportPaymentModal, setShowReportPaymentModal] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [reportDownloadsOverride, setReportDownloadsOverride] = useState<
+    number | null
+  >(null);
   const [paymentData, setPaymentData] = useState<{
     clientSecret?: string;
     selectedTier: PricingTier;
@@ -57,9 +60,15 @@ export default function PetitionCardWithReport({
     setShowReportPaymentModal(true);
   };
 
-  const handleReportPaymentSuccess = () => {
+  const handleReportPaymentSuccess = (newDownloadCount: number) => {
     setShowReportPaymentModal(false);
-    window.location.reload();
+    setReportDownloadsOverride(newDownloadCount);
+  };
+
+  const petitionForReport = {
+    ...petition,
+    reportDownloads:
+      reportDownloadsOverride ?? petition.reportDownloads ?? 0,
   };
 
   const handleTierSelect = async (
@@ -132,11 +141,12 @@ export default function PetitionCardWithReport({
       {/* Report Download Button - positioned absolutely or as overlay */}
       <div className="mt-4">
         <ReportDownloadButton
-          petition={petition}
+          petition={petitionForReport}
           userId={user?.uid ?? ''}
           onUpgrade={handleUpgrade}
           onPayment={handlePayment}
           onLimitChoice={() => setShowLimitModal(true)}
+          onDownloadComplete={setReportDownloadsOverride}
         />
       </div>
 
@@ -180,7 +190,9 @@ export default function PetitionCardWithReport({
       />
 
       <ReportPaymentModal
-        petition={petition}
+        petition={petitionForReport}
+        userId={user?.uid ?? ''}
+        userEmail={user?.email?.trim() || undefined}
         isOpen={showReportPaymentModal}
         onClose={() => setShowReportPaymentModal(false)}
         onSuccess={handleReportPaymentSuccess}

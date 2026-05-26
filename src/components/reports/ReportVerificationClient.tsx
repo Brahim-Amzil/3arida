@@ -67,6 +67,9 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
+  const [downloadCountOverride, setDownloadCountOverride] = useState<
+    number | null
+  >(null);
 
   if (!data.valid) {
     return (
@@ -96,7 +99,11 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
     Boolean(user?.uid) &&
     Boolean(petition.creatorId) &&
     user?.uid === petition.creatorId;
-  const petitionForDownload = snapshotToPetition(petition);
+  const petitionForDownload = {
+    ...snapshotToPetition(petition),
+    reportDownloads:
+      downloadCountOverride ?? petition.reportDownloads ?? 0,
+  };
 
   const handleTierSelect = async (
     selectedTier: PricingTier,
@@ -245,6 +252,7 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
                   onUpgrade={() => setShowUpgradeModal(true)}
                   onPayment={() => setShowPaymentModal(true)}
                   onLimitChoice={() => setShowLimitModal(true)}
+                  onDownloadComplete={setDownloadCountOverride}
                 />
               </div>
             )}
@@ -293,12 +301,17 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
         />
       )}
 
-      {showPaymentModal && (
+      {showPaymentModal && user && (
         <ReportPaymentModal
           petition={petitionForDownload}
+          userId={user.uid}
+          userEmail={user.email?.trim() || undefined}
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
-          onSuccess={() => window.location.reload()}
+          onSuccess={(newDownloadCount) => {
+            setShowPaymentModal(false);
+            setDownloadCountOverride(newDownloadCount);
+          }}
         />
       )}
 

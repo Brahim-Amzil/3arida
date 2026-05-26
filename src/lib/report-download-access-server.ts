@@ -3,6 +3,7 @@ import {
   getDownloadPrice,
   requiresPayment,
 } from '@/lib/report-access-control';
+import { verifyReportDownloadPayment } from '@/lib/report-download-payment-server';
 import type { Petition } from '@/types/petition';
 
 export type ReportDownloadAccessResult =
@@ -21,11 +22,11 @@ export type ReportDownloadAccessResult =
  * Server-side gate for creator report PDF downloads.
  * Must run before recordDownload / PDF generation.
  */
-export function evaluateReportDownloadAccess(
+export async function evaluateReportDownloadAccess(
   petition: Petition,
   userId: string,
   paymentId?: string | null,
-): ReportDownloadAccessResult {
+): Promise<ReportDownloadAccessResult> {
   const access = canGenerateReport(petition, userId);
 
   if (!access.allowed) {
@@ -55,6 +56,24 @@ export function evaluateReportDownloadAccess(
         status: 402,
         code: 'PAYMENT_REQUIRED',
         message: `Payment of ${price} MAD required for additional downloads`,
+        requiresPayment: true,
+        price,
+      };
+    }
+
+    const verification = await verifyReportDownloadPayment(
+      paymentId,
+      petition,
+      userId,
+    );
+
+    if (!verification.valid) {
+      const price = getDownloadPrice(petition);
+      return {
+        allowed: false,
+        status: 402,
+        code: 'PAYMENT_INVALID',
+        message: verification.message || 'Payment verification failed',
         requiresPayment: true,
         price,
       };
