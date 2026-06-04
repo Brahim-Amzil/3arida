@@ -18,7 +18,7 @@ Status values:
 |---|---|---|---|---|
 | G-01 | No critical security findings remain unresolved | P0 | Pending | Includes secrets, authz, SSRF, XSS — pre-flight: [`docs/SECURITY-GATE-G01-CHECKLIST.md`](docs/SECURITY-GATE-G01-CHECKLIST.md) |
 | G-02 | Production build passes on clean environment | P0 | Done | CI #32 green on `main` @ `efad0c9` (2026-05-16): lint, type-check, test, production build |
-| G-03 | Core user journeys pass smoke tests in production-like env | P0 | In Progress | **Done (2026-05-20):** contact + reCAPTCHA; **email/password auth** — register → Arabic Resend mail (`contact@3arida.org`), verify link on `www.3arida.org`, login blocked until verified, resend works (`0f76a0e`–`61e22ed`). **Still open:** formal §13 petition create/sign smoke, **E-08** payment receipt matrix, Google OAuth spot-check |
+| G-03 | Core user journeys pass smoke tests in production-like env | P0 | In Progress | **Done:** contact + reCAPTCHA, auth verify, **E-08** emails, report/upgrade/pay flows. **Still open:** §13 petition create/sign smoke, Google OAuth spot-check; paid create receipt when BETA100 off |
 | G-04 | Incident rollback plan documented and tested | P0 | Pending | Docs: tracker §13 + [`docs/STAGING-DRY-RUN.md`](docs/STAGING-DRY-RUN.md) rollback row; mark **Done** after signed drill in Vercel UI |
 
 ---
@@ -225,7 +225,7 @@ Policy matrix (what each payer receives):
 | E-05 | Petition upgrade: enable Stripe receipt to payer | P0 | Done | `receipt_email` on `api/petitions/upgrade` + `userEmail` from client (`1735495`, deployed) |
 | E-06 | Contact form delivers to `contact@3arida.org` | P0 | Done | Resend + reCAPTCHA v3; domains `3arida.org` / `www.3arida.org`; Vercel keys via CLI (2026-05-20 prod test) |
 | E-07 | Production reCAPTCHA keys on Vercel | P0 | Done | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` + `RECAPTCHA_SECRET_KEY`; runtime loader `/api/recaptcha/config` (`fd75739`) |
-| E-08 | Post-deploy smoke: verify payment email matrix | P0 | In Progress | **Tips done (2026-06-04):** `/about#support-platform` + checkout donation → thank-you email both paths. **Open:** confirm no Stripe receipt on tips; paid create Stripe receipt; contact form |
+| E-08 | Post-deploy smoke: verify payment email matrix | P0 | Done | 2026-06-04: tips (thank-you), upgrade free→paid (Stripe), contact→`contact@3arida.org`. Paid **create** receipt deferred (BETA100 auto on checkout) |
 
 ---
 
@@ -267,8 +267,8 @@ Policy doc: [`docs/REPORT-DOWNLOAD-LIMITS-PLAN.md`](docs/REPORT-DOWNLOAD-LIMITS-
 ## Progress Summary
 
 - Total tasks (§0–§16 rows): 106
-- Done: 100
-- Remaining (Pending or In Progress): 6 — **G-01**, **G-03**, **G-04**, **T-06**, **E-08**
+- Done: 101
+- Remaining (Pending or In Progress): 5 — **G-01**, **G-03**, **G-04**, **T-06**
 
 ---
 
@@ -390,4 +390,5 @@ Policy doc: [`docs/REPORT-DOWNLOAD-LIMITS-PLAN.md`](docs/REPORT-DOWNLOAD-LIMITS-
 | 2026-05-22 | RPT-01–RPT-05, RPT-07–RPT-08 | In Progress / Pending | Done | Quotas, limit modal, verify API enforcement, Arabic copy, unit tests |
 | 2026-06-04 | RPT-06, RPT-09 | Pending | Done | Prod QA: 19 MAD report pay, upgrade modal + 10 free reports after free→paid (`c182285`); user confirmed all OK |
 | 2026-06-04 | E-08 (tips) | Pending | In Progress | Prod: footer/about donation + petition checkout donation — thank-you emails received (`d7ddc30`) |
+| 2026-06-04 | E-08 | In Progress | Done | Tips, upgrade receipt, contact inbox verified; paid create receipt N/A until post-BETA100 |
 
