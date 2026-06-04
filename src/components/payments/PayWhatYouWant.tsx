@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import type { Stripe } from '@stripe/stripe-js';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
   PaymentElement,
@@ -11,11 +11,7 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { useAuth } from '@/components/auth/AuthProvider';
-
-// Initialize Stripe
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-);
+import { getStripe } from '@/lib/stripe';
 
 /**
  * Payment Form Component (inside Stripe Elements)
@@ -121,8 +117,27 @@ export default function PayWhatYouWant() {
   const [thankYouAmount, setThankYouAmount] = useState<number | null>(null);
   const [clientSecret, setClientSecret] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
 
   const suggestedAmounts = [20, 50, 100, 200];
+
+  useEffect(() => {
+    if (!showPayment || !clientSecret) {
+      setStripeInstance(null);
+      return;
+    }
+
+    let cancelled = false;
+    getStripe().then((stripe) => {
+      if (!cancelled) {
+        setStripeInstance(stripe);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showPayment, clientSecret]);
 
   function getDonorEmail() {
     return (user?.email || userProfile?.email || '').trim();
@@ -242,6 +257,14 @@ export default function PayWhatYouWant() {
   }
 
   if (showPayment && clientSecret) {
+    if (!stripeInstance) {
+      return (
+        <Card className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-300">
+          <p className="text-center text-purple-800">جاري تجهيز الدفع...</p>
+        </Card>
+      );
+    }
+
     return (
       <Card className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-300">
         <div className="text-center mb-6">
@@ -255,7 +278,7 @@ export default function PayWhatYouWant() {
         </div>
 
         <Elements
-          stripe={stripePromise}
+          stripe={stripeInstance}
           options={{
             clientSecret,
             appearance: {

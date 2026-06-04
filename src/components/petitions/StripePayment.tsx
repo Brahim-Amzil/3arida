@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import React, { useEffect, useState } from 'react';
+import type { Stripe } from '@stripe/stripe-js';
 import {
   Elements,
   CardElement,
@@ -16,11 +16,7 @@ import {
   calculatePricingTier,
   PRICING_TIERS,
 } from '@/lib/petition-utils';
-
-// Initialize Stripe
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-);
+import { getStripe, isStripeClientConfigured } from '@/lib/stripe';
 
 interface StripePaymentProps {
   formData: PetitionFormData;
@@ -299,8 +295,39 @@ function PaymentForm({
 }
 
 export default function StripePayment(props: StripePaymentProps) {
+  const { t } = useTranslation();
+  const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getStripe().then((stripe) => {
+      if (!cancelled) {
+        setStripeInstance(stripe);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!isStripeClientConfigured()) {
+    return (
+      <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3">
+        Stripe غير مُعدّ محلياً. أضف NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY إلى .env.local
+      </p>
+    );
+  }
+
+  if (!stripeInstance) {
+    return (
+      <div className="flex items-center justify-center py-8 text-gray-500">
+        {t('payment.processing')}
+      </div>
+    );
+  }
+
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={stripeInstance}>
       <PaymentForm {...props} />
     </Elements>
   );

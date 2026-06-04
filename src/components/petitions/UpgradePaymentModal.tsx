@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import React, { useEffect, useState } from 'react';
+import type { Stripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { X, Check, Loader2, CreditCard, Tag } from 'lucide-react';
 import { PricingTier } from '@/types/petition';
 import { UPGRADE_PRICING_TIERS } from '@/lib/petition-upgrade-utils';
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+import { getStripe, isStripeClientConfigured } from '@/lib/stripe';
 
 interface UpgradePaymentModalProps {
   isOpen: boolean;
@@ -281,7 +280,32 @@ function PaymentForm({
 }
 
 export function UpgradePaymentModal(props: UpgradePaymentModalProps) {
+  const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
+  const isFree = Boolean(props.betaMode && props.upgradePrice === 0);
+  const needsStripe = !isFree;
+
+  useEffect(() => {
+    if (!props.isOpen || !needsStripe) {
+      setStripeInstance(null);
+      return;
+    }
+
+    let cancelled = false;
+    getStripe().then((stripe) => {
+      if (!cancelled) {
+        setStripeInstance(stripe);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [props.isOpen, needsStripe, props.clientSecret]);
+
   if (!props.isOpen) return null;
+
+  const stripeReady = !needsStripe || (stripeInstance && props.clientSecret);
+  const stripeConfigMissing = needsStripe && !isStripeClientConfigured();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -296,10 +320,37 @@ export function UpgradePaymentModal(props: UpgradePaymentModalProps) {
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="p-6">
-          <Elements stripe={stripePromise}>
-            <PaymentForm {...props} />
-          </Elements>
+        <div className="p-6" dir="rtl">
+          {stripeConfigMissing && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+              مفتاح Stripe غير متوفر. أضف NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY إلى .env.local
+              (محلياً) أو Vercel ثم أعد التشغيل / إعادة النشر.
+            </p>
+          )}
+
+          {!stripeConfigMissing && needsStripe && !props.clientSecret && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+              جلسة الدفع غير جاهزة. أغلق النافذة وحاول الترقية مرة أخرى.
+            </p>
+          )}
+
+          {!stripeConfigMissing && needsStripe && !stripeReady && (
+            <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>جاري تجهيز الدفع...</span>
+            </div>
+          )}
+
+          {!stripeConfigMissing && isFree && <PaymentForm {...props} />}
+
+          {!stripeConfigMissing && needsStripe && stripeReady && stripeInstance && (
+            <Elements
+              stripe={stripeInstance}
+              options={{ clientSecret: props.clientSecret }}
+            >
+              <PaymentForm {...props} />
+            </Elements>
+          )}
         </div>
       </div>
     </div>
