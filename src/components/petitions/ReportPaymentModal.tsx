@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 import {
   Elements,
   CardElement,
@@ -18,11 +18,9 @@ import {
   FREE_EXTRA_DOWNLOAD_PRICE_MAD,
   getDownloadPrice,
 } from '@/lib/report-access-control';
+import { getStripe, isStripeClientConfigured } from '@/lib/stripe';
+import { mapReportPaymentApiError } from '@/lib/report-payment-errors';
 import { Button } from '@/components/ui/button';
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-);
 
 interface ReportPaymentModalProps {
   petition: Petition;
@@ -188,11 +186,27 @@ export function ReportPaymentModal({
   );
   const [loadingIntent, setLoadingIntent] = useState(false);
   const [initError, setInitError] = useState('');
+  const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
       setClientSecret(null);
       setInitError('');
+      setStripeInstance(null);
+      return;
+    }
+
+    if (!userId?.trim()) {
+      setInitError(mapReportPaymentApiError('User not authenticated'));
+      setLoadingIntent(false);
+      return;
+    }
+
+    if (!isStripeClientConfigured()) {
+      setInitError(
+        'مفتاح Stripe العام غير متوفر في الواجهة. أعد نشر الموقع بعد التحقق من NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.',
+      );
+      setLoadingIntent(false);
       return;
     }
 
@@ -201,6 +215,7 @@ export function ReportPaymentModal({
     async function createIntent() {
       setLoadingIntent(true);
       setInitError('');
+      setStripeInstance(null);
 
       try {
         const response = await fetch(
@@ -208,24 +223,41 @@ export function ReportPaymentModal({
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, userEmail }),
+            body: JSON.stringify({
+              userId: userId.trim(),
+              userEmail,
+              clientReportDownloads: petition.reportDownloads ?? 0,
+            }),
           },
         );
 
         const data = await response.json();
         if (!data.success || !data.clientSecret) {
-          throw new Error(data.error || 'تعذر بدء عملية الدفع');
+          throw new Error(
+            mapReportPaymentApiError(
+              typeof data.error === 'string' ? data.error : undefined,
+              typeof data.code === 'string' ? data.code : undefined,
+            ),
+          );
+        }
+
+        const stripe = await getStripe();
+        if (!stripe) {
+          throw new Error(
+            'تعذر تحميل Stripe. حدّث الصفحة أو جرّب متصفحاً آخر.',
+          );
         }
 
         if (!cancelled) {
           setClientSecret(data.clientSecret);
           setPrice(data.price || getDownloadPrice(petition));
+          setStripeInstance(stripe);
         }
       } catch (err) {
         if (!cancelled) {
-          setInitError(
-            err instanceof Error ? err.message : 'تعذر بدء عملية الدفع',
-          );
+          const raw =
+            err instanceof Error ? err.message : 'تعذر بدء عملية الدفع';
+          setInitError(mapReportPaymentApiError(raw));
         }
       } finally {
         if (!cancelled) {
@@ -239,7 +271,15 @@ export function ReportPaymentModal({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, petition.id, petition.referenceCode, userId, userEmail, petition.reportDownloads, petition.pricingTier]);
+  }, [
+    isOpen,
+    petition.id,
+    petition.referenceCode,
+    petition.reportDownloads,
+    petition.pricingTier,
+    userId,
+    userEmail,
+  ]);
 
   if (!isOpen) return null;
 
@@ -315,8 +355,8 @@ export function ReportPaymentModal({
             </p>
           )}
 
-          {clientSecret && !loadingIntent && (
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
+          {clientSecret && stripeInstance && !loadingIntent && (
+            <Elements stripe={stripeInstance} options={{ clientSecret }}>
               <PaymentForm
                 petition={petition}
                 userId={userId}

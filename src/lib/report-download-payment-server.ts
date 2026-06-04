@@ -2,9 +2,27 @@ import { getStripeServer, withStripeReceiptEmail } from '@/lib/stripe-server';
 import {
   canGenerateReport,
   getDownloadPrice,
+  getFreeDownloadAllowance,
   requiresPayment,
 } from '@/lib/report-access-control';
 import type { Petition } from '@/types/petition';
+
+export function isReportDownloadCountMismatch(
+  petition: Petition,
+  clientReportDownloads?: number,
+): boolean {
+  if (
+    typeof clientReportDownloads !== 'number' ||
+    !Number.isFinite(clientReportDownloads)
+  ) {
+    return false;
+  }
+
+  const allowance = getFreeDownloadAllowance(petition);
+  const serverCount = petition.reportDownloads || 0;
+
+  return clientReportDownloads >= allowance && serverCount < allowance;
+}
 
 export async function createReportDownloadPaymentIntent(
   petition: Petition,
@@ -13,11 +31,17 @@ export async function createReportDownloadPaymentIntent(
 ): Promise<{ clientSecret: string; paymentIntentId: string; price: number }> {
   const access = canGenerateReport(petition, userId);
   if (!access.allowed) {
-    throw new Error('You do not have permission to pay for this report download');
+    throw new Error(
+      'You do not have permission to pay for this report download',
+    );
   }
 
+  const serverDownloadCount = petition.reportDownloads || 0;
+
   if (!requiresPayment(petition)) {
-    throw new Error('No payment required for the next report download');
+    throw new Error(
+      `No payment required for the next report download (server count: ${serverDownloadCount})`,
+    );
   }
 
   const price = getDownloadPrice(petition);

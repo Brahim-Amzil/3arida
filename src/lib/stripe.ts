@@ -2,13 +2,18 @@ import { loadStripe, Stripe } from '@stripe/stripe-js';
 
 let stripePromise: Promise<Stripe | null>;
 
+export function isStripeClientConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim());
+}
+
 export const getStripe = () => {
   if (!stripePromise) {
-    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    const publishableKey =
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim();
 
     if (!publishableKey) {
       console.warn(
-        'Stripe publishable key not found. Stripe functionality will be disabled.'
+        'Stripe publishable key not found. Stripe functionality will be disabled.',
       );
       return Promise.resolve(null);
     }

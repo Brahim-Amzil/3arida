@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import '@/lib/firebase-admin';
 import { adminDb } from '@/lib/firebase-admin';
 import { Petition } from '@/types/petition';
-import { createReportDownloadPaymentIntent } from '@/lib/report-download-payment-server';
+import {
+  createReportDownloadPaymentIntent,
+  isReportDownloadCountMismatch,
+} from '@/lib/report-download-payment-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -57,8 +60,12 @@ export async function POST(
     const body = await request.json();
     const userId = body.userId as string | undefined;
     const userEmail = body.userEmail as string | undefined;
+    const clientReportDownloads =
+      typeof body.clientReportDownloads === 'number'
+        ? body.clientReportDownloads
+        : undefined;
 
-    if (!userId) {
+    if (!userId?.trim()) {
       return NextResponse.json(
         { success: false, error: 'User not authenticated' },
         { status: 401 },
@@ -73,9 +80,22 @@ export async function POST(
       );
     }
 
+    if (isReportDownloadCountMismatch(petition, clientReportDownloads)) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'COUNT_MISMATCH',
+          error: 'Report download count out of sync with server',
+          serverCount: petition.reportDownloads || 0,
+          clientReportDownloads,
+        },
+        { status: 409 },
+      );
+    }
+
     const payment = await createReportDownloadPaymentIntent(
       petition,
-      userId,
+      userId.trim(),
       userEmail,
     );
 
@@ -87,15 +107,19 @@ export async function POST(
     });
   } catch (error) {
     console.error('[Report payment-intent] Error:', error);
+    const message =
+      error instanceof Error ? error.message : 'Failed to create report payment';
+    const isConfigError =
+      message.includes('STRIPE_SECRET_KEY') ||
+      message.includes('not configured');
+
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Failed to create report payment',
+        error: message,
+        code: isConfigError ? 'STRIPE_NOT_CONFIGURED' : 'PAYMENT_INTENT_FAILED',
       },
-      { status: 400 },
+      { status: isConfigError ? 503 : 400 },
     );
   }
 }
