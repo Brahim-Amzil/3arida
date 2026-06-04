@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
+import PayWhatYouWant from '@/components/payments/PayWhatYouWant';
 
 export default function AboutPage() {
   const { t } = useTranslation();
@@ -103,6 +104,27 @@ export default function AboutPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Optional platform support (tips) */}
+        <section className="mb-8" id="support-platform" aria-labelledby="support-platform-title">
+          <Card>
+            <CardContent className="p-8">
+              <h2
+                id="support-platform-title"
+                className="text-2xl font-bold text-gray-900 mb-3 text-center"
+              >
+                ساهم في دعم المنصة
+              </h2>
+              <p className="text-gray-600 text-center max-w-2xl mx-auto mb-6 leading-relaxed">
+                مساهمتك اختيارية وتساعدنا على تطوير المنصة والحفاظ عليها مستقلة
+                وخالية من الإعلانات. يمكنك التبرع بأي مبلغ يناسبك.
+              </p>
+              <div className="max-w-lg mx-auto">
+                <PayWhatYouWant />
+              </div>
+            </CardContent>
+          </Card>
+        </section>
 
         {/* How It Works */}
         <Card className="mb-8">

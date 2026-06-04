@@ -32,10 +32,10 @@
 | RPT-03 | Add `ReportDownloadLimitModal` (19 MAD vs upgrade + perks) | P0 | Done | `ReportDownloadLimitModal.tsx` |
 | RPT-04 | Wire modal + button states in `ReportDownloadButton` and parents | P0 | Done | Card, section, verify page |
 | RPT-05 | Enforce limits on generate + download + verify PDF APIs | P0 | Done | Verify route no longer public in launch mode |
-| RPT-06 | Stripe one-off payment for report download (10 MAD / 19 MAD) | P0 | Pending | Replace payment modal stub |
+| RPT-06 | Stripe one-off payment for report download (10 MAD / 19 MAD) | P0 | Done | Stripe PaymentIntent + pay/download progress modal |
 | RPT-07 | Arabic UI copy (badges, modal, verify page) | P1 | Done | |
 | RPT-08 | Unit tests for `report-access-control` | P1 | Done | 14 tests |
-| RPT-09 | Manual smoke: free 4→modal, paid 10→10 MAD, verify counts | P0 | Pending | QA |
+| RPT-09 | Manual smoke: free 4→modal, paid 10→10 MAD, verify counts | P0 | Done | Prod smoke passed 2026-06-04 |
 
 ---
 
@@ -73,3 +73,4 @@ Report limits apply **even when** `BETA_MODE=true`.
 |------|-----|-------|
 | 2026-05-22 | PLAN | Plan created; execution started (RPT-01+) |
 | 2026-05-22 | RPT-01–RPT-05, RPT-07–RPT-08 | Implemented quotas, limit modal, API enforcement, tests |
+| 2026-06-04 | RPT-06, RPT-09 | Stripe report pay + full prod QA complete |

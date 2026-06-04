@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Check, ArrowRight } from 'lucide-react';
+import { X, Check, ArrowRight, ArrowLeft } from 'lucide-react';
 import { PricingTier } from '@/types/petition';
 import { filterAvailableTiers, TierOption } from '@/lib/petition-upgrade-utils';
 import { Button } from '@/components/ui/button';
@@ -115,7 +115,7 @@ export function PetitionUpgradeModal({
                 {isProcessing ? 'جاري المعالجة...' : (
                   <>
                     متابعة إلى الدفع
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowLeft className="w-4 h-4" />
                   </>
                 )}
               </Button>

@@ -265,7 +265,9 @@ function CompleteView({ onClose }: { onClose: () => void }) {
           تم التحميل بنجاح
         </p>
         <p className="text-sm text-muted-foreground">
-          تحقق من مجلد التحميلات على جهازك. ملف PDF جاهز للتقديم الرسمي.
+          تحقق من مجلد التحميلات على جهازك.
+          <br />
+          ملف PDF جاهز للتقديم الرسمي.
         </p>
       </div>
       <Button onClick={onClose} className="w-full">

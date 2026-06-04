@@ -53,6 +53,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/about#support-platform" className="hover:text-white">
+                  {t('footer.supportPlatform')}
+                </Link>
+              </li>
+              <li>
                 <Link href="/contact" className="hover:text-white">
                   {t('footer.contactUs')}
                 </Link>
