@@ -45,8 +45,14 @@ interface PaymentFormProps {
   price: number;
   disabled: boolean;
   onPaymentConfirmed: (paymentIntentId: string) => void;
-  onPaymentStart: () => void;
   onPaymentFailed: (message: string) => void;
+}
+
+function mapStripePaymentError(message: string): string {
+  if (message.includes('Element') && message.includes('mounted')) {
+    return 'حقل البطاقة غير جاهز. انتظر لحظة ثم أعد المحاولة.';
+  }
+  return message;
 }
 
 function PaymentForm({
@@ -54,12 +60,12 @@ function PaymentForm({
   price,
   disabled,
   onPaymentConfirmed,
-  onPaymentStart,
   onPaymentFailed,
 }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
+  const [cardComplete, setCardComplete] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -72,13 +78,12 @@ function PaymentForm({
 
     const cardElement = elements.getElement(CardElement);
     if (!cardElement) {
-      setError('عنصر البطاقة غير موجود');
+      setError('عنصر البطاقة غير موجود. انتظر حتى يظهر حقل البطاقة.');
       return;
     }
 
     setSubmitting(true);
     setError('');
-    onPaymentStart();
 
     try {
       const { error: stripeError, paymentIntent } =
@@ -87,22 +92,32 @@ function PaymentForm({
         });
 
       if (stripeError) {
-        onPaymentFailed(stripeError.message || 'فشلت عملية الدفع');
+        const msg = mapStripePaymentError(
+          stripeError.message || 'فشلت عملية الدفع',
+        );
+        setError(msg);
+        onPaymentFailed(msg);
+        setSubmitting(false);
         return;
       }
 
       if (paymentIntent?.status !== 'succeeded') {
-        onPaymentFailed('لم تكتمل عملية الدفع');
+        const msg = 'لم تكتمل عملية الدفع';
+        setError(msg);
+        onPaymentFailed(msg);
+        setSubmitting(false);
         return;
       }
 
+      // Keep CardElement mounted until confirm finishes; parent switches phase after this.
       onPaymentConfirmed(paymentIntent.id);
     } catch (err) {
       console.error('Report payment error:', err);
-      onPaymentFailed(
+      const msg = mapStripePaymentError(
         err instanceof Error ? err.message : 'حدث خطأ أثناء الدفع',
       );
-    } finally {
+      setError(msg);
+      onPaymentFailed(msg);
       setSubmitting(false);
     }
   };
@@ -113,6 +128,14 @@ function PaymentForm({
         <label className="text-sm font-medium">بيانات البطاقة</label>
         <div className="rounded-md border bg-background p-3">
           <CardElement
+            onChange={(event) => {
+              setCardComplete(event.complete);
+              if (event.error) {
+                setError(event.error.message);
+              } else {
+                setError('');
+              }
+            }}
             options={{
               hidePostalCode: true,
               disabled: disabled || submitting,
@@ -134,9 +157,15 @@ function PaymentForm({
         </p>
       )}
 
+      {submitting && (
+        <p className="text-sm text-center text-muted-foreground animate-pulse">
+          جاري تأكيد الدفع مع البنك — لا تغلق النافذة
+        </p>
+      )}
+
       <Button
         type="submit"
-        disabled={disabled || submitting}
+        disabled={disabled || submitting || !cardComplete}
         className="w-full gap-2"
       >
         {submitting ? (
@@ -590,20 +619,13 @@ export function ReportPaymentModal({
                     clientSecret={clientSecret}
                     price={displayPrice}
                     disabled={false}
-                    onPaymentStart={() => {
-                      setPhase('processing');
-                      setActiveStep(1);
-                      setProgressPercent(12);
-                      setStatusMessage('جاري تأكيد الدفع مع البنك...');
+                    onPaymentConfirmed={runDownloadAfterPayment}
+                    onPaymentFailed={() => {
+                      stopProgressTick();
+                      setPhase('checkout');
+                      setProgressPercent(0);
                       setPaymentConfirmed(false);
                       setFlowError('');
-                    }}
-                    onPaymentConfirmed={runDownloadAfterPayment}
-                    onPaymentFailed={(message) => {
-                      stopProgressTick();
-                      setFlowError(message);
-                      setPhase('error');
-                      setProgressPercent(0);
                     }}
                   />
                 </Elements>
