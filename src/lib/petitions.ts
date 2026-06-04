@@ -336,6 +336,8 @@ export const getPetition = async (
             resubmissionCount: data.resubmissionCount || 0,
             resubmissionHistory: data.resubmissionHistory || [],
             reportDownloads: data.reportDownloads || 0,
+            reportDownloadQuotaBaseline: data.reportDownloadQuotaBaseline,
+            upgradeHistory: data.upgradeHistory,
             reportDownloadHistory: data.reportDownloadHistory,
           };
           return petition;
@@ -446,6 +448,8 @@ export const getPetition = async (
       tags: data.tags,
 
       reportDownloads: data.reportDownloads || 0,
+      reportDownloadQuotaBaseline: data.reportDownloadQuotaBaseline,
+      upgradeHistory: data.upgradeHistory,
       reportDownloadHistory: data.reportDownloadHistory,
     };
 
@@ -1116,6 +1120,8 @@ export const getUserPetitions = async (userId: string): Promise<Petition[]> => {
 
         referenceCode: data.referenceCode,
         reportDownloads: data.reportDownloads || 0,
+        reportDownloadQuotaBaseline: data.reportDownloadQuotaBaseline,
+        upgradeHistory: data.upgradeHistory,
         reportDownloadHistory: data.reportDownloadHistory,
       });
     });

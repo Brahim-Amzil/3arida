@@ -24,6 +24,8 @@ interface PetitionCardWithReportProps {
   showCreator?: boolean;
   showActions?: boolean;
   className?: string;
+  /** Refetch petitions after upgrade modal completes */
+  onUpgradeComplete?: () => void;
 }
 
 export default function PetitionCardWithReport({
@@ -33,6 +35,7 @@ export default function PetitionCardWithReport({
   showCreator = true,
   showActions = false,
   className = '',
+  onUpgradeComplete,
 }: PetitionCardWithReportProps) {
   const { user } = useAuth();
   const router = useRouter();
@@ -115,15 +118,10 @@ export default function PetitionCardWithReport({
     }
   };
 
-  const handlePaymentSuccess = async () => {
+  const handlePaymentSuccess = () => {
     setShowPaymentModal(false);
     setPaymentData(null);
-    
-    // Wait a moment for Firestore to update
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Force a hard reload to clear all caches
-    window.location.href = window.location.href;
+    onUpgradeComplete?.();
   };
 
   return (

@@ -85,6 +85,30 @@ describe('report-access-control', () => {
         ),
       ).toBe(3);
     });
+
+    it('grants full paid quota after free→paid upgrade (baseline)', () => {
+      expect(
+        getRemainingFreeDownloads(
+          basePetition({
+            pricingTier: 'basic',
+            reportDownloads: 5,
+            reportDownloadQuotaBaseline: 5,
+          }),
+        ),
+      ).toBe(PAID_TIER_FREE_DOWNLOADS);
+    });
+
+    it('legacy: infers baseline from upgradeHistory when field missing', () => {
+      expect(
+        getRemainingFreeDownloads(
+          basePetition({
+            pricingTier: 'basic',
+            reportDownloads: 5,
+            upgradeHistory: [{ fromTier: 'free', toTier: 'basic' }],
+          }),
+        ),
+      ).toBe(PAID_TIER_FREE_DOWNLOADS);
+    });
   });
 
   describe('getDownloadPrice', () => {

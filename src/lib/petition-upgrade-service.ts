@@ -83,6 +83,9 @@ export async function upgradePetition(
     const currentPetition = petitionDoc.data();
     const currentTier = currentPetition?.pricingTier as PricingTier;
     const newLimit = getNewSignatureLimit(newTier);
+    const priorReportDownloads = currentPetition?.reportDownloads || 0;
+    const isUpgradeFromFree =
+      currentTier === 'free' && newTier !== 'free';
 
     // Create upgrade history entry
     const historyEntry: UpgradeHistoryEntry = {
@@ -95,7 +98,7 @@ export async function upgradePetition(
 
     // Update petition with new tier, limit, targetSignatures, and history
     // Set targetSignatures to the new limit so the petition can collect more signatures
-    await petitionRef.update({
+    const updatePayload: Record<string, unknown> = {
       pricingTier: newTier,
       signatureLimit: newLimit,
       targetSignatures: newLimit,
@@ -103,7 +106,14 @@ export async function upgradePetition(
       lastUpgradePaymentId: paymentIntentId,
       upgradeHistory: FieldValue.arrayUnion(historyEntry),
       updatedAt: Timestamp.now(),
-    });
+    };
+
+    // Grant full paid-tier report quota (10 free) after free→paid upgrade
+    if (isUpgradeFromFree) {
+      updatePayload.reportDownloadQuotaBaseline = priorReportDownloads;
+    }
+
+    await petitionRef.update(updatePayload);
 
     console.log(
       `[Upgrade Service] Successfully upgraded petition ${petitionId} from ${currentTier} to ${newTier}`,

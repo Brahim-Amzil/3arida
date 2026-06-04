@@ -48,6 +48,45 @@ export function getFreeDownloadAllowance(petition: Petition): number {
     : FREE_TIER_FREE_DOWNLOADS;
 }
 
+/**
+ * Downloads counted against the current tier quota.
+ * After free→paid upgrade, usage before upgrade is excluded via baseline.
+ */
+export function getReportDownloadQuotaBaseline(petition: Petition): number {
+  if (typeof petition.reportDownloadQuotaBaseline === 'number') {
+    return Math.max(0, petition.reportDownloadQuotaBaseline);
+  }
+
+  if (!isPaidPetitionTier(petition)) {
+    return 0;
+  }
+
+  const history = petition.upgradeHistory;
+  const upgradedFromFree = Array.isArray(history)
+    ? history.some(
+        (entry) =>
+          entry &&
+          typeof entry === 'object' &&
+          'fromTier' in entry &&
+          (entry as { fromTier?: string }).fromTier === 'free',
+      )
+    : false;
+
+  if (upgradedFromFree) {
+    return petition.reportDownloads || 0;
+  }
+
+  return 0;
+}
+
+export function getEffectiveReportDownloadsUsed(petition: Petition): number {
+  const total = petition.reportDownloads || 0;
+  if (!isPaidPetitionTier(petition)) {
+    return total;
+  }
+  return Math.max(0, total - getReportDownloadQuotaBaseline(petition));
+}
+
 export function getExtraDownloadPrice(petition: Petition): number {
   return isPaidPetitionTier(petition)
     ? PAID_EXTRA_DOWNLOAD_PRICE_MAD
@@ -79,8 +118,10 @@ export function canGenerateReport(
  * Determines if payment is required for the next download
  */
 export function requiresPayment(petition: Petition): boolean {
-  const downloadCount = petition.reportDownloads || 0;
-  return downloadCount >= getFreeDownloadAllowance(petition);
+  return (
+    getEffectiveReportDownloadsUsed(petition) >=
+    getFreeDownloadAllowance(petition)
+  );
 }
 
 /**
@@ -94,8 +135,9 @@ export function isFreeTierLimitChoice(petition: Petition): boolean {
  * Calculates remaining free downloads
  */
 export function getRemainingFreeDownloads(petition: Petition): number {
-  const downloadCount = petition.reportDownloads || 0;
-  const remaining = getFreeDownloadAllowance(petition) - downloadCount;
+  const remaining =
+    getFreeDownloadAllowance(petition) -
+    getEffectiveReportDownloadsUsed(petition);
   return Math.max(0, remaining);
 }
 
@@ -159,6 +201,8 @@ export const ReportAccessControl = {
   getButtonState,
   isPaidPetitionTier,
   getFreeDownloadAllowance,
+  getReportDownloadQuotaBaseline,
+  getEffectiveReportDownloadsUsed,
   getExtraDownloadPrice,
   FREE_TIER_FREE_DOWNLOADS,
   PAID_TIER_FREE_DOWNLOADS,

@@ -114,6 +114,15 @@ export interface Petition {
 
   // Report tracking
   reportDownloads?: number;
+  /** Downloads before paid-tier upgrade — excluded from paid quota (10 free) */
+  reportDownloadQuotaBaseline?: number;
+  upgradeHistory?: Array<{
+    fromTier?: PricingTier;
+    toTier?: PricingTier;
+    upgradedAt?: Date | string;
+    paymentIntentId?: string;
+    amountPaid?: number;
+  }>;
   reportDownloadHistory?: Array<{
     downloadedAt: Date;
     downloadedBy: string;

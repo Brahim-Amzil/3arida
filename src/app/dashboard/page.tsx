@@ -682,6 +682,7 @@ export default function DashboardPage() {
                     showProgress={true}
                     showCreator={false}
                     showActions={true}
+                    onUpgradeComplete={loadUserPetitions}
                   />
                 ))}
               </div>
