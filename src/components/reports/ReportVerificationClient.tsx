@@ -309,7 +309,6 @@ export function ReportVerificationClient({ data }: ReportVerificationClientProps
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           onSuccess={(newDownloadCount) => {
-            setShowPaymentModal(false);
             setDownloadCountOverride(newDownloadCount);
           }}
         />

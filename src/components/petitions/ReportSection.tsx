@@ -48,7 +48,6 @@ export function ReportSection({ petition, userId }: ReportSectionProps) {
   };
 
   const handlePaymentSuccess = (newDownloadCount: number) => {
-    setShowPaymentModal(false);
     setReportDownloadsOverride(newDownloadCount);
   };
 

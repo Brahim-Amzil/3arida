@@ -61,7 +61,6 @@ export default function PetitionCardWithReport({
   };
 
   const handleReportPaymentSuccess = (newDownloadCount: number) => {
-    setShowReportPaymentModal(false);
     setReportDownloadsOverride(newDownloadCount);
   };
 
