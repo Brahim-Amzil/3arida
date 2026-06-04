@@ -19,9 +19,9 @@ Single reference for what emails payers receive. Tracker IDs: **E-01–E-08** in
 
 ## Smoke tests (**E-08**)
 
-1. **Tip** (logged in): one thank-you email; **no** Stripe receipt.
-2. **Paid petition or upgrade**: Stripe receipt to payer; **no** platform thank-you.
-3. **Contact form**: success UI + message at `contact@3arida.org`.
+1. **Tip** (logged in): one thank-you email; **no** Stripe receipt. — **Pass 2026-06-04** (about footer link + checkout donation; thank-you received)
+2. **Paid petition or upgrade**: Stripe receipt to payer; **no** platform thank-you. — Upgrade paid earlier; **create flow receipt** still to confirm
+3. **Contact form**: success UI + message at `contact@3arida.org`. — Pending
 
 ## Code paths
 

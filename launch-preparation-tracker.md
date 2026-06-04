@@ -225,7 +225,7 @@ Policy matrix (what each payer receives):
 | E-05 | Petition upgrade: enable Stripe receipt to payer | P0 | Done | `receipt_email` on `api/petitions/upgrade` + `userEmail` from client (`1735495`, deployed) |
 | E-06 | Contact form delivers to `contact@3arida.org` | P0 | Done | Resend + reCAPTCHA v3; domains `3arida.org` / `www.3arida.org`; Vercel keys via CLI (2026-05-20 prod test) |
 | E-07 | Production reCAPTCHA keys on Vercel | P0 | Done | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` + `RECAPTCHA_SECRET_KEY`; runtime loader `/api/recaptcha/config` (`fd75739`) |
-| E-08 | Post-deploy smoke: verify payment email matrix | P0 | Pending | Code deployed; manual: 1) small tip → thank-you only, no Stripe receipt; 2) paid create/upgrade → Stripe receipt only |
+| E-08 | Post-deploy smoke: verify payment email matrix | P0 | In Progress | **Tips done (2026-06-04):** `/about#support-platform` + checkout donation → thank-you email both paths. **Open:** confirm no Stripe receipt on tips; paid create Stripe receipt; contact form |
 
 ---
 
@@ -389,4 +389,5 @@ Policy doc: [`docs/REPORT-DOWNLOAD-LIMITS-PLAN.md`](docs/REPORT-DOWNLOAD-LIMITS-
 | 2026-05-22 | RPT-01–RPT-09 | N/A | Pending | Added §16 report PDF download limits plan — [`docs/REPORT-DOWNLOAD-LIMITS-PLAN.md`](docs/REPORT-DOWNLOAD-LIMITS-PLAN.md); execution started |
 | 2026-05-22 | RPT-01–RPT-05, RPT-07–RPT-08 | In Progress / Pending | Done | Quotas, limit modal, verify API enforcement, Arabic copy, unit tests |
 | 2026-06-04 | RPT-06, RPT-09 | Pending | Done | Prod QA: 19 MAD report pay, upgrade modal + 10 free reports after free→paid (`c182285`); user confirmed all OK |
+| 2026-06-04 | E-08 (tips) | Pending | In Progress | Prod: footer/about donation + petition checkout donation — thank-you emails received (`d7ddc30`) |
 
