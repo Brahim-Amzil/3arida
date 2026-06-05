@@ -40,14 +40,14 @@ function ResetPasswordPageContent() {
       return;
     }
 
+    const resetCode = oobCodeFromUrl;
     let cancelled = false;
 
     async function verifyCode() {
       try {
         setVerifying(true);
         setError('');
-        const accountEmail =
-          await verifyPasswordResetCodeForEmail(oobCodeFromUrl);
+        const accountEmail = await verifyPasswordResetCodeForEmail(resetCode);
         if (!cancelled) {
           setEmail(accountEmail);
         }
