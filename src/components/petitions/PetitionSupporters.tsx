@@ -101,6 +101,13 @@ function buildTopLevelFromCommentMap(map: Map<string, Comment>): Comment[] {
   return topLevelComments;
 }
 
+function isCommentAnonymous(comment: {
+  isAnonymous: boolean;
+  authorName: string;
+}) {
+  return comment.isAnonymous || comment.authorName === 'Anonymous';
+}
+
 export default function PetitionSupporters({
   petitionId,
   className = '',
@@ -572,18 +579,36 @@ export default function PetitionSupporters({
     }
   };
 
+  const getCommentAuthorDisplayName = (comment: Comment) =>
+    isCommentAnonymous(comment)
+      ? t('supporters.anonymous')
+      : comment.authorName;
+
+  const getSignatureDisplayName = (name: string) =>
+    name === 'Anonymous' ? t('supporters.anonymous') : name;
+
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800)
-      return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 60) return t('notifications.justNow');
+    if (diffInSeconds < 3600) {
+      return t('notifications.minutesAgo', {
+        count: Math.floor(diffInSeconds / 60),
+      });
+    }
+    if (diffInSeconds < 86400) {
+      return t('notifications.hoursAgo', {
+        count: Math.floor(diffInSeconds / 3600),
+      });
+    }
+    if (diffInSeconds < 604800) {
+      return t('notifications.daysAgo', {
+        count: Math.floor(diffInSeconds / 86400),
+      });
+    }
 
-    return date.toLocaleDateString();
+    return date.toLocaleDateString(locale === 'ar' ? 'ar-MA' : 'fr-FR');
   };
 
   const handleLoadMore = () => {
@@ -887,14 +912,14 @@ export default function PetitionSupporters({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium text-gray-900">
-                            {comment.authorName}
+                            {getCommentAuthorDisplayName(comment)}
                           </span>
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                            Comment
+                            {t('supporters.comment')}
                           </span>
                           {comment.isAnonymous && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                              Anonymous
+                              {t('supporters.anonymous')}
                             </span>
                           )}
                           <span
@@ -1086,7 +1111,7 @@ export default function PetitionSupporters({
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                       <span className="font-medium text-sm text-gray-900">
-                                        {reply.authorName}
+                                        {getCommentAuthorDisplayName(reply)}
                                       </span>
                                       <span
                                         className="text-xs text-gray-500"
@@ -1220,7 +1245,7 @@ export default function PetitionSupporters({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium text-gray-900">
-                            {signature.name}
+                            {getSignatureDisplayName(signature.name)}
                           </span>
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
                             <svg
@@ -1280,11 +1305,11 @@ export default function PetitionSupporters({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-gray-900">
-                        {comment.authorName}
+                        {getCommentAuthorDisplayName(comment)}
                       </span>
                       {comment.isAnonymous && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                          Anonymous
+                          {t('supporters.anonymous')}
                         </span>
                       )}
                       <span
@@ -1297,7 +1322,7 @@ export default function PetitionSupporters({
 
                     {comment.deleted ? (
                       <p className="text-gray-400 italic mb-3">
-                        [Comment deleted]
+                        {t('supporters.commentDeleted')}
                       </p>
                     ) : (
                       <p className="text-gray-700 whitespace-pre-wrap mb-3">
@@ -1490,7 +1515,7 @@ export default function PetitionSupporters({
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="font-medium text-sm text-gray-900">
-                                    {reply.authorName}
+                                    {getCommentAuthorDisplayName(reply)}
                                   </span>
                                   <span
                                     className="text-xs text-gray-500"
@@ -1501,7 +1526,7 @@ export default function PetitionSupporters({
                                 </div>
                                 {reply.deleted ? (
                                   <p className="text-sm text-gray-400 italic">
-                                    [Reply deleted]
+                                    {t('supporters.replyDeleted')}
                                   </p>
                                 ) : (
                                   <p className="text-sm text-gray-700">
@@ -1638,7 +1663,7 @@ export default function PetitionSupporters({
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {signature.name}
+                            {getSignatureDisplayName(signature.name)}
                           </p>
                           {signature.location && (
                             <p className="text-sm text-gray-500">

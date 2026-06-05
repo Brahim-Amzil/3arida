@@ -314,6 +314,7 @@ const translations: Record<Locale, TranslationMessages> = {
     'supporters.reply': 'رد',
     'supporters.delete': 'حذف',
     'supporters.commentDeleted': '[تم حذف التعليق]',
+    'supporters.replyDeleted': '[تم حذف الرد]',
     'supporters.showReplies': 'عرض {count} رد',
     'supporters.hideReplies': 'إخفاء الردود',
     'supporters.replyTo': 'الرد على {name}',

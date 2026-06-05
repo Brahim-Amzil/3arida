@@ -22,6 +22,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COMMENT_PAGE_SIZE } from '@/lib/firestore-page-sizes';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Comment {
   id: string;
@@ -48,6 +49,13 @@ function sortDiscussionComments(
   );
 }
 
+function isCommentAnonymous(comment: {
+  isAnonymous: boolean;
+  authorName: string;
+}) {
+  return comment.isAnonymous || comment.authorName === 'Anonymous';
+}
+
 interface PetitionCommentsProps {
   petitionId: string;
   className?: string;
@@ -59,6 +67,7 @@ export default function PetitionComments({
   className = '',
   onCommentsCountChange,
 }: PetitionCommentsProps) {
+  const { t, locale } = useTranslation();
   const { user, userProfile } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -308,18 +317,33 @@ export default function PetitionComments({
   // Throttled like — prevents spam writes (1 second cooldown per comment)
   const throttledLikeComment = useThrottle(handleLikeComment, 1000);
 
+  const getCommentAuthorDisplayName = (comment: Comment) =>
+    isCommentAnonymous(comment)
+      ? t('supporters.anonymous')
+      : comment.authorName;
+
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800)
-      return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 60) return t('notifications.justNow');
+    if (diffInSeconds < 3600) {
+      return t('notifications.minutesAgo', {
+        count: Math.floor(diffInSeconds / 60),
+      });
+    }
+    if (diffInSeconds < 86400) {
+      return t('notifications.hoursAgo', {
+        count: Math.floor(diffInSeconds / 3600),
+      });
+    }
+    if (diffInSeconds < 604800) {
+      return t('notifications.daysAgo', {
+        count: Math.floor(diffInSeconds / 86400),
+      });
+    }
 
-    return date.toLocaleDateString();
+    return date.toLocaleDateString(locale === 'ar' ? 'ar-MA' : 'fr-FR');
   };
 
   return (
@@ -522,11 +546,11 @@ export default function PetitionComments({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-gray-900">
-                      {comment.authorName}
+                      {getCommentAuthorDisplayName(comment)}
                     </span>
                     {comment.isAnonymous && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                        Anonymous
+                        {t('supporters.anonymous')}
                       </span>
                     )}
                     <span className="text-sm text-gray-500">
