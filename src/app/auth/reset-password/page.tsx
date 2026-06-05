@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/layout/HeaderWrapper';
@@ -28,36 +28,49 @@ function ResetPasswordPageContent() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const verifyCode = useCallback(
-    async (code: string) => {
-      try {
-        setVerifying(true);
-        setError('');
-        const accountEmail = await verifyPasswordResetCodeForEmail(code);
-        setEmail(accountEmail);
-      } catch (err: any) {
-        console.error('Reset link verification error:', err);
-        setError(err.message || t('auth.resetPassword.invalidLink'));
-      } finally {
-        setVerifying(false);
-      }
-    },
-    [t],
-  );
+  const oobCodeFromUrl = searchParams?.get('oobCode');
+  const modeFromUrl = searchParams?.get('mode');
 
   useEffect(() => {
-    const code = searchParams?.get('oobCode');
-    const mode = searchParams?.get('mode');
-    setOobCode(code);
+    setOobCode(oobCodeFromUrl);
 
-    if (!code || (mode && mode !== 'resetPassword')) {
+    if (!oobCodeFromUrl || (modeFromUrl && modeFromUrl !== 'resetPassword')) {
       setVerifying(false);
       setError(t('auth.resetPassword.invalidLink'));
       return;
     }
 
-    void verifyCode(code);
-  }, [searchParams, t, verifyCode]);
+    let cancelled = false;
+
+    async function verifyCode() {
+      try {
+        setVerifying(true);
+        setError('');
+        const accountEmail =
+          await verifyPasswordResetCodeForEmail(oobCodeFromUrl);
+        if (!cancelled) {
+          setEmail(accountEmail);
+        }
+      } catch (err: any) {
+        console.error('Reset link verification error:', err);
+        if (!cancelled) {
+          setError(err.message || t('auth.resetPassword.invalidLink'));
+        }
+      } finally {
+        if (!cancelled) {
+          setVerifying(false);
+        }
+      }
+    }
+
+    void verifyCode();
+
+    return () => {
+      cancelled = true;
+    };
+    // Verify once per URL — do not depend on `t` (recreated every render).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oobCodeFromUrl, modeFromUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
