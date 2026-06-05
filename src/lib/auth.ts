@@ -2,7 +2,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  sendPasswordResetEmail,
   confirmPasswordReset,
   verifyPasswordResetCode,
   GoogleAuthProvider,
@@ -17,7 +16,6 @@ import {
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
-import { getPublicAppUrl } from './app-url';
 import { auth, db } from './firebase';
 import { User } from '../types/petition';
 import {
@@ -287,16 +285,22 @@ export const logout = async (): Promise<void> => {
   }
 };
 
-// Send password reset email (link opens in-app reset page, not Firebase blank handler)
+// Send password reset email via server (Resend + rewritten app link, not firebaseapp.com)
 export const resetPassword = async (email: string): Promise<void> => {
-  try {
-    await sendPasswordResetEmail(auth, email, {
-      url: `${getPublicAppUrl()}/auth/reset-password`,
-      handleCodeInApp: true,
-    });
-  } catch (error: any) {
-    console.error('Password reset error:', error);
-    throw new Error(getAuthErrorMessage(error.code));
+  const response = await fetch('/api/auth/request-password-reset', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.trim() }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data?.error === 'string'
+        ? data.error
+        : 'تعذر إرسال رسالة إعادة التعيين. حاول لاحقاً.',
+    );
   }
 };
 

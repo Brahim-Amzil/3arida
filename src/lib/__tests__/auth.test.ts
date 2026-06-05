@@ -9,7 +9,6 @@ import { auth, db } from '../firebase';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  sendPasswordResetEmail,
   updateProfile,
   signOut,
 } from 'firebase/auth';
@@ -28,8 +27,6 @@ const mockSignInWithEmailAndPassword =
   signInWithEmailAndPassword as jest.MockedFunction<
     typeof signInWithEmailAndPassword
   >;
-const mockSendPasswordResetEmail =
-  sendPasswordResetEmail as jest.MockedFunction<typeof sendPasswordResetEmail>;
 const mockUpdateProfile = updateProfile as jest.MockedFunction<
   typeof updateProfile
 >;
@@ -204,32 +201,41 @@ describe('Auth Service', () => {
   });
 
   describe('resetPassword', () => {
-    it('should send password reset email', async () => {
+    const originalFetch = global.fetch;
+
+    afterEach(() => {
+      global.fetch = originalFetch;
+    });
+
+    it('should request password reset via API', async () => {
       const email = 'john@example.com';
 
-      mockSendPasswordResetEmail.mockResolvedValue(undefined);
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true }),
+      }) as jest.Mock;
 
       await resetPassword(email);
 
-      expect(mockSendPasswordResetEmail).toHaveBeenCalledWith(
-        auth,
-        email,
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/auth/request-password-reset',
         expect.objectContaining({
-          url: expect.stringContaining('/auth/reset-password'),
-          handleCodeInApp: true,
+          method: 'POST',
+          body: JSON.stringify({ email }),
         }),
       );
     });
 
-    it('should handle reset password errors', async () => {
+    it('should handle reset password API errors', async () => {
       const email = 'nonexistent@example.com';
 
-      mockSendPasswordResetEmail.mockRejectedValue(
-        authError('auth/user-not-found'),
-      );
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: 'تعذر إرسال رسالة إعادة التعيين. حاول لاحقاً.' }),
+      }) as jest.Mock;
 
       await expect(resetPassword(email)).rejects.toThrow(
-        'No account found with this email address.'
+        'تعذر إرسال رسالة إعادة التعيين. حاول لاحقاً.',
       );
     });
   });
