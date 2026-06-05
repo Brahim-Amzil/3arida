@@ -3,6 +3,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  confirmPasswordReset,
+  verifyPasswordResetCode,
   GoogleAuthProvider,
   signInWithPopup,
   User as FirebaseUser,
@@ -15,6 +17,7 @@ import {
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
+import { getPublicAppUrl } from './app-url';
 import { auth, db } from './firebase';
 import { User } from '../types/petition';
 import {
@@ -284,12 +287,38 @@ export const logout = async (): Promise<void> => {
   }
 };
 
-// Send password reset email
+// Send password reset email (link opens in-app reset page, not Firebase blank handler)
 export const resetPassword = async (email: string): Promise<void> => {
   try {
-    await sendPasswordResetEmail(auth, email);
+    await sendPasswordResetEmail(auth, email, {
+      url: `${getPublicAppUrl()}/auth/reset-password`,
+      handleCodeInApp: true,
+    });
   } catch (error: any) {
     console.error('Password reset error:', error);
+    throw new Error(getAuthErrorMessage(error.code));
+  }
+};
+
+export const verifyPasswordResetCodeForEmail = async (
+  oobCode: string,
+): Promise<string> => {
+  try {
+    return await verifyPasswordResetCode(auth, oobCode);
+  } catch (error: any) {
+    console.error('Password reset code verification error:', error);
+    throw new Error(getAuthErrorMessage(error.code));
+  }
+};
+
+export const completePasswordReset = async (
+  oobCode: string,
+  newPassword: string,
+): Promise<void> => {
+  try {
+    await confirmPasswordReset(auth, oobCode, newPassword);
+  } catch (error: any) {
+    console.error('Password reset completion error:', error);
     throw new Error(getAuthErrorMessage(error.code));
   }
 };
@@ -457,6 +486,10 @@ const getAuthErrorMessage = (errorCode: string): string => {
       return 'This sign-in method is not enabled.';
     case 'auth/weak-password':
       return 'Password should be at least 6 characters long.';
+    case 'auth/expired-action-code':
+      return 'This link has expired. Please request a new password reset.';
+    case 'auth/invalid-action-code':
+      return 'This reset link is invalid or has already been used.';
     case 'auth/user-disabled':
       return 'This account has been disabled.';
     case 'auth/user-not-found':

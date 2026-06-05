@@ -3,11 +3,15 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/HeaderWrapper';
+import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslation } from '@/hooks/useTranslation';
 import { resetPassword } from '@/lib/auth';
 
 export default function ForgotPasswordPage() {
+  const { t, locale } = useTranslation();
+  const isRTL = locale === 'ar';
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -17,7 +21,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
 
     if (!email.trim()) {
-      setError('Please enter your email address');
+      setError(t('auth.forgotPassword.enterEmail'));
       return;
     }
 
@@ -29,35 +33,41 @@ export default function ForgotPasswordPage() {
       setSuccess(true);
     } catch (err: any) {
       console.error('Password reset error:', err);
-      setError(err.message || 'Failed to send reset email. Please try again.');
+      setError(err.message || t('auth.forgotPassword.sendLink'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className="min-h-screen bg-gray-50 flex flex-col"
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
       <Header />
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
-          {/* Header */}
           <div className="text-center">
-            <div className="flex justify-center">
-              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold text-xl">3</span>
+            <Link
+              href="/"
+              className="flex items-center justify-center space-x-2 mb-6"
+            >
+              <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">#</span>
               </div>
-            </div>
+              <span className="text-2xl font-bold text-gray-900">
+                {locale === 'ar' ? 'عريضة' : '3arida'}
+              </span>
+            </Link>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Reset Password
+              {t('auth.forgotPassword.title')}
             </h2>
-            <p className="text-gray-600">
-              Enter your email to receive a password reset link
-            </p>
+            <p className="text-gray-600">{t('auth.forgotPassword.subtitle')}</p>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Forgot Password</CardTitle>
+              <CardTitle>{t('auth.forgotPassword.cardTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               {success ? (
@@ -78,21 +88,24 @@ export default function ForgotPasswordPage() {
                     </svg>
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Check Your Email
+                    {t('auth.forgotPassword.checkEmail')}
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    We've sent a password reset link to <strong>{email}</strong>
+                    {t('auth.forgotPassword.sentTo')}{' '}
+                    <strong>{email}</strong>
                   </p>
                   <div className="space-y-4">
                     <Button asChild className="w-full">
-                      <Link href="/auth/login">Back to Sign In</Link>
+                      <Link href="/auth/login">
+                        {t('auth.forgotPassword.backToLogin')}
+                      </Link>
                     </Button>
                     <div className="text-sm text-gray-500">
-                      <p>Didn't receive the email?</p>
+                      <p>{t('auth.forgotPassword.noEmail')}</p>
                       <ul className="mt-2 space-y-1">
-                        <li>• Check your spam/junk folder</li>
-                        <li>• Make sure the email address is correct</li>
-                        <li>• Wait a few minutes and try again</li>
+                        <li>• {t('auth.forgotPassword.checkSpam')}</li>
+                        <li>• {t('auth.forgotPassword.verifyEmail')}</li>
+                        <li>• {t('auth.forgotPassword.wait')}</li>
                       </ul>
                     </div>
                   </div>
@@ -101,14 +114,14 @@ export default function ForgotPasswordPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
+                      {t('auth.email')}
                     </label>
                     <input
                       type="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email address"
+                      placeholder={t('auth.email')}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       disabled={loading}
                     />
@@ -123,22 +136,22 @@ export default function ForgotPasswordPage() {
                   <Button type="submit" disabled={loading} className="w-full">
                     {loading ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Sending Reset Link...
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2" />
+                        {t('auth.forgotPassword.sending')}
                       </>
                     ) : (
-                      'Send Reset Link'
+                      t('auth.forgotPassword.sendLink')
                     )}
                   </Button>
 
                   <div className="text-center">
                     <p className="text-sm text-gray-600">
-                      Remember your password?{' '}
+                      {t('auth.forgotPassword.rememberPassword')}{' '}
                       <Link
                         href="/auth/login"
                         className="font-medium text-green-600 hover:text-green-500"
                       >
-                        Sign in
+                        {t('auth.forgotPassword.signIn')}
                       </Link>
                     </p>
                   </div>
@@ -147,20 +160,20 @@ export default function ForgotPasswordPage() {
             </CardContent>
           </Card>
 
-          {/* Help */}
           <div className="text-center">
             <p className="text-xs text-gray-500">
-              Need help?{' '}
-              <a
+              {t('auth.forgotPassword.needHelp')}{' '}
+              <Link
                 href="/contact"
                 className="text-green-600 hover:text-green-500 underline"
               >
-                Contact us
-              </a>
+                {t('auth.forgotPassword.contact')}
+              </Link>
             </p>
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

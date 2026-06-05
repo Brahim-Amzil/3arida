@@ -51,7 +51,9 @@ export function middleware(request: NextRequest) {
   // Firebase email action links sometimes hit /__/auth/action on our domain
   if (pathname === '/__/auth/action' || pathname.startsWith('/__/auth/')) {
     const url = request.nextUrl.clone();
-    url.pathname = '/auth/verify-email';
+    const mode = url.searchParams.get('mode');
+    url.pathname =
+      mode === 'resetPassword' ? '/auth/reset-password' : '/auth/verify-email';
     return NextResponse.redirect(url);
   }
 

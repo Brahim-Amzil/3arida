@@ -7,7 +7,7 @@ import { getPublicAppUrl } from '@/lib/app-url';
  */
 export function rewriteFirebaseActionLinkToApp(
   firebaseLink: string,
-  appPath = '/auth/verify-email',
+  appPath?: string,
 ): string {
   try {
     const parsed = new URL(firebaseLink);
@@ -17,7 +17,10 @@ export function rewriteFirebaseActionLinkToApp(
     }
 
     const mode = parsed.searchParams.get('mode') || 'verifyEmail';
-    const appLink = new URL(`${getPublicAppUrl()}${appPath}`);
+    const resolvedPath =
+      appPath ||
+      (mode === 'resetPassword' ? '/auth/reset-password' : '/auth/verify-email');
+    const appLink = new URL(`${getPublicAppUrl()}${resolvedPath}`);
     appLink.searchParams.set('mode', mode);
     appLink.searchParams.set('oobCode', oobCode);
 

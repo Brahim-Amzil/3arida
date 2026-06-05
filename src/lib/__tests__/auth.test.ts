@@ -211,7 +211,14 @@ describe('Auth Service', () => {
 
       await resetPassword(email);
 
-      expect(mockSendPasswordResetEmail).toHaveBeenCalledWith(auth, email);
+      expect(mockSendPasswordResetEmail).toHaveBeenCalledWith(
+        auth,
+        email,
+        expect.objectContaining({
+          url: expect.stringContaining('/auth/reset-password'),
+          handleCodeInApp: true,
+        }),
+      );
     });
 
     it('should handle reset password errors', async () => {

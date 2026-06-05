@@ -13,6 +13,17 @@ describe('rewriteFirebaseActionLinkToApp', () => {
     expect(result).not.toContain('firebaseapp.com');
   });
 
+  it('rewrites reset password links to app reset page', () => {
+    const firebaseLink =
+      'https://arida-c5faf.firebaseapp.com/__/auth/action?mode=resetPassword&oobCode=xyz789&apiKey=key';
+
+    const result = rewriteFirebaseActionLinkToApp(firebaseLink);
+
+    expect(result).toContain('https://3arida.org/auth/reset-password');
+    expect(result).toContain('mode=resetPassword');
+    expect(result).toContain('oobCode=xyz789');
+  });
+
   it('returns original link when oobCode is missing', () => {
     const bad = 'https://example.com/no-code';
     expect(rewriteFirebaseActionLinkToApp(bad)).toBe(bad);
