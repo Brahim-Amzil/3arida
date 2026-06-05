@@ -135,6 +135,8 @@ const translations: Record<Locale, TranslationMessages> = {
     'auth.forgotPassword.enterEmail': 'يرجى إدخال بريدك الإلكتروني',
     'auth.forgotPassword.needHelp': 'تحتاج مساعدة؟',
     'auth.forgotPassword.contact': 'تواصل معنا',
+    'auth.forgotPassword.rateLimited':
+      'طلبات كثيرة لإعادة التعيين. انتظر ساعة ثم حاول مرة أخرى.',
     'auth.resetPassword.title': 'تعيين كلمة مرور جديدة',
     'auth.resetPassword.subtitle': 'اختر كلمة مرور قوية لحسابك',
     'auth.resetPassword.forEmail': 'لحساب',
@@ -1848,6 +1850,8 @@ const translations: Record<Locale, TranslationMessages> = {
     'auth.forgotPassword.enterEmail': 'Veuillez entrer votre e-mail',
     'auth.forgotPassword.needHelp': 'Besoin d’aide ?',
     'auth.forgotPassword.contact': 'Contactez-nous',
+    'auth.forgotPassword.rateLimited':
+      'Trop de demandes de réinitialisation. Réessayez dans une heure.',
     'auth.resetPassword.title': 'Nouveau mot de passe',
     'auth.resetPassword.subtitle': 'Choisissez un mot de passe sécurisé',
     'auth.resetPassword.forEmail': 'Pour le compte',

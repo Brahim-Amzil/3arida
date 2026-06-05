@@ -19,15 +19,6 @@ export async function POST(request: NextRequest) {
     'api/auth/request-password-reset',
   );
 
-  const rateLimited = enforceRateLimit(request, {
-    keyPrefix: 'request-password-reset',
-    limit: 3,
-    windowMs: 60 * 60 * 1000,
-  });
-  if (rateLimited) {
-    return withRequestId(rateLimited, apiContext.requestId);
-  }
-
   try {
     const body = await request.json().catch(() => ({}));
     const email = typeof body?.email === 'string' ? body.email : '';
@@ -35,6 +26,25 @@ export async function POST(request: NextRequest) {
     if (!email.trim()) {
       return withRequestId(
         NextResponse.json({ error: 'البريد الإلكتروني مطلوب' }, { status: 400 }),
+        apiContext.requestId,
+      );
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const rateLimited = enforceRateLimit(request, {
+      keyPrefix: `request-password-reset:${normalizedEmail}`,
+      limit: 5,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (rateLimited) {
+      return withRequestId(
+        NextResponse.json(
+          {
+            error:
+              'طلبات كثيرة لإعادة التعيين. انتظر ساعة ثم حاول مرة أخرى.',
+          },
+          { status: 429, headers: rateLimited.headers },
+        ),
         apiContext.requestId,
       );
     }

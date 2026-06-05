@@ -1,14 +1,15 @@
+import type { UserRecord } from 'firebase-admin/auth';
 import { adminAuth } from '@/lib/firebase-admin';
 import { getPublicAppUrl } from '@/lib/app-url';
 import { sendPasswordResetEmailViaResend } from '@/lib/auth-password-reset-email';
 import { rewriteFirebaseActionLinkToApp } from '@/lib/firebase-action-link';
 
-function hasPasswordProvider(
-  providerData: Array<{ providerId?: string }> | undefined,
-): boolean {
-  return (
-    providerData?.some((provider) => provider.providerId === 'password') ?? false
-  );
+function canResetPassword(user: UserRecord): boolean {
+  if (user.providerData?.some((provider) => provider.providerId === 'password')) {
+    return true;
+  }
+  // Some email/password accounts have passwordHash but empty providerData
+  return Boolean(user.passwordHash);
 }
 
 export async function sendPasswordResetEmailForAddress(
@@ -35,7 +36,7 @@ export async function sendPasswordResetEmailForAddress(
     throw error;
   }
 
-  if (!hasPasswordProvider(firebaseUser.providerData)) {
+  if (!canResetPassword(firebaseUser)) {
     // Google-only accounts cannot reset password this way
     return { success: true };
   }

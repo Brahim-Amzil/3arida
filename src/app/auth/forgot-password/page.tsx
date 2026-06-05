@@ -33,7 +33,15 @@ export default function ForgotPasswordPage() {
       setSuccess(true);
     } catch (err: any) {
       console.error('Password reset error:', err);
-      setError(err.message || t('auth.forgotPassword.sendLink'));
+      const message = err.message || '';
+      if (
+        message.includes('Too many requests') ||
+        message.includes('طلبات كثيرة')
+      ) {
+        setError(t('auth.forgotPassword.rateLimited'));
+      } else {
+        setError(message || t('auth.forgotPassword.sendLink'));
+      }
     } finally {
       setLoading(false);
     }
